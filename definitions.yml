@@ -1,0 +1,136 @@
+# Domain: EdTech
+# Problem Statement: Course Enrollment and Academic Planning System (Lumina)
+# Last Updated: 2026-01-31
+
+Student:
+  definition: 
+   An individual officially admitted to a degree program who uses the system to manage their course registrations and academic progression.
+  examples: 
+   A 2nd-year B.Tech (CSE) student identifying elective options.
+  aliases:
+   - Candidate
+
+Faculty:
+  definition: 
+   An academic staff member responsible for instructing students, managing course syllabus, evaluation of students.
+  examples: 
+   A lecturer giving a lecture to a group of students in classroom.
+  aliases:
+   - Instructor
+   - Professor
+
+Coordinator:
+  definition: 
+   An administrative official responsible for managing the academic catalog, setting enrollment rules, and resolving schedule conflicts.
+  examples: 
+   The Head of the Academic Office initializing the enrollment window for the new term.
+  aliases:
+   - Administrator
+   - Academic Manager
+
+Course:
+  definition: 
+   A distinct unit of study with a defined syllabus, credit value, and learning outcomes, forming a part of the academic curriculum.
+  examples:
+   Fundamentals of Full Stack Development
+  aliases:
+   - Subject
+
+Course_Credit:
+  definition: 
+   A standard unit of measure representing the workload and academic value of a course, usually calculated based on total contact hours
+  examples: 
+   A course with 36-48 hours of lecture in a semester is usually 4 credits.
+  aliases:
+   - Credit
+   - Course Weight
+
+Enroll:
+  definition: 
+   The formal process by which a student secures a seat in a specific course section for an upcoming academic term.
+  examples: 
+   A student finalizing their registration for Fundamentals of Full Stack Development.
+  aliases:
+   - Register
+   - Course Signup
+
+Prerequisite:
+  definition: 
+   A mandatory academic requirement or course that a student must successfully complete with a passing grade before they are permitted to enroll in a more advanced course.
+  examples: 
+   A student must complete Data Structures before enrolling in Advanced Data Structures.
+  aliases:
+   - Pre-req
+   - Prior requirement
+
+Enrollment_Window:
+  definition: 
+   A restricted period of time, authorized by the academic administration, during which the enrollment system is active for specific student batches.
+  examples: 
+   The registration period for 2026 Spring Semester open from 1st Jan 2026 to 4th Jan 2026.
+  aliases:
+   - Registration Period
+   - Enrollment Phase
+
+Course_Slot:
+  definition: 
+   A specific recurring period in the weekly institutional calendar assigned to a course to prevent scheduling overlaps for students and faculty.
+  examples:
+   Deep Learning Lab Monday and Wednesday from 11:30 AM to 1:00 PM.
+  aliases:
+   - Time Slot
+   - Class Schedule
+
+Academic_Roster:
+  definition: 
+   The official list of students successfully registered for a specific course section during a given academic term.
+  examples:
+   The list of 60 students enrolled in Advanced Data Structures.
+  aliases:
+   - Student List
+   - Course Registry
+
+Credit_Requirements:
+  definition:
+   The institutional limit on the minimum or maximum number of credits a student is permitted to enroll in for a single academic term.
+  examples:
+   A maximum limit of 24 credits per semester for B.Tech students.
+  aliases:
+   - Credit Limit
+   - Semester Load
+
+Academic_Roadmap:
+  definition: 
+   A strategic multi-semester planning tool used by students to sequence required courses and electives to ensure all degree criteria are met by their target graduation date.
+  examples:
+   A 2nd-year student mapping out their CSE electives for the next two years.
+  aliases:
+   - Degree Plan
+   - Graduation Path
+
+Core_Course:
+  definition: 
+   A mandatory subject defined by the department that every student in a specific degree program must pass to graduate.
+  examples:
+   Operating Systems for all B.Tech CSE students.
+  aliases:
+   - Compulsory Subject
+   - Major Requirement
+
+Degree_Requirements:
+  definition: 
+   The total tally of academic credits, categorized by discipline, that a student must earn to qualify for their degree.
+  examples: 
+   Completing a total of 160 credits with specific elective balances.
+  aliases:
+   - Graduation Criteria
+   - Curriculum Standards
+
+Degree_Audit:
+  definition: 
+   A systematic review of a student's academic history against the mandatory degree requirements to identify completed milestones and remaining requirements.
+  examples:
+   A report showing a student has finished all technical courses but need two more elective courses.
+  aliases:
+   - Graduation Progress Check
+   - Academic Evaluation
