@@ -1,6 +1,6 @@
 # Domain: EdTech
 # Problem Statement: Course Enrollment and Academic Planning System (Lumina)
-# Last Updated: 2026-01-31
+# Last Updated: 2026-02-03
 
 Student:
   definition: 
@@ -134,3 +134,47 @@ Degree_Audit:
   aliases:
    - Graduation Progress Check
    - Academic Evaluation
+
+Enrollment_Constraints:
+  definition:
+    The set of logic-based rules and institutional policies that the system 
+    automatically enforces during registration to ensure academic integrity 
+    and resource management.
+  examples:
+    - Automatically blocking a student from exceeding the 24-credit limit.
+    - Preventing enrollment if a mandatory prerequisite has not been cleared.
+  aliases:
+    - System Rules
+    - Registration Logic
+
+Course_Catalog:
+  definition:
+    A centralized, digital "Single Source of Truth" containing the master 
+    list of all subjects offered by the university, including their syllabus, 
+    credit values, and prerequisite chains.
+  examples:
+    - The database of all CSE electives available for the Monsoon 2026 semester.
+  aliases:
+    - Master Catalog
+    - Subject Directory
+    
+Override_Request:
+  definition: 
+    A formal petition submitted by a student to bypass specific 
+    enrollment constraints, requiring manual review and approval 
+    by the Coordinator.
+  examples:
+    - A senior requesting a prerequisite waiver for a graduation requirement.
+  aliases:
+    - Exception Request
+    - Waiver Application
+
+Academic_Term:
+  definition: 
+    A defined instructional period within the university calendar 
+    governed by specific enrollment windows and academic policies.
+  examples:
+    - Monsoon Semester 2026.
+  aliases:
+    - Semester
+    - Session
