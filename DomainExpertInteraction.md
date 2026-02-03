@@ -7,9 +7,9 @@
     Date of interaction: 31-01-2026(1st) & 01-02-2026(2nd)
     Mode of interaction: Video call
     Duration (in-minutes): 22 minutes(1st) & 28 minutes(2nd)
-    Publicly accessible Video link:
-    (1st) [Video Link](https://drive.google.com/file/d/1N5AMHNMic40dDIO-wTwmBNYDUPym4luH/view?usp=sharing)
-    (2nd) https://www.awesomescreenshot.com/video/48963103?key=31db99a113386f6382efdd444c21c2e7
+    Publicly accessible Video link:  
+https://drive.google.com/file/d/1N5AMHNMic40dDIO-wTwmBNYDUPym4luH/view?usp=sharing (1st)
+https://www.awesomescreenshot.com/video/48963103?key=31db99a113386f6382efdd444c21c2e7
 
 ## Domain Expert Details
 
