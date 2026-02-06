@@ -34,11 +34,13 @@ https://www.awesomescreenshot.com/video/48963103?key=31db99a113386f6382efdd444c2
 
 ## Actors and Responsibilities
 
-| Actor           | Responsibilities                                                                              |
-| --------------- | --------------------------------------------------------------------------------------------- |
-| **Student**     | Selects courses, validates prerequisites, and manages their own academic roadmap.             |
-| **Faculty**     | Delivers instruction, manages syllabus details, and evaluates student performance via grades. |
-| **Coordinator** | Sets enrollment dates, manages course catalog, and allocates course slots.                    |
+| Actor | Responsibilities |
+| :--- | :--- |
+| **Student** | Enrolls in courses and plans a tentative long-term academic path toward graduation. |
+| **Faculty** | Maintains instructional data (syllabus, materials) and records student performance via grades. |
+| **Assistant Dean 1** | Allocates Course Slots, maintains Course Catalogs, and resolves scheduling conflicts. |
+| **Assistant Dean 2** | Defines Enrollment Constraints, configures the Enrollment Window, and manages student gradesheets. |
+| **Dean** | Oversees and manages all actions of the Assistant Deans. |
 
 ## Core workflows
 
