@@ -2,7 +2,7 @@
 
 ## Problem Statement
 
-At many universities, including IIIT Sri City, elective and course registrations are often handled through manual, fragmented tools like Google Forms. These methods suffer from critical flaws:
+At many universities, including IIIT Sri City, elective and core course registrations are often handled through manual, fragmented tools like Google Forms. These methods suffer from critical flaws:
 
 - **No Real Time Validation:** They cannot check for seat availability or prerequisite fulfillment at the moment of submission.
 - **Administrative Overhead:** Academic coordinators must manually resolve schedule clashes and credit violations.
@@ -14,15 +14,23 @@ Lumina is a centralized enrollment engine designed to automate the registration 
 
 ### **1. Student**
 
-The primary user navigating the registration process. Students use Lumina to enroll in courses and plan their long-term academic path toward graduation.
+The primary user navigating the registration process. Students use Lumina to enroll in courses and plan their tentative long-term academic path toward graduation
 
 ### **2. Faculty**
 
 The content and evaluation owners. Faculty are responsible for maintaining the instructional data for their assigned courses and ensuring student performance is recorded to update academic history.
 
-### **3. Coordinator**
+### **3. Assistant Dean 1**
 
-The administrative architect of the system. The Coordinator manages the institutional rules, defines the operational timing of the enrollment cycle, and resolves scheduling conflicts at a department-wide level.
+The administrator who allocates course slots, maintains the course catalogs and handles schedule conflicts.
+
+### **4. Assistant Dean 2**
+
+The administrator who defines enrollment constraints, configures enrollment window and manages gradesheets for students.
+
+### **5. Dean**
+
+The administrator who oversees and manages everything related to Assistant Dean 1 and Assistant Dean 2.
 
 ## Planned Features
 
@@ -50,14 +58,22 @@ The administrative architect of the system. The Coordinator manages the institut
 
 - **Student Communication:** Integrated channels to broadcast updates or communicate directly with enrolled students.
 
-### **Coordinator**
+### **Assistant Dean 1**
 
 - **Course Catalog Administration:** Tools to define the master list of subjects, including Course Credits and Prerequisite chains.
 
-- **Enrollment Policy Configuration:** Setting the time limit and defining rules for the Enrollment Window.
-
 - **Conflict Free Slot Allocation:** Administrative tools to assign time and rooms using an engine that prevents faculty or student batch overlaps.
 
+### **Assistant Dean 2**
+
+- **Enrollment Policy Configuration:** Setting the time limit and defining rules for the Enrollment Window.
+
 - **Active Window Status:** A single toggle to emergency-pause or extend the Enrollment Window if technical issues or institutional changes arise.
+
+- **Gradesheet Management:** Managing the gradesheet of all students.
+
+### **Dean**
+
+- **Mangement of Assistant Deans:** Dean can manage and overview everything that the assistant deans do.
 
 - **Automated Roster Generation:** Exporting final, verified Academic Rosters for the Academic Office at the click of a button, replacing the need to consolidate messy Google Sheet responses.
