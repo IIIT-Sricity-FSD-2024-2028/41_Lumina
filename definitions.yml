@@ -19,15 +19,6 @@ Faculty:
    - Instructor
    - Professor
 
-Coordinator:
-  definition: 
-   An administrative official responsible for managing the academic catalog, setting enrollment rules, and resolving schedule conflicts.
-  examples: 
-   The Head of the Academic Office initializing the enrollment window for the new term.
-  aliases:
-   - Administrator
-   - Academic Manager
-
 Course:
   definition: 
    A distinct unit of study with a defined syllabus, credit value, and learning outcomes, forming a part of the academic curriculum.
