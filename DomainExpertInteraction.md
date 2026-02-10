@@ -47,7 +47,7 @@ https://www.awesomescreenshot.com/video/48963103?key=31db99a113386f6382efdd444c2
 - **Enrollment Window Configuration**
   - **Trigger/start condition:** Academic calendar reaches the pre-registration phase.
   - **Steps involved:**
-    1. Coordinator defines opening timestamp and closing timestamp.
+    1. Assistant Dean 2 defines opening timestamp and closing timestamp.
     2. Access to courses is restricted by Prerequisites.
     3. The enrollment status is toggled to Active.
   - **Outcome / End condition:** The system becomes live for student registration.
