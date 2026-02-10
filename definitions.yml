@@ -19,6 +19,16 @@ Faculty:
    - Instructor
    - Professor
 
+Dean:
+  definition: 
+   Senior academic authority overseeing academic operations and supervising Assistant Deans.
+  examples: 
+    - Approves academic policies and regulations
+    - Oversees Assistant Deans in course administration
+  aliases:
+   - Academic Dean
+   - Dean of Faculty
+
 Course:
   definition: 
    A distinct unit of study with a defined syllabus, credit value, and learning outcomes, forming a part of the academic curriculum.
