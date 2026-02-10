@@ -5,7 +5,7 @@
 At many universities, including IIIT Sri City, elective and core course registrations are often handled through manual, fragmented tools like Google Forms. These methods suffer from critical flaws:
 
 - **No Real Time Validation:** They cannot check for seat availability or prerequisite fulfillment at the moment of submission.
-- **Administrative Overhead:** Academic coordinators must manually resolve schedule clashes and credit violations.
+- **Administrative Overhead:** Academic deans must manually resolve schedule clashes and credit violations.
 - **Data Inconsistency:** Manual consolidation often lead to errors in final academic rosters.
 
 Lumina is a centralized enrollment engine designed to automate the registration lifecycle. By replacing manual forms with a rule-based system, Lumina ensures that every transaction is validated instantly against institutional constraints, providing a Single Source of Truth for students, faculty, and the Academic Office.
