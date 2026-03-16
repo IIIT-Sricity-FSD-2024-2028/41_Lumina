@@ -1,4 +1,4 @@
-# Lumina: UI/UX Prototype
+# Lumina: Figma Prototype
 
 This document contains the interactive Figma prototype for the **Lumina Course Enrollment System**.
 
