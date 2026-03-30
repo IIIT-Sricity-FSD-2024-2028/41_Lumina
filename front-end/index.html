@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Lumina Academic Planning System" />
+    <title>Lumina - Academic Planning System</title>
+    <link rel="stylesheet" href="css/global.css" />
+    <link rel="stylesheet" href="css/index.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="logo-group">
+        <img src="assets/icons/logo.svg" alt="Lumina logo" class="logo-icon" />
+        <span class="logo-text">Lumina</span>
+      </div>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="#">Home</a>
+        <a href="course.html">Courses</a>
+        <a href="#about">About</a>
+        <a href="#contact">Contact Us</a>
+      </nav>
+      <button class="btn-primary" onclick="window.location.href = 'login.html'">
+        Login
+      </button>
+    </header>
+
+    <main>
+      <section class="hero-section">
+        <div class="status-badge">REGISTRATION ACTIVE FOR FALL 2026</div>
+        <h1 class="hero-title">Streamlining Academic<br />Progress.</h1>
+        <p class="hero-subtitle">
+          Plan your roadmap, enroll with confidence, and explore the complete<br />academic
+          catalog with our intelligent planning system.
+        </p>
+        <div class="hero-actions">
+          <button
+            class="btn-primary"
+            onclick="window.location.href = 'login.html'"
+          >
+            Login to Portal
+          </button>
+          <button
+            class="btn-outline"
+            onclick="window.location.href = 'course.html'"
+          >
+            Browse Courses
+          </button>
+        </div>
+      </section>
+
+      <section class="features-section">
+        <h2 class="section-title">Take Control of Your Academic Journey</h2>
+        <p class="section-subtitle">
+          Advanced tools designed for student success and clarity.
+        </p>
+
+        <div class="feature-grid">
+          <article class="feature-card">
+            <img
+              src="assets/icons/compass.svg"
+              alt="Roadmaps"
+              class="feature-icon"
+            />
+            <h3>Multi-Term Roadmaps</h3>
+            <p>
+              Navigate your entire degree with a clear visual compass. Plan
+              prerequisites and balance workloads across multiple semesters.
+            </p>
+          </article>
+          <article class="feature-card">
+            <img
+              src="assets/icons/tick.svg"
+              alt="Enrollment"
+              class="feature-icon"
+            />
+            <h3>Frictionless Enrollment</h3>
+            <p>
+              Register for classes with a single click. Our system handles
+              validation in real-time to ensure zero friction during peak
+              registration.
+            </p>
+          </article>
+          <article class="feature-card">
+            <img src="assets/icons/logo.svg" alt="Audit" class="feature-icon" />
+            <h3>Real-Time Degree Audit</h3>
+            <p>
+              Monitor your progress toward graduation with a real-time cap and
+              gown view. Know exactly what credits you need to finish.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section id="about" class="about-section">
+        <div class="about-container">
+          <h2>About Lumina</h2>
+          <p class="about-lead">
+            Empowering Academic Journeys Through
+            <strong>Intelligent Architecture</strong>.<br />Lumina is more than
+            a portal; it's the backbone of modern education management.
+          </p>
+
+          <div class="about-grid">
+            <div class="about-item">
+              <h3>Automated Degree Audits</h3>
+              <p>
+                Algorithmic checking of degree requirements against student
+                transcripts for instantaneous progress tracking.
+              </p>
+            </div>
+            <div class="about-item">
+              <h3>Faculty Tools</h3>
+              <p>
+                Powerful dashboards for advisors to monitor student health and
+                approve course deviations efficiently.
+              </p>
+            </div>
+            <div class="about-item">
+              <h3>Institution Compliance</h3>
+              <p>
+                Built-in safeguards to ensure all academic registrations meet
+                university and state regulatory standards.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="contact" class="contact-section">
+        <div class="contact-info">
+          <h2>Get in Touch</h2>
+          <p>
+            Have questions about the planning system? Our technical support team
+            is here to assist you with any inquiries.
+          </p>
+
+          <div class="contact-methods">
+            <div class="contact-method">
+              <img
+                src="assets/icons/location.svg"
+                alt="Location"
+                class="contact-icon"
+              />
+              <div>
+                <strong>System Administrator Office</strong>
+                <p>Academic Block A, 3rd Floor, IIIT Sri City</p>
+              </div>
+            </div>
+            <div class="contact-method">
+              <img
+                src="assets/icons/mail.svg"
+                alt="Email"
+                class="contact-icon"
+              />
+              <div>
+                <strong>Support Email</strong>
+                <br />
+                <a href="mailto:support@lumina.iiits.in"
+                  >support@lumina.iiits.in</a
+                >
+              </div>
+            </div>
+            <div class="contact-method">
+              <img
+                src="assets/icons/telephone.svg"
+                alt="Phone"
+                class="contact-icon"
+              />
+              <div>
+                <strong>Technical Help Desk</strong>
+                <br />
+                <a href="tel:+9108576244400">+91 08576 244 400</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <form class="contact-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label>FULL NAME</label>
+              <input
+                type="text"
+                placeholder="John Doe"
+                class="form-input"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label>INSTITUTIONAL ID</label>
+              <input
+                type="text"
+                placeholder="S20230010xxx"
+                class="form-input"
+                required
+              />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>MESSAGE</label>
+            <textarea
+              placeholder="How can we help you?"
+              class="form-input"
+              rows="4"
+              required
+            ></textarea>
+          </div>
+          <button type="submit" class="btn-primary">
+            Send Message
+            <img
+              src="img/image.svg"
+              alt=""
+              aria-hidden="true"
+              style="width: 16px; margin-left: 8px; filter: invert(1)"
+            />
+          </button>
+        </form>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-top">
+        <div class="logo-group">
+          <img
+            src="assets/icons/logo_white.svg"
+            alt="Lumina logo"
+            class="logo-icon"
+          />
+          <span class="logo-text">Lumina</span>
+        </div>
+        <nav class="footer-nav">
+          <a href="#">Help Desk</a>
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Service</a>
+        </nav>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2026 Lumina Academic Systems. All rights reserved.</p>
+        <div class="social-links">
+          <a href="#">Twitter</a>
+          <a href="#">LinkedIn</a>
+          <a href="#">GitHub</a>
+        </div>
+      </div>
+    </footer>
+    <script src="js/mockData.js"></script>
+    <script src="js/validation.js"></script>
+  </body>
+</html>

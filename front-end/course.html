@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Course Catalog - Lumina</title>
+    <link rel="stylesheet" href="css/global.css" />
+    <link rel="stylesheet" href="css/course.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="logo-group">
+        <img
+          src="assets/icons/logo.svg"
+          alt="Lumina logo"
+          class="logo-icon"
+          style="width: 24px"
+        />
+        <span class="logo-text">Lumina</span>
+      </div>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="index.html">Home</a>
+        <a href="course.html">Courses</a>
+        <a href="index.html#about">About</a>
+        <a href="index.html#contact">Contact Us</a>
+      </nav>
+      <button class="btn-primary" onclick="window.location.href = 'login.html'">
+        Login
+      </button>
+    </header>
+
+    <main class="catalog-container">
+      <header class="catalog-header">
+        <h1>Course Catalog</h1>
+        <p>
+          Browse and search for active courses across all departments to plan
+          your academic roadmap.
+        </p>
+      </header>
+
+      <section class="filter-section" aria-label="Course search filters">
+        <form class="filter-bar" role="search">
+          <div class="form-group search-group">
+            <label for="search-input">Search Courses</label>
+            <div class="input-with-icon">
+              <img src="img/vector-15.svg" alt="" class="input-icon" />
+              <input
+                type="search"
+                id="search-input"
+                class="form-input"
+                placeholder="Search by course code (e.g., CS201) or title..."
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="dept-select">Department</label>
+            <select id="dept-select" class="form-select">
+              <option value="all">All Depts</option>
+              <option value="cse">CSE</option>
+              <option value="math">MATH</option>
+              <option value="hum">HUM</option>
+              <option value="phys">PHYS</option>
+              <option value="econ">ECON</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="type-select">Course Type</label>
+            <select id="type-select" class="form-select">
+              <option value="all">All Types</option>
+              <option value="core">Core</option>
+              <option value="elective">Elective</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="credit-select">Credits</label>
+            <select id="credit-select" class="form-select">
+              <option value="all">All</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn-primary search-btn">Search</button>
+        </form>
+      </section>
+
+      <section class="course-grid" aria-label="Course listings">
+        <article class="course-card">
+          <div class="card-top">
+            <span class="course-code">CS201</span>
+            <span class="badge badge-core">Core</span>
+          </div>
+          <h2 class="course-title">Introduction to Algorithms</h2>
+          <div class="course-meta">
+            <span class="meta-item"
+              ><img src="assets/icons/credit_icon.svg" alt="" /> Credits: 4</span
+            >
+            <span class="meta-item"
+              ><img src="assets/icons/dept.svg" alt="" /> Department: CSE</span
+            >
+          </div>
+        </article>
+
+        <article class="course-card">
+          <div class="card-top">
+            <span class="course-code">MAT305</span>
+            <span class="badge badge-core">Core</span>
+          </div>
+          <h2 class="course-title">Linear Algebra & Applications</h2>
+          <div class="course-meta">
+            <span class="meta-item"
+              ><img src="assets/icons/credit_icon.svg" alt="" /> Credits: 3</span
+            >
+            <span class="meta-item"
+              ><img src="assets/icons/dept.svg" alt="" /> Department: MATH</span
+            >
+          </div>
+        </article>
+
+        <article class="course-card">
+          <div class="card-top">
+            <span class="course-code">ENG102</span>
+            <span class="badge badge-elective">Elective</span>
+          </div>
+          <h2 class="course-title">Technical Writing for Engineers</h2>
+          <div class="course-meta">
+            <span class="meta-item"
+              ><img src="assets/icons/credit_icon.svg" alt="" /> Credits: 2</span
+            >
+            <span class="meta-item"
+              ><img src="assets/icons/dept.svg" alt="" /> Department: HUM</span
+            >
+          </div>
+        </article>
+
+        <article class="course-card">
+          <div class="card-top">
+            <span class="course-code">PHY101</span>
+            <span class="badge badge-core">Core</span>
+          </div>
+          <h2 class="course-title">Classical Mechanics</h2>
+          <div class="course-meta">
+            <span class="meta-item"
+              ><img src="assets/icons/credit_icon.svg" alt="" /> Credits: 4</span
+            >
+            <span class="meta-item"
+              ><img src="assets/icons/dept.svg" alt="" /> Department: PHYS</span
+            >
+          </div>
+        </article>
+
+        <article class="course-card">
+          <div class="card-top">
+            <span class="course-code">CS440</span>
+            <span class="badge badge-elective">Elective</span>
+          </div>
+          <h2 class="course-title">Artificial Intelligence</h2>
+          <div class="course-meta">
+            <span class="meta-item"
+              ><img src="assets/icons/credit_icon.svg" alt="" /> Credits: 4</span
+            >
+            <span class="meta-item"
+              ><img src="assets/icons/dept.svg" alt="" /> Department: CSE</span
+            >
+          </div>
+        </article>
+
+        <article class="course-card">
+          <div class="card-top">
+            <span class="course-code">ECO201</span>
+            <span class="badge badge-core">Core</span>
+          </div>
+          <h2 class="course-title">Macroeconomics 101</h2>
+          <div class="course-meta">
+            <span class="meta-item"
+              ><img src="assets/icons/credit_icon.svg" alt="" /> Credits: 3</span
+            >
+            <span class="meta-item"
+              ><img src="assets/icons/dept.svg" alt="" /> Department: ECON</span
+            >
+          </div>
+        </article>
+      </section>
+
+      <nav class="pagination" aria-label="Pagination">
+        <button class="page-btn text-muted">Previous</button>
+        <button class="page-btn active">1</button>
+        <button class="page-btn">2</button>
+        <button class="page-btn">3</button>
+        <span class="page-dots">...</span>
+        <button class="page-btn">8</button>
+        <button class="page-btn">Next</button>
+      </nav>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-top">
+        <div class="logo-group">
+          <img
+            src="assets/icons/logo_white.svg"
+            alt="Lumina logo"
+            class="logo-icon"
+            style="width: 24px; filter: brightness(0) invert(1)"
+          />
+          <span class="logo-text">Lumina</span>
+        </div>
+        <nav class="footer-nav">
+          <a href="#">Help Desk</a>
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Service</a>
+        </nav>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2026 Lumina Academic Systems. All rights reserved.</p>
+        <div class="social-links">
+          <a href="#">Twitter</a>
+          <a href="#">LinkedIn</a>
+          <a href="#">GitHub</a>
+        </div>
+      </div>
+    </footer>
+    <script src="js/mockData.js"></script>
+    <script src="js/validation.js"></script>
+  </body>
+</html>

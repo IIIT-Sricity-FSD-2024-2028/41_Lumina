@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lumina - Login</title>
+    <link rel="stylesheet" href="css/global.css" />
+    <link rel="stylesheet" href="css/login.css" />
+  </head>
+  <body class="login-body">
+    <main class="login-wrapper">
+      <section class="login-card" aria-label="Login">
+        <button
+          class="back-btn"
+          aria-label="Go back"
+          onclick="window.history.back()"
+        >
+          <img src="assets/icons/back_arrow.svg" alt="Back" />
+        </button>
+
+        <header class="login-header">
+          <div class="logo-box">
+            <img
+              src="assets/icons/logo_white.svg"
+              alt="Lumina icon"
+              class="logo-icon"
+            />
+          </div>
+          <h1>Lumina</h1>
+          <p>Academic Planning & Course Enrollment</p>
+        </header>
+
+        <form class="login-form" id="loginForm" novalidate>
+          <div id="loginError" class="alert-error hidden" role="alert">
+            <span class="error-icon">⚠️</span>
+            <span class="error-text">Invalid Username or Password.</span>
+          </div>
+          <div class="form-group">
+            <label for="username">Username</label>
+            <div class="input-with-icon">
+              <img
+                src="assets/icons/user_id.svg"
+                alt=""
+                class="input-icon"
+                aria-hidden="true"
+              />
+              <input
+                type="text"
+                id="username"
+                class="form-input"
+                placeholder="Enter Institute ID"
+                autocomplete="username"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="password">Password</label>
+            <div class="input-with-icon">
+              <img
+                src="assets/icons/password.svg"
+                alt=""
+                class="input-icon"
+                aria-hidden="true"
+              />
+              <input
+                type="password"
+                id="password"
+                class="form-input"
+                placeholder="Enter password"
+                autocomplete="current-password"
+                required
+              />
+              <button
+                type="button"
+                class="password-toggle"
+                aria-label="Toggle password visibility"
+              >
+                <img src="assets/icons/hide_password.svg" alt="" />
+              </button>
+            </div>
+          </div>
+
+          <div class="forgot-password">
+            <a href="#">Forgot password?</a>
+          </div>
+
+          <button type="submit" class="btn-primary w-100">
+            Log In
+            <img
+              src="assets/icons/sign_in.svg"
+              alt=""
+              class="btn-icon"
+              aria-hidden="true"
+            />
+          </button>
+        </form>
+      </section>
+    </main>
+    <script src="js/mockData.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/validation.js"></script>
+  </body>
+</html>

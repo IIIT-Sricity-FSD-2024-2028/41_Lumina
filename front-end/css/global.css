@@ -1,0 +1,170 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+:root {
+  /* Lumina Design Tokens */
+  --primary-dark: #071932;
+  --primary-hover: #0a254a;
+  --accent-blue: #4a90e2;
+  --background-light: #f8fafc;
+  --surface-white: #ffffff;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+}
+
+/* --- Universal Reset --- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+}
+
+html,
+body {
+  min-height: 100vh;
+  font-family: "Inter", sans-serif;
+  background-color: var(--background-light);
+  color: var(--text-main);
+  line-height: 1.5;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent-blue) !important;
+  outline-offset: 2px;
+}
+
+/* --- Global Buttons --- */
+.btn-primary {
+  background-color: var(--primary-dark);
+  color: var(--surface-white);
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-hover);
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: var(--primary-dark);
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  border: 2px solid var(--border-color);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-outline:hover {
+  background-color: var(--surface-white);
+}
+
+
+/* --- Universal Navbar --- */
+.site-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 5%;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(6px);
+}
+.logo-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+}
+.main-nav a {
+  margin: 0 15px;
+  font-weight: 500;
+}
+.main-nav a:hover {
+  color: var(--accent-blue);
+}
+
+/* --- Universal Footer --- */
+.site-footer .logo-group {
+    color: var(--surface-white);
+}
+
+.site-footer {
+  background-color: var(--primary-dark);
+  color: var(--surface-white);
+  padding: 40px 5% 20px;
+  margin-top: auto;
+}
+.footer-top,
+.footer-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.footer-top {
+  border-bottom: 1px solid #1e293b;
+  padding-bottom: 24px;
+  margin-bottom: 24px;
+}
+.footer-nav a {
+  margin-left: 24px;
+  color: #cbd5e1;
+}
+.footer-bottom {
+  color: #64748b;
+  font-size: 0.875rem;
+}
+.social-links a {
+  margin-left: 16px;
+  color: #cbd5e1;
+}
+
+/* --- Global Badges (Core / Elective) --- */
+.badge {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.badge-core {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #dbeafe;
+}
+.badge-elective {
+  background-color: #f3f4f6;
+  color: #374151;
+  border: 1px solid var(--border-color);
+}
+
+/* --- Validation States --- */
+.input-error {
+    border-color: #ef4444 !important; /* Tailwind Red 500 */
+    background-color: #fef2f2 !important;
+}
+.input-error:focus {
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2) !important;
+}
