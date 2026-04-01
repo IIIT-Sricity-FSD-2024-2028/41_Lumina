@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lumina - Grade Sheet Details</title>
+    <link rel="stylesheet" href="css/Dean2_styles.css">
+</head>
+<body>
+
+    <header>
+        <div class="logo-container">
+        <div class="logo-icon">
+            <img src="assets/icons/logo.svg" alt="Lumina Logo" width="20" height="20">
+        </div>
+        Lumina
+    </div>
+        <nav class="main-nav">
+            <a href="Dean2_index.html">Home</a>
+            <a href="Dean2_policies.html">Academic Terms &amp; Policies</a>
+            <a href="Dean2_enrollment.html">Enrollment Configuration</a>
+            <a href="Dean2_overrides.html">Override Requests</a>
+            <a href="Dean2_analytics.html">Enrollment Analytics</a>
+        </nav>
+        <div class="user-controls">
+            <div class="notification-wrapper">
+                <span class="notif-bell">🔔</span>
+                <div class="notif-dot"></div>
+            </div>
+            <div class="user-info">
+                <div class="user-text">
+                    <h4>Dr. Sarah Jenkins</h4>
+                    <p>Assistant Dean 2</p>
+                </div>
+                <img src="https://ui-avatars.com/api/?name=Sarah+Jenkins&background=f0e6ff&color=5c3c92" alt="Avatar" class="avatar">
+            </div>
+        <a href="login.html" class="sign-out" id="signOutBtn">
+            Sign Out 
+            <img src="assets/icons/logout.svg" alt="Logout" width="16" height="16" style="vertical-align: middle; margin-left: 5px;">
+        </a>
+    </div>
+    </header>
+
+    <main class="container">
+        <div class="page-header flex-between">
+            <div>
+                <h1>Grade Sheets Workspace</h1>
+                <p>Manage and review academic course grading records. and submit it to Students</p>
+            </div>
+            <button class="btn btn-primary">📥 Export Records</button>
+        </div>
+
+        <div class="tabs-nav">
+            <a href="Dean2_gradesheets.html" class="tab-link active">Grade Sheets List</a>
+            <a href="Dean2_gradesheets-detail.html" class="tab-link">Grade Sheet Details</a>
+        </div>
+
+        <!-- Dimmed list card -->
+        <div class="card gs-list-dimmed">
+            <div class="flex-between" style="margin-bottom: 1.5rem;">
+                <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-dark);">Course Grade Sheets Overview</h3>
+                <div class="gs-search-wrap">
+                    <span class="gs-search-icon">🔍</span>
+                    <input type="text" class="gs-search-input" placeholder="Search courses..." disabled>
+                </div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Course Code</th>
+                        <th>Course Name</th>
+                        <th>Semester</th>
+                        <th>Status</th>
+                        <th>Last Updated</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>CS201</strong></td>
+                        <td>Data Structures</td>
+                        <td><span class="badge badge-upcoming">Fall 2023</span></td>
+                        <td><span class="badge badge-pending">Pending</span></td>
+                        <td style="color: var(--text-muted);">2023-10-15</td>
+                        <td><span class="btn-view-dark" style="cursor:default;">View Grade Sheet →</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Detail header row -->
+        <div class="gs-detail-header-row">
+            <div style="display:flex; align-items:flex-start; gap: 12px;">
+                <a href="Dean2_gradesheets.html" class="gs-back-btn">←</a>
+                <div>
+                    <h2 class="gs-detail-title">Grade Sheet Details: CS201 - Data Structures</h2>
+                    <div class="gs-detail-meta">
+                        Section A &nbsp;•&nbsp; Dr. Julian Thorne &nbsp;•&nbsp; Fall 2023
+                        <span class="badge-awaiting">AWAITING APPROVAL</span>
+                    </div>
+                </div>
+            </div>
+            <div style="display:flex; gap:0.75rem; align-items:center; flex-shrink:0;">
+                <button class="btn btn-outline">Save Draft</button>
+                <button class="btn btn-primary">Submit for Review</button>
+            </div>
+        </div>
+
+        <!-- Main grade sheet card -->
+        <div class="card gs-detail-card">
+            <h2 class="gs-inner-title">Grade Sheet Details - CS201: Data Structures</h2>
+            <div class="gs-inner-meta">
+                📅 Academic Year 2023-2024 &nbsp;&nbsp;•&nbsp;&nbsp; 🎓 Faculty of Computer Science
+            </div>
+
+            <table id="gradesTable">
+                <thead>
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Student Name</th>
+                        <th style="text-align:center;">Credit Hours</th>
+                        <th style="text-align:center;">Grade</th>
+                        <th style="text-align:center;">Grade Point</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="color:var(--text-muted);">S101</td>
+                        <td><strong>Alice Johnson</strong></td>
+                        <td style="text-align:center; color:var(--text-muted);">3</td>
+                        <td style="text-align:center;"><span class="grade-badge grade-A">A</span></td>
+                        <td style="text-align:center; color:var(--text-muted);">4.0</td>
+                    </tr>
+                    <tr>
+                        <td style="color:var(--text-muted);">S102</td>
+                        <td><strong>Bob Miller</strong></td>
+                        <td style="text-align:center; color:var(--text-muted);">3</td>
+                        <td style="text-align:center;"><span class="grade-badge grade-B-plus">B+</span></td>
+                        <td style="text-align:center; color:var(--text-muted);">3.5</td>
+                    </tr>
+                    <tr>
+                        <td style="color:var(--text-muted);">S103</td>
+                        <td><strong>Charlie Davis</strong></td>
+                        <td style="text-align:center; color:var(--text-muted);">3</td>
+                        <td style="text-align:center;"><span class="grade-badge grade-B">B</span></td>
+                        <td style="text-align:center; color:var(--text-muted);">3.0</td>
+                    </tr>
+                    <tr>
+                        <td style="color:var(--text-muted);">S104</td>
+                        <td><strong>Diana Prince</strong></td>
+                        <td style="text-align:center; color:var(--text-muted);">3</td>
+                        <td style="text-align:center;"><span class="grade-badge grade-A">A</span></td>
+                        <td style="text-align:center; color:var(--text-muted);">4.0</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="gs-card-footer">
+                <div class="gs-pagination">
+                    <button class="gs-page-btn">‹</button>
+                    <span>Page 1 of 4</span>
+                    <button class="gs-page-btn">›</button>
+                </div>
+                <div style="display:flex; gap:0.75rem;">
+                    <button class="btn btn-primary" id="calcGpaBtn">🧮 Calculate GPA</button>
+                    <button class="btn btn-primary" id="sendGpaBtn">▷ Send GPA to Students</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+    <div class="footer-top">
+        <div class="logo-group">
+            <div class="logo-white" style="width:28px;height:28px;padding:5px;">
+                <img src="assets/icons/logo_white.svg" alt="Lumina Logo" width="18" height="18">
+            </div>
+            <span class="logo-text">Lumina</span>
+        </div>
+        <nav class="footer-nav">
+            <a href="#">Help Desk</a>
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+        </nav>
+    </div>
+    <div class="footer-bottom">
+        <p>© 2026 Lumina Academic Systems. All rights reserved.</p>
+        <div class="social-links">
+            <a href="#">Twitter</a>
+            <a href="#">LinkedIn</a>
+            <a href="#">GitHub</a>
+        </div>
+    </div>
+</footer>  
+
+    <script>
+        document.getElementById('calcGpaBtn').addEventListener('click', function() {
+            alert('GPA Calculated Successfully!');
+        });
+        document.getElementById('sendGpaBtn').addEventListener('click', function() {
+            alert('GPA sent to all students!');
+        });
+    </script>
+</body>
+</html> 

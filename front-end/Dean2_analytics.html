@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lumina - Enrollment Analytics</title>
+    <link rel="stylesheet" href="css/Dean2_styles.css">
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+        <div class="logo-icon">
+            <img src="assets/icons/logo.svg" alt="Lumina Logo" width="20" height="20">
+        </div>
+        Lumina
+    </div> 
+        <nav class="main-nav">
+            <a href="Dean2_index.html">Home</a>
+            <a href="Dean2_policies.html">Academic Terms &amp; Policies</a>
+            <a href="Dean2_enrollment.html">Enrollment Configuration</a>
+            <a href="Dean2_overrides.html">Override Requests</a>
+            <a href="Dean2_analytics.html" class="active">Enrollment Analytics</a>
+        </nav>
+        <div class="user-controls">
+            <div class="notification-wrapper">
+                <span class="notif-bell">🔔</span>
+                <div class="notif-dot"></div>
+            </div>
+            <div class="user-info">
+                <div class="user-text">
+                    <h4>Dr. Sarah Jenkins</h4>
+                    <p>Assistant Dean 2</p>
+                </div>
+                <img src="https://ui-avatars.com/api/?name=Sarah+Jenkins&background=f0e6ff&color=5c3c92" alt="Avatar" class="avatar">
+           </div>
+        <a href="login.html" class="sign-out" id="signOutBtn">
+            Sign Out 
+            <img src="assets/icons/logout.svg" alt="Logout" width="16" height="16" style="vertical-align: middle; margin-left: 5px;">
+        </a>
+    </div> 
+    </header>
+
+    <main class="container">
+        <div class="page-header">
+            <h1>Enrollment Monitoring</h1>
+            <p>Track enrollment activity and capacity utilization across departments.</p>
+        </div>
+
+        <!-- Year-wise Enrollment Progress -->
+        <div class="card">
+            <div class="flex-between" style="margin-bottom:1.75rem;">
+                <div>
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                        <span style="font-size:1.1rem;">📊</span>
+                        <h3 style="font-size:1.05rem;font-weight:700;color:var(--primary-blue);">Year-wise Enrollment Progress</h3>
+                    </div>
+                    <p style="font-size:0.875rem;color:var(--text-muted);">Comparative analysis of enrollment targets across academic years</p>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:var(--text-muted);flex-shrink:0;">
+                    <span style="display:inline-block;width:10px;height:10px;background:var(--primary-blue);border-radius:50%;"></span>
+                    Actual Enrollment
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <!-- 1st Year -->
+                <div>
+                    <div class="flex-between" style="margin-bottom:6px;">
+                        <div>
+                            <div class="analytics-year-label">1st Year</div>
+                            <div class="analytics-year-sub">Freshman Intake</div>
+                        </div>
+                        <div class="analytics-pct">60%</div>
+                    </div>
+                    <div class="progress-bar-bg" style="height:12px;"><div class="progress-bar-fill" style="width:60%;"></div></div>
+                </div>
+                <!-- 2nd Year -->
+                <div>
+                    <div class="flex-between" style="margin-bottom:6px;">
+                        <div>
+                            <div class="analytics-year-label">2nd Year</div>
+                            <div class="analytics-year-sub">Sophomore Retention</div>
+                        </div>
+                        <div class="analytics-pct">75%</div>
+                    </div>
+                    <div class="progress-bar-bg" style="height:12px;"><div class="progress-bar-fill" style="width:75%;"></div></div>
+                </div>
+                <!-- 3rd Year -->
+                <div>
+                    <div class="flex-between" style="margin-bottom:6px;">
+                        <div>
+                            <div class="analytics-year-label">3rd Year</div>
+                            <div class="analytics-year-sub">Junior Specialization</div>
+                        </div>
+                        <div class="analytics-pct">80%</div>
+                    </div>
+                    <div class="progress-bar-bg" style="height:12px;"><div class="progress-bar-fill" style="width:80%;"></div></div>
+                </div>
+                <!-- 4th Year -->
+                <div>
+                    <div class="flex-between" style="margin-bottom:6px;">
+                        <div>
+                            <div class="analytics-year-label">4th Year</div>
+                            <div class="analytics-year-sub">Senior Graduation Track</div>
+                        </div>
+                        <div class="analytics-pct">92%</div>
+                    </div>
+                    <div class="progress-bar-bg" style="height:12px;"><div class="progress-bar-fill" style="width:92%;"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Department Statistics -->
+        <div class="card">
+            <h3 style="font-size:1.05rem;font-weight:700;color:var(--primary-blue);margin-bottom:1.5rem;">Department Statistics</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Department</th>
+                        <th>Total Capacity</th>
+                        <th>Students Enrolled</th>
+                        <th>Utilization %</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>CSE</strong></td>
+                        <td>1,200</td>
+                        <td>980</td>
+                        <td>
+                            <div class="progress-row">
+                                <div class="progress-bar-bg" style="height:8px;">
+                                    <div class="progress-bar-fill" style="width:82%;"></div>
+                                </div>
+                                <span class="utilization-high" style="min-width:38px;">82%</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>ECE</strong></td>
+                        <td>1,000</td>
+                        <td>750</td>
+                        <td>
+                            <div class="progress-row">
+                                <div class="progress-bar-bg" style="height:8px;">
+                                    <div class="progress-bar-fill" style="width:75%;"></div>
+                                </div>
+                                <span class="utilization-med" style="min-width:38px;">75%</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>ME</strong></td>
+                        <td>800</td>
+                        <td>400</td>
+                        <td>
+                            <div class="progress-row">
+                                <div class="progress-bar-bg" style="height:8px;">
+                                    <div class="progress-bar-fill" style="width:50%;"></div>
+                                </div>
+                                <span class="utilization-low" style="min-width:38px;">50%</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Course Capacity Monitoring -->
+        <div class="card">
+            <div class="flex-between" style="margin-bottom:1.5rem;">
+                <h3 style="font-size:1.05rem;font-weight:700;color:var(--primary-blue);">Course Capacity Monitoring</h3>
+                <span class="critical-badge">⚠️ Critical: Low Seats Remaining</span>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Course Code</th>
+                        <th>Course Type</th>
+                        <th>Capacity</th>
+                        <th>Enrolled</th>
+                        <th>Utilization %</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>CS101</strong></td>
+                        <td>Institute Core</td>
+                        <td>100</td>
+                        <td>98</td>
+                        <td>
+                            <div class="progress-row">
+                                <div class="progress-bar-bg" style="height:8px;">
+                                    <div class="progress-bar-fill" style="width:98%;background:#DC2626;"></div>
+                                </div>
+                                <span class="utilization-crit" style="min-width:38px;">98%</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>IC201</strong></td>
+                        <td>Program Core</td>
+                        <td>80</td>
+                        <td>79</td>
+                        <td>
+                            <div class="progress-row">
+                                <div class="progress-bar-bg" style="height:8px;">
+                                    <div class="progress-bar-fill" style="width:99%;background:#DC2626;"></div>
+                                </div>
+                                <span class="utilization-crit" style="min-width:38px;">99%</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>CE205</strong></td>
+                        <td>Core Elective</td>
+                        <td>60</td>
+                        <td>45</td>
+                        <td>
+                            <div class="progress-row">
+                                <div class="progress-bar-bg" style="height:8px;">
+                                    <div class="progress-bar-fill" style="width:75%;"></div>
+                                </div>
+                                <span class="utilization-med" style="min-width:38px;">75%</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>SE101</strong></td>
+                        <td>SEED</td>
+                        <td>120</td>
+                        <td>110</td>
+                        <td>
+                            <div class="progress-row">
+                                <div class="progress-bar-bg" style="height:8px;">
+                                    <div class="progress-bar-fill" style="width:92%;"></div>
+                                </div>
+                                <span class="utilization-high" style="min-width:38px;">92%</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+    <div class="footer-top">
+        <div class="logo-group">
+            <div class="logo-white" style="width:28px;height:28px;padding:5px;">
+                <img src="assets/icons/logo_white.svg" alt="Lumina Logo" width="18" height="18">
+            </div>
+            <span class="logo-text">Lumina</span>
+        </div>
+        <nav class="footer-nav">
+            <a href="#">Help Desk</a>
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+        </nav>
+    </div>
+    <div class="footer-bottom">
+        <p>© 2026 Lumina Academic Systems. All rights reserved.</p>
+        <div class="social-links">
+            <a href="#">Twitter</a>
+            <a href="#">LinkedIn</a>
+            <a href="#">GitHub</a>
+        </div>
+    </div>
+</footer>  
+
+   <script src="js/Dean2_app.js"></script>
+    <script src="js/Dean2_database.js"></script>
+</body>
+</html> 

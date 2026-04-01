@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lumina - Enrollment Configuration</title>
+    <link rel="stylesheet" href="css/Dean2_styles.css">
+</head>
+<body>
+    <header>
+       <div class="logo-container">
+        <div class="logo-icon">
+            <img src="assets/icons/logo.svg" alt="Lumina Logo" width="20" height="20">
+        </div>
+        Lumina
+    </div>
+
+        <nav class="main-nav">
+            <a href="Dean2_index.html">Home</a>
+            <a href="Dean2_policies.html">Academic Terms &amp; Policies</a>
+            <a href="Dean2_enrollment.html" class="active">Enrollment Configuration</a>
+            <a href="Dean2_overrides.html">Override Requests</a>
+            <a href="Dean2_analytics.html">Enrollment Analytics</a>
+        </nav>
+
+        <div class="user-controls">
+            <div class="notification-wrapper">
+                <span class="notif-bell">🔔</span>
+                <div class="notif-dot"></div>
+            </div>
+            <div class="user-info">
+                <div class="user-text">
+                    <h4>Dr. Sarah Jenkins</h4>
+                    <p>Assistant Dean 2</p>
+                </div>
+                <img src="https://ui-avatars.com/api/?name=Sarah+Jenkins&background=f0e6ff&color=5c3c92" alt="Avatar" class="avatar">
+            </div>
+        <a href="login.html" class="sign-out" id="signOutBtn">
+            Sign Out 
+            <img src="assets/icons/logout.svg" alt="Logout" width="16" height="16" style="vertical-align: middle; margin-left: 5px;">
+        </a>
+    </div> 
+    </header>
+
+    <main class="container">
+        <div class="page-header">
+            <h1>Enrollment Setup</h1>
+            <p>Configure enrollment windows, phases, and course availability.</p>
+        </div>
+
+        <!-- Current Enrollment Status -->
+        <div class="card enrollment-status-card">
+            <div>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.5rem;">
+                    <span style="font-size:0.75rem;font-weight:700;letter-spacing:0.08em;color:var(--text-muted);text-transform:uppercase;">Current Enrollment Status</span>
+                    <span class="badge badge-active" id="systemStatusBadge">● ACTIVE</span>
+                </div>
+                <div class="enrollment-phase-name" id="activePhaseName">No Active Phase</div>
+                <div class="enrollment-meta">
+                    <span>👥 Eligible: <span id="activePhaseEligible">N/A</span></span>
+                    <span id="globalEnrollmentDates">📅 No dates set</span>
+                </div>
+            </div>
+            <div class="enrollment-actions">
+                <button class="btn btn-primary" id="btnActivate">▶ Activate Enrollment</button>
+                <button class="btn btn-light" id="btnDeactivate">Deactivate System</button>
+            </div>
+        </div>
+
+        <!-- Enrollment Window -->
+        <div class="card window-card">
+            <div class="window-header">
+                <h3 style="font-size:1rem;font-weight:700;color:var(--primary-blue);">Enrollment Window Configuration</h3>
+                <span class="badge" id="windowStatusBadge">OPEN</span>
+            </div>
+            <div class="window-dates">
+                <div class="form-group" style="margin:0;">
+                    <label>Enrollment Start Date &amp; Time</label>
+                    <input type="datetime-local" id="startDateInput">
+                </div>
+                <div class="form-group" style="margin:0;">
+                    <label>Enrollment End Date &amp; Time</label>
+                    <input type="datetime-local" id="endDateInput">
+                </div>
+            </div>
+            <div class="window-buttons">
+                <button class="btn btn-primary" id="btnOpen">🔓 Open Enrollment</button>
+                <button class="btn btn-warning" id="btnPause">⏸ Pause Enrollment</button>
+                <button class="btn btn-danger" id="btnClose">✕ Close Enrollment</button>
+            </div>
+        </div>
+
+        <!-- Enrollment Phases -->
+        <div class="card">
+            <div class="phases-header">
+                <div class="phases-title">Enrollment Phases</div>
+                <button class="btn btn-primary btn-sm" id="addPhaseBtn">+ Add Phase</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Phase Name</th>
+                        <th>Eligible Students</th>
+                        <th>Timeline</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="phaseTableBody">
+                    <!-- Rendered by JS -->
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- Phase Modal -->
+    <div class="modal-overlay" id="phaseModal">
+        <div class="modal-box">
+            <div class="modal-title" id="modalTitle">Add Enrollment Phase</div>
+            <div class="form-group">
+                <label>Phase Name</label>
+                <input type="text" id="modalPhaseName" placeholder="e.g. Final Year Registration">
+            </div>
+            <div class="form-group">
+                <label>Eligible Students</label>
+                <select id="modalYear">
+                    <option value="Final Year">Final Year Students</option>
+                    <option value="3rd Year">3rd Year Students</option>
+                    <option value="2nd Year">2nd Year Students</option>
+                    <option value="1st Year">1st Year Students</option>
+                    <option value="Backlog Students">Backlog Students</option>
+                    <option value="All Students">All Students</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Timeline</label>
+                <input type="text" id="modalSemester" placeholder="e.g. Aug 1 - Aug 2">
+            </div>
+            <div class="form-group" style="margin:0;">
+                <label>Phase Status</label>
+                <select id="modalPhaseStatus">
+                    <option value="Upcoming">Upcoming</option>
+                    <option value="Active">Active</option>
+                    <option value="Completed">Completed</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" id="closeModal">Cancel</button>
+                <button class="btn btn-primary" id="savePhase">Save Phase Configuration</button>
+            </div>
+        </div>
+    </div>
+
+   <footer class="site-footer">
+    <div class="footer-top">
+        <div class="logo-group">
+            <div class="logo-white" style="width:28px;height:28px;padding:5px;">
+                <img src="assets/icons/logo_white.svg" alt="Lumina Logo" width="18" height="18">
+            </div>
+            <span class="logo-text">Lumina</span>
+        </div>
+        <nav class="footer-nav">
+            <a href="#">Help Desk</a>
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+        </nav>
+    </div>
+    <div class="footer-bottom">
+        <p>© 2026 Lumina Academic Systems. All rights reserved.</p>
+        <div class="social-links">
+            <a href="#">Twitter</a>
+            <a href="#">LinkedIn</a>
+            <a href="#">GitHub</a>
+        </div>
+    </div>
+</footer> 
+
+   <script src="js/Dean2_app.js"></script>
+    <script src="js/Dean2_database.js"></script> 
+</body>
+</html>

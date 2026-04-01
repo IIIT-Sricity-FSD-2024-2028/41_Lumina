@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lumina – Academic Roadmap</title>
+  <link rel="stylesheet" href="css/student_style.css" />
+  <link rel="stylesheet" href="css/student_Roadmap.css" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+    <script src="js/mockData.js"></script>
+    <script>      
+    function openPopup(id) {
+        document.getElementById(id).classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+    function closePopup(id) {
+        document.getElementById(id).classList.remove('open');
+        document.body.style.overflow = '';
+    }
+
+    /* openSemModal needs semHistory — defer until roadmap.js is loaded */
+    function openSemModal(semNum) {
+        /* If roadmap.js hasn't loaded yet, wait for it */
+        if (typeof semHistory === 'undefined') {
+        window.addEventListener('load', function() { openSemModal(semNum); });
+        return;
+        }
+
+        var data   = semHistory[semNum];
+        var header = document.getElementById('semPopupHeader');
+        var chip   = document.getElementById('semPopupChip');
+
+        document.getElementById('semPopupTitle').textContent = data.title;
+        document.getElementById('semPopupDate').textContent  = data.date;
+
+        if (data.isCurrent) {
+        header.classList.add('blue-header');
+        chip.style.display = 'inline-block';
+        } else {
+        header.classList.remove('blue-header');
+        chip.style.display = 'none';
+        }
+
+        var body = document.getElementById('semPopupBody');
+        body.innerHTML = '';
+        data.courses.forEach(function(course) {
+        var row = document.createElement('div');
+        row.className = 'sem-popup-row';
+        row.innerHTML =
+            '<div class="spr-bar' + (data.isCurrent ? ' teal' : '') + '"></div>' +
+            '<span class="spr-name">' + course.name + '</span>' +
+            '<span class="spr-credits">' + course.credits + ' CR</span>';
+        body.appendChild(row);
+        });
+
+        document.getElementById('semPopupCredits').textContent = data.totalCredits + ' Credits';
+        openPopup('semModal');
+    }
+    </script>
+
+  <div id="navbar-placeholder"></div>
+
+  <main class="main-content" id="planView">
+
+    <div class="page-title">
+      <h1>Academic Roadmap Generation</h1>
+      <p>Plan your future semesters and generate a personalized academic roadmap.</p>
+    </div>
+
+    <!-- ACADEMIC HISTORY -->
+    <section class="section-block">
+      <div class="section-heading">
+        <span class="section-icon">🗓</span>
+        <h2>Academic History</h2>
+      </div>
+      <div class="history-row">
+
+        <div class="history-card completed">
+          <div class="hc-top">
+            <span class="hc-status-label">COMPLETED</span>
+            <span class="hc-check">✔</span>
+          </div>
+          <div class="hc-title">Semester 1</div>
+          <div class="hc-courses">CP, DLD, OCW, DSMA, EE, FHVE</div>
+          <div class="hc-footer">
+            <span class="hc-credits">⊕ 20 Credits</span>
+            <button class="hc-view-btn" onclick="openSemModal(1)">View</button>
+          </div>
+        </div>
+
+        <div class="history-card completed">
+          <div class="hc-top">
+            <span class="hc-status-label">COMPLETED</span>
+            <span class="hc-check">✔</span>
+          </div>
+          <div class="hc-title">Semester 2</div>
+          <div class="hc-courses">DSA, CA, SS, PS, OPC, EEN</div>
+          <div class="hc-footer">
+            <span class="hc-credits">⊕ 20 Credits</span>
+            <button class="hc-view-btn" onclick="openSemModal(2)">View</button>
+          </div>
+        </div>
+
+        <div class="history-card completed">
+          
+          <div class="hc-top">
+            <span class="hc-status-label">COMPLETED</span>
+            <span class="hc-check">✔</span>
+          </div>
+          <div class="hc-title">Semester 3</div>
+          <div class="hc-courses">ADSA, RANAC, OS, OOP, DBMS, PC</div>
+          <div class="hc-footer">
+            <span class="hc-credits teal">⊕ 22 Credits</span>
+            <button class="hc-view-btn dark" onclick="openSemModal(3)">View</button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- PLAN FOR FUTURE SEMESTER -->
+    <section class="section-block plan-section">
+      <div class="plan-header">
+        <div>
+          <div class="plan-label">Plan for Future Semester</div>
+          <div class="select-wrapper-inline">
+            <select id="semSelect" class="styled-select" onchange="onSemChange()">
+            <option value="">— Select Semester —</option>
+            <option value="5">Semester 5</option>
+            <option value="6">Semester 6</option>
+            <option value="7">Semester 7</option>
+            <option value="8">Semester 8</option>
+            </select>
+            <span class="sel-arrow">▾</span>
+          </div>
+        </div>
+        <div class="plan-hint" id="planHint">Select a semester to view available courses and prerequisites.</div>
+      </div>
+    </section>
+
+    <!-- COURSES OFFERED -->
+    <section class="section-block" id="coursesSection" style="display:none">
+      <div class="section-heading">
+        <span class="section-icon">📋</span>
+        <h2 id="coursesHeading">Courses Offered (Semester 4)</h2>
+      </div>
+      <div id="semTabs" class="sem-tabs"></div>
+      <div class="courses-grid" id="coursesGrid"></div>
+    </section>
+
+  </main>
+
+  <!-- STICKY FOOTER BAR -->
+    <div class="sticky-bar" id="stickyBar" style="display:none">
+    <div class="sticky-left">
+        <span class="progress-label">PROGRESS</span>
+        <span class="credits-text">Total Selected Credits: <span id="totalCredits" class="credits-num">0</span></span>
+        <span class="credit-warning" id="creditWarning" style="display:none">⚠ Credit limit exceeded</span>
+    </div>
+    <button class="generate-btn" id="generateBtn" onclick="generateRoadmap()">✦ Generate Academic Roadmap</button>
+    </div>
+
+  <!-- ROADMAP RESULT VIEW (hidden until Generate is clicked) -->
+  <div id="roadmapView" style="display:none">
+    <main class="main-content">
+      <div class="page-title">
+        <h1>Academic Roadmap</h1>
+        <p>Your personalized semester-wise learning plan based on selected courses.</p>
+      </div>
+      <div class="roadmap-cards-row" id="roadmapCardsRow"></div>
+      <div class="roadmap-actions">
+        <button class="edit-btn" onclick="backToPlan()">✎ Edit Selected Courses</button>
+        <button class="dark-btn download-btn" onclick="downloadRoadmapPDF()">⬇ Download and Export as PDF</button>
+      </div>
+    </main>
+    <div id="footer-placeholder-2"></div>
+  </div>
+
+  <!-- SEM DETAIL MODAL -->
+  <div class="popup-bg" id="semModal">
+    <div class="popup sem-popup">
+      <div class="sem-popup-header" id="semPopupHeader">
+        <div>
+          <div class="sem-popup-title" id="semPopupTitle">Semester 1</div>
+          <div class="sem-popup-date" id="semPopupDate">Fall 2024 – Winter 2025</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="current-chip" id="semPopupChip" style="display:none">CURRENT</span>
+          <button class="close-btn" onclick="closePopup('semModal')">✕</button>
+        </div>
+      </div>
+      <div class="sem-popup-body" id="semPopupBody"></div>
+      <div class="sem-popup-footer">
+        <span class="footer-label">TOTAL CREDITS</span>
+        <span class="footer-credits" id="semPopupCredits">20 Credits</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="footer-placeholder"></div>
+  <div class="toast" id="toast">✅ PDF downloaded successfully!</div>
+
+  <script src="js/student_loader.js"></script>
+  <script src="js/student_Roadmap.js"></script>
+  <script>
+    loadSharedComponents('student_Roadmap.html');
+  </script>
+</body>
+</html>

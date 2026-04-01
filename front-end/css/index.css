@@ -221,3 +221,77 @@
   margin-left: 16px;
   color: #cbd5e1;
 }
+
+/* ==========================================================================
+   CUSTOM CONTACT TOAST (Bottom Center) - Figma Match
+   ========================================================================== */
+
+.contact-toast-container {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px); /* Starts hidden below the screen */
+    background-color: #112a46; /* The exact dark navy from the image */
+    color: #ffffff;
+    padding: 12px 24px 12px 16px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease, visibility 0.4s;
+    font-family: 'Inter', sans-serif;
+    min-width: 280px;
+}
+
+/* Class added via JS to slide it up */
+.contact-toast-container.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+    visibility: visible;
+}
+
+.toast-icon-circle {
+    background-color: #ffffff;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.toast-icon-circle svg {
+    width: 16px;
+    height: 16px;
+    color: #112a46; /* Navy blue checkmark */
+}
+
+.toast-message-text {
+    font-size: 1.1rem;
+    font-weight: 500;
+    flex-grow: 1;
+    letter-spacing: 0.3px;
+}
+
+.toast-close-btn {
+    background: none;
+    border: none;
+    color: #9ca3af;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+    margin-left: 8px;
+}
+
+.toast-close-btn:hover {
+    color: #ffffff;
+}

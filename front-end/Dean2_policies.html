@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lumina - Academic Terms &amp; Policies</title>
+    <link rel="stylesheet" href="css/Dean2_styles.css">
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+        <div class="logo-icon">
+            <img src="assets/icons/logo.svg" alt="Lumina Logo" width="20" height="20">
+        </div>
+        Lumina
+    </div>
+
+        <nav class="main-nav">
+            <a href="Dean2_index.html">Home</a>
+            <a href="Dean2_policies.html" class="active">Academic Terms &amp; Policies</a>
+            <a href="Dean2_enrollment.html">Enrollment Configuration</a>
+            <a href="Dean2_overrides.html">Override Requests</a>
+            <a href="Dean2_analytics.html">Enrollment Analytics</a>
+        </nav>
+
+        <div class="user-controls">
+            <div class="notification-wrapper">
+                <span class="notif-bell">🔔</span>
+                <div class="notif-dot"></div>
+            </div>
+            <div class="user-info">
+                <div class="user-text">
+                    <h4>Dr. Sarah Jenkins</h4>
+                    <p>Assistant Dean 2</p>
+                </div>
+                <img src="https://ui-avatars.com/api/?name=Sarah+Jenkins&background=f0e6ff&color=5c3c92" alt="Avatar" class="avatar">
+            </div>
+        <a href="login.html" class="sign-out" id="signOutBtn">
+            Sign Out 
+            <img src="assets/icons/logout.svg" alt="Logout" width="16" height="16" style="vertical-align: middle; margin-left: 5px;">
+        </a>
+    </div>
+    </header>
+
+    <main class="container">
+        <div class="page-header">
+            <h1>Academic &amp; Enrollment Policies</h1>
+            <p>Define and manage academic rules and enrollment policies for the current enrollment term.</p>
+        </div>
+
+        <div class="policies-layout">
+            <!-- Left: Main Settings -->
+            <div class="policies-main">
+
+                <!-- Academic Term Settings -->
+                <div class="card">
+                    <div class="policy-section-title">📅 Academic Term Settings</div>
+
+                    <div class="info-banner" id="termLockedBanner">
+                        🔒 Term is currently locked. Click "Unlock Term" to make changes.
+                    </div>
+
+                    <div style="display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap;">
+                        <div class="form-group" style="flex:1;min-width:160px;margin:0;">
+                            <label>Academic Year</label>
+                            <select id="academicYearInput">
+                                <option value="">Select Year...</option>
+                                <option value="2024-2025">2024-2025</option>
+                                <option value="2025-2026">2025-2026</option>
+                                <option value="2026-2027">2026-2027</option>
+                                <option value="2027-2028">2027-2028</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex:1;min-width:140px;margin:0;">
+                            <label>Term</label>
+                            <select id="termSelect">
+                                <option value="Spring">Spring</option>
+                                <option value="Monsoon">Monsoon</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" id="lockTermBtn" style="height:42px;">🔒 Lock Term</button>
+                        <button class="btn btn-outline" id="unlockTermBtn" style="height:42px;display:none;">🔓 Unlock Term</button>
+                    </div>
+                </div>
+
+                <!-- Credit & Prereq -->
+                <div class="two-col">
+                    <div class="card" style="margin:0;">
+                        <div class="policy-section-title">💳 Credit Limit Policy</div>
+                        <div class="form-group">
+                            <label>Minimum Credits Allowed</label>
+                            <input type="number" id="minCredits" value="12" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Maximum Credits Allowed</label>
+                            <input type="number" id="maxCredits" value="21" min="0">
+                        </div>
+                        <div class="form-group" style="margin:0;">
+                            <label>Maximum Courses Allowed</label>
+                            <input type="number" id="maxCourses" value="6" min="0">
+                        </div>
+                    </div>
+
+                    <div class="card" style="margin:0;">
+                        <div class="policy-section-title">🛡️ Prerequisite Policy</div>
+                        <div class="toggle-row">
+                            <span>Enforce Prerequisite Checking</span>
+                            <label class="switch"><input type="checkbox" id="togglePrereq"><span class="slider"></span></label>
+                        </div>
+                        <div class="toggle-row">
+                            <span>Allow Conditional Enrollment</span>
+                            <label class="switch"><input type="checkbox" id="toggleCond"><span class="slider"></span></label>
+                        </div>
+                        <div class="toggle-row" style="margin:0;">
+                            <span>Allow Advisor Override</span>
+                            <label class="switch"><input type="checkbox" id="toggleAdvOver"><span class="slider"></span></label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Eligibility Rules -->
+                <div class="card">
+                    <div class="policy-section-title">⚖️ Enrollment Eligibility Rules</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.5rem;align-items:center;">
+                        <div class="form-group" style="margin:0;">
+                            <label>Min GPA Required</label>
+                            <input type="number" step="0.1" id="minGpa" value="5.0" min="0">
+                        </div>
+                        <div>
+                            <div class="toggle-row" style="margin:0;">
+                                <span>Financial Clearance Required</span>
+                                <label class="switch"><input type="checkbox" id="toggleFinance"><span class="slider"></span></label>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="toggle-row" style="margin:0;">
+                                <span>Advisor Approval Required</span>
+                                <label class="switch"><input type="checkbox" id="toggleAdvApprove"><span class="slider"></span></label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right: Change Log Sidebar -->
+            <div>
+                <div class="card" style="height:fit-content;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
+                        <div class="policy-section-title" style="margin:0;">Policy Change Log</div>
+                        <span style="font-size:1rem;">⏱️</span>
+                    </div>
+                    <div class="change-log" id="policyChangeLog">
+                        <!-- Rendered by JS -->
+                    </div>
+                    <button class="btn btn-outline" style="width:100%;margin-top:0.75rem;">View All Logs</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Policy Status Banner -->
+        <div class="policy-status-banner card" id="policyStatusBanner">
+            <div class="status-left">
+                <div class="status-icon" id="policyStatusIcon">✓</div>
+                <div>
+                    <div style="font-weight:700;font-size:1rem;margin-bottom:2px;" id="policyStatusTitle">Policy Status – Validated</div>
+                    <div style="font-size:0.85rem;" id="policyStatusDesc">All current policies meet academic board standards.</div>
+                </div>
+            </div>
+            <div class="status-banner-actions">
+                <button class="btn btn-outline" id="validatePolicies">Validate Policies</button>
+                <button class="btn btn-green" id="lockPolicies">Lock Policies</button>
+                <button class="btn btn-ghost" id="unlockPolicies">Unlock Policies</button>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+    <div class="footer-top">
+        <div class="logo-group">
+            <div class="logo-white" style="width:28px;height:28px;padding:5px;">
+                <img src="assets/icons/logo_white.svg" alt="Lumina Logo" width="18" height="18">
+            </div>
+            <span class="logo-text">Lumina</span>
+        </div>
+        <nav class="footer-nav">
+            <a href="#">Help Desk</a>
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+        </nav>
+    </div>
+    <div class="footer-bottom">
+        <p>© 2026 Lumina Academic Systems. All rights reserved.</p>
+        <div class="social-links">
+            <a href="#">Twitter</a>
+            <a href="#">LinkedIn</a>
+            <a href="#">GitHub</a>
+        </div>
+    </div>
+</footer> 
+
+    <script src="js/Dean2_app.js"></script>
+    <script src="js/Dean2_database.js"></script>
+</body>
+</html>

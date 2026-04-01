@@ -55,10 +55,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Route to dashboard
                 switch (validUser.Role) {
-                    case 'Student': window.location.href = 'student.html'; break;
-                    case 'Faculty': window.location.href = 'faculty.html'; break;
-                    case 'Assistant_Dean_1': window.location.href = 'admin1.html'; break;
-                    case 'Assistant_Dean_2': window.location.href = 'admin2.html'; break;
+                    case 'Student': window.location.href = 'student_index.html'; break;
+                    case 'Faculty': window.location.href = 'faculty_home.html'; break;
+                    case 'Assistant_Dean_1': window.location.href = 'Dean1_dashboard.html'; break;
+                    case 'Assistant_Dean_2': window.location.href = 'Dean2_index.html'; break;
                     case 'Dean': window.location.href = 'dean.html'; break;
                     default: console.error("Unknown role.");
                 }

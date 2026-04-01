@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+
+  <!-- This makes the page look correct on mobile phones -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Lumina – Student Dashboard</title>
+
+  <!-- Link to our CSS file for styling -->
+  <link rel="stylesheet" href="css/student_style.css" />
+
+  <!-- Google Font (nicer looking text) -->
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <script src="js/mockData.js"></script>
+
+  <div id="navbar-placeholder"></div>
+
+
+  <!-- ==============================
+       MAIN PAGE CONTENT
+  ============================== -->
+  <main class="main-content">
+
+    <!-- Page title and subtitle -->
+    <div class="page-title">
+      <h1>Student Dashboard</h1>
+      <p>Manage your academic journey efficiently</p>
+    </div>
+
+
+    <!-- ---- TOP ROW: 3 cards side by side ---- -->
+    <div class="top-row">
+
+
+      <!-- CARD 1: My Courses -->
+      <div class="card">
+        <div class="card-title">
+          <span>📄</span>
+          <h2>My Courses</h2>
+        </div>
+
+        <!-- List of 3 courses shown in the card -->
+        <div class="course-item">
+          <div class="course-name">IC241: Computer Communication Networks</div>
+          <div class="course-prof">Dr. Arun P V</div>
+        </div>
+        <div class="course-item">
+          <div class="course-name">PC241: Artificial Intelligence</div>
+          <div class="course-prof">Dr. Megha R</div>
+        </div>
+        <div class="course-item">
+          <div class="course-name">No course enrolled</div>
+          <div class="course-prof">Use Course Registration to add courses</div>
+        </div>
+
+        <!-- Button to open the "My Courses" popup -->
+        <button class="text-btn" id="viewAllBtn">View all 2 courses</button>
+      </div>
+
+
+      <!-- CARD 2: Next Class -->
+      <div class="card card-center">
+        <div class="card-title">
+          <span>🕐</span>
+          <h2>Next Class</h2>
+        </div>
+
+        <div class="next-class-info">
+          <h3>IC241: Computer Communication Networks</h3>
+          <p>📅 Monday, Apr 2, 2026</p>
+          <p>🕐 11:00 AM – 12:00 PM</p>
+          <p>📍 Acad Block, G04</p>
+        </div>
+      </div>
+
+
+      <!-- CARD 3: Week's Timetable (mini grid preview) -->
+      <div class="card">
+        <div class="card-title">
+          <span>📅</span>
+          <h2>Week's Timetable</h2>
+        </div>
+
+        <!-- Mini timetable grid (just coloured boxes as a preview) -->
+        <div class="mini-timetable">
+          <div class="tt-days">
+            <span>MON</span>
+            <span>TUE</span>
+            <span>WED</span>
+            <span>THU</span>
+            <span>FRI</span>
+          </div>
+
+          <!-- Each row = one time slot. Coloured boxes = class exists -->
+          <div class="tt-row">
+            <div class="tt-box filled"></div>
+            <div class="tt-box filled blue"></div>
+            <div class="tt-box"></div>
+            <div class="tt-box filled"></div>
+            <div class="tt-box filled dark"></div>
+          </div>
+          <div class="tt-row">
+            <div class="tt-box filled"></div>
+            <div class="tt-box"></div>
+            <div class="tt-box filled blue"></div>
+            <div class="tt-box filled"></div>
+            <div class="tt-box"></div>
+          </div>
+          <div class="tt-row">
+            <div class="tt-box"></div>
+            <div class="tt-box filled blue"></div>
+            <div class="tt-box"></div>
+            <div class="tt-box"></div>
+            <div class="tt-box filled blue"></div>
+          </div>
+          <div class="tt-row">
+            <div class="tt-box filled blue"></div>
+            <div class="tt-box"></div>
+            <div class="tt-box filled"></div>
+            <div class="tt-box"></div>
+            <div class="tt-box"></div>
+          </div>
+        </div>
+
+        <!-- Button to open the full timetable popup -->
+        <button class="text-btn" id="fullScheduleBtn">Full Schedule ↗</button>
+      </div>
+
+
+    </div><!-- end top-row -->
+
+
+    <!-- ---- BOTTOM ROW: 2 cards side by side ---- -->
+    <div class="bottom-row">
+
+
+      <!-- CARD 4: Latest Announcements -->
+      <div class="card">
+        <div class="card-title">
+          <span>📢</span>
+          <h2>Latest Announcements</h2>
+        </div>
+
+        <!-- Empty state - shown when there are no announcements -->
+        <div class="empty-box">
+          <div class="empty-icon">📥</div>
+          <p class="empty-text">No new announcements today</p>
+          <p class="empty-subtext">We'll notify you when something important comes up.</p>
+        </div>
+      </div>
+
+
+      <div class="card">
+        <div class="card-title">
+          <span>📈</span>
+          <h2>Gradesheets</h2>
+        </div>
+        
+        <div class="sem-badge-inner">
+          <div class="sem-badge-top">
+            <span class="sem-badge-dot"></span>
+            <span class="sem-badge-status">IN PROGRESS</span>
+          </div>
+          <div class="sem-badge-main" id="semBadgeMain">UG–2 · Spring Semester</div>
+          <div class="sem-badge-sub" id="semBadgeSub">Jan 2026 – May 2026 · Semester 4 of 8</div>
+        </div>
+
+        <div class="gradesheet-row">
+          <span class="file-icon">📄</span>
+          <div class="gradesheet-text">
+            <div class="gradesheet-name">Previous Semester (Monsoon)</div>
+            <div class="gradesheet-date">Released: Dec 15, 2025</div>
+          </div>
+          <button class="dark-btn" id="downloadGradeBtn">Download pdf</button>
+        </div>
+
+        <div class="gpa-row">
+          <span>Cumulative GPA:</span>
+          <span class="gpa-number">8.9 / 10.0</span>
+        </div>
+      </div>
+  </main><!-- end main-content -->
+
+
+  <div id="footer-placeholder"></div>
+
+
+  <!-- ==============================
+       POPUP 1: My Courses (full list)
+       Hidden by default. JS shows it.
+  ============================== -->
+  <div class="popup-bg" id="coursesPopup">
+    <div class="popup">
+
+      <!-- Popup title + close button -->
+      <div class="popup-header">
+        <h2>My Courses</h2>
+        <button class="close-btn" onclick="closePopup('coursesPopup')">✕</button>
+      </div>
+
+      <!-- List of enrolled courses -->
+      <div class="popup-body">
+
+        <div class="popup-course-row">
+          <div class="popup-course-left">
+            <div class="course-icon">💻</div>
+            <div>
+              <div class="popup-course-name">IC241 Computer Communication Networks</div>
+              <div class="popup-course-credits">4 credits •</div>
+            </div>
+          </div>
+          <button class="dark-btn small-btn" onclick="openCourseDetail('IC241')">View</button>
+        </div>
+
+        <div class="popup-course-row">
+          <div class="popup-course-left">
+            <div class="course-icon">∑</div>
+            <div>
+              <div class="popup-course-name">PC241 Artificial Intelligence</div>
+              <div class="popup-course-credits">4 credits •</div>
+            </div>
+          </div>
+          <button class="dark-btn small-btn" onclick="openCourseDetail('PC241')">View</button>
+        </div>
+
+        <!-- <div class="popup-course-row">
+          <div class="popup-course-left">
+            <div class="course-icon">〜</div>
+            <div>
+              <div class="popup-course-name">EE102 Signals and Systems</div>
+              <div class="popup-course-credits">4 credits •</div>
+            </div>
+          </div>
+          <button class="dark-btn small-btn" onclick="openCourseDetail('Signals and Systems')">View</button>
+        </div>
+
+        <div class="popup-course-row">
+          <div class="popup-course-left">
+            <div class="course-icon">🖥</div>
+            <div>
+              <div class="popup-course-name">CS251 Computer Architecture</div>
+              <div class="popup-course-credits">4 credits •</div>
+            </div>
+          </div>
+          <button class="dark-btn small-btn" onclick="openCourseDetail('Computer Architecture')">View</button>
+        </div>
+
+        <div class="popup-course-row">
+          <div class="popup-course-left">
+            <div class="course-icon">⚙</div>
+            <div>
+              <div class="popup-course-name">CS227 Operating Systems</div>
+              <div class="popup-course-credits">4 credits •</div>
+            </div>
+          </div>
+          <button class="dark-btn small-btn" onclick="openCourseDetail('Operating Systems')">View</button>
+        </div> -->
+
+      </div><!-- end popup-body -->
+    </div>
+  </div>
+
+
+  <!-- ==============================
+       POPUP 2: Course Detail (modules)
+       Hidden by default. JS shows it.
+  ============================== -->
+  <div class="popup-bg" id="courseDetailPopup">
+    <div class="popup">
+
+      <!-- Dark header with course name -->
+      <div class="popup-header dark-popup-header">
+        <h2 id="courseDetailTitle">Advanced Data Structures</h2>
+        <button class="close-btn white-close" onclick="closePopup('courseDetailPopup')">✕</button>
+      </div>
+
+      <!-- List of modules to download -->
+      <div class="popup-body">
+        <div class="module-row">
+          <div class="module-bar"></div>
+          <span class="module-name">Syllabus</span>
+          <button class="dark-btn small-btn">Download</button>
+        </div>
+        <div class="module-row">
+          <div class="module-bar"></div>
+          <span class="module-name">Module – 1</span>
+          <button class="dark-btn small-btn">Download</button>
+        </div>
+        <div class="module-row">
+          <div class="module-bar"></div>
+          <span class="module-name">Module – 2</span>
+          <button class="dark-btn small-btn">Download</button>
+        </div>
+        <div class="module-row">
+          <div class="module-bar"></div>
+          <span class="module-name">Module – 3</span>
+          <button class="dark-btn small-btn">Download</button>
+        </div>
+        <div class="module-row">
+          <div class="module-bar"></div>
+          <span class="module-name">Module – 4</span>
+          <button class="dark-btn small-btn">Download</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ==============================
+       POPUP 3: Full Weekly Timetable
+       Hidden by default. JS shows it.
+  ============================== -->
+  <div class="popup-bg" id="timetablePopup">
+    <div class="popup popup-wide">
+
+      <!-- Popup title + close -->
+      <div class="popup-header">
+        <div class="tt-popup-title">
+          <span class="tt-cal-icon">📅</span>
+          <h2>Weekly Time Table</h2>
+        </div>
+        <button class="close-btn" onclick="closePopup('timetablePopup')">✕</button>
+      </div>
+
+      <!-- Timetable (scrolls horizontally on small screens) -->
+      <div class="tt-scroll">
+        <table class="timetable">
+          <thead>
+            <tr>
+              <th>TIME</th>
+              <th>Monday</th>
+              <th>Tuesday</th>
+              <th>Wednesday</th>
+              <th>Thursday</th>
+              <th>Friday</th>
+            </tr>
+          </thead>
+          <tbody>
+
+            <tr>
+              <td class="time-col">08:45 AM<br>09:45 AM</td>
+              <td><div class="slot dark-slot">FFSD1<br><small>Room: G07</small></div></td>
+              <td><div class="slot light-slot">TOC1<br><small>Room: G05</small></div></td>
+              <td></td>
+              <td><div class="slot dark-slot">AI1<br><small>Room: G04</small></div></td>
+              <td></td>
+            </tr>
+
+            <tr>
+              <td class="time-col">09:45 AM<br>10:45 AM</td>
+              <td><div class="slot dark-slot">FFSD1<br><small>Room: G07</small></div></td>
+              <td></td>
+              <td><div class="slot teal-slot">CCN1<br><small>Room: G07</small></div></td>
+              <td></td>
+              <td><div class="slot light-slot">ACS1<br><small>Room: G05</small></div></td>
+            </tr>
+
+            <!-- Break row -->
+            <tr class="break-row">
+              <td class="break-label">BREAK</td>
+              <td colspan="5" class="break-time">10:45 AM – 11:00 AM</td>
+            </tr>
+
+            <tr>
+              <td class="time-col">11:00 AM<br>12:00 PM</td>
+              <td></td>
+              <td><div class="slot light-slot">LR1<br><small>Room: G06</small></div></td>
+              <td></td>
+              <td><div class="slot dark-slot">AI1<br><small>Room: G04</small></div></td>
+              <td></td>
+            </tr>
+
+            <tr>
+              <td class="time-col">12:00 PM<br>01:00 PM</td>
+              <td><div class="slot dark-slot">CCN1<br><small>Room: G07</small></div></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td><div class="slot light-slot">TOC1<br><small>Room: G05</small></div></td>
+            </tr>
+
+            <!-- Gap row -->
+            <tr class="break-row">
+              <td class="break-label">GAP</td>
+              <td colspan="5"></td>
+            </tr>
+
+            <tr>
+              <td class="time-col">02:15 PM<br>03:15 PM</td>
+              <td></td>
+              <td><div class="slot light-slot">AI1<br><small>Room: G05 1</small></div></td>
+              <td></td>
+              <td><div class="slot dark-slot">FFSD1<br><small>Room: G07</small></div></td>
+              <td></td>
+            </tr>
+
+            <tr>
+              <td class="time-col">03:15 PM<br>04:15 PM</td>
+              <td><div class="slot dark-slot">ACS1<br><small>Room: G06</small></div></td>
+              <td></td>
+              <td><div class="slot teal-slot">CCN1<br><small>Room: G04</small></div></td>
+              <td></td>
+              <td></td>
+            </tr>
+
+            <!-- Break row -->
+            <tr class="break-row">
+              <td class="break-label">BREAK</td>
+              <td colspan="5" class="break-time">4:15 PM – 4:30 PM</td>
+            </tr>
+
+            <tr>
+              <td class="time-col">04:30 PM<br>05:30 PM</td>
+              <td></td>
+              <td><div class="slot light-slot">TOC1<br><small>Room: G05</small></div></td>
+              <td></td>
+              <td></td>
+              <td><div class="slot light-slot">LR1<br><small>Room: G07</small></div></td>
+            </tr>
+
+            <tr>
+              <td class="time-col">05:30 PM<br>06:30 PM</td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td><div class="slot dark-slot">ACS1<br><small>Room: G06</small></div></td>
+              <td></td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div><!-- end tt-scroll -->
+
+      <!-- Download button at bottom -->
+      <div class="tt-footer">
+        <button class="dark-btn">Download PDF</button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ==============================
+       TOAST NOTIFICATION
+       Small green bar that slides up
+       from the bottom-right on download.
+       Hidden by default, JS shows it.
+  ============================== -->
+  <div class="toast" id="toast">
+    ✅ PDF downloaded successfully!
+  </div>
+
+
+  <script src="js/student_loader.js"></script>
+  <script src="js/student_App.js"></script>
+  <script>
+    // Tell the loader which page is active so the right nav link is highlighted
+    loadSharedComponents('student_index.html');
+  </script>
+
+</body>
+</html>

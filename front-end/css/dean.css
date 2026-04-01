@@ -1,0 +1,264 @@
+/* ==========================================================================
+   DEAN DASHBOARD STYLES (dean.css) - Figma Match
+   ========================================================================== */
+
+.dashboard-body {
+    background-color: #f3f4f6;
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+}
+
+/* --- Header --- */
+.dashboard-header {
+    background-color: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 0 5%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 70px;
+}
+.header-left, .header-right { display: flex; align-items: center; gap: 24px; }
+.dean-nav a {
+    text-decoration: none;
+    color: #111827;
+    font-weight: 500;
+    padding: 8px 16px;
+    background-color: #e5e7eb;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+.user-profile { display: flex; align-items: center; gap: 12px; }
+.user-role { font-weight: 600; font-size: 0.9rem; color: #111827;}
+.avatar-circle { width: 36px; height: 36px; background-color: #fed7aa; border-radius: 50%; }
+.sign-out-btn { all: unset; cursor: pointer; display: flex; align-items: center; gap: 8px; color: #374151; font-size: 0.9rem; font-weight: 500; }
+
+/* --- Main Layout --- */
+.dashboard-main { padding: 40px 5%; max-width: 1400px; margin: 0 auto; }
+.page-header h1 { margin: 0 0 8px 0; color: #111827; font-size: 2rem; }
+.text-muted { color: #6b7280; font-size: 0.95rem; }
+
+/* --- Grids --- */
+.top-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 32px; }
+.bottom-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px; margin-top: 24px; }
+.dash-card { background: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+.card-title { margin: 0 0 20px 0; font-size: 1.1rem; color: #111827; display: flex; align-items: center; gap: 8px; }
+.card-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+
+/* --- Assistant Deans List --- */
+.dean-row { display: flex; align-items: center; justify-content: space-between; padding: 12px; background-color: #f9fafb; border-radius: 8px; margin-bottom: 12px; }
+.dean-info { display: flex; align-items: center; gap: 12px; font-weight: 500; font-size: 0.95rem; color: #111827; }
+.dean-avatar { width: 32px; height: 32px; background-color: #cbd5e1; border-radius: 50%; }
+.badge-active { background-color: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 50px; font-size: 0.7rem; font-weight: 700; }
+
+/* --- Alert Boxes --- */
+.alert-box { padding: 16px; border-radius: 8px; margin-bottom: 16px; }
+.alert-high { background-color: #fef2f2; border-left: 4px solid #ef4444; }
+.alert-minor { background-color: #fffbeb; border-left: 4px solid #f59e0b; }
+.alert-box h4 { margin: 0 0 8px 0; font-size: 0.95rem; color: #991b1b; }
+.alert-minor h4 { color: #b45309; }
+.alert-box p { margin: 0; font-size: 0.85rem; color: #4b5563; line-height: 1.4; }
+.alert-link { display: inline-block; margin-top: 12px; font-size: 0.85rem; color: #2563eb; text-decoration: none; font-weight: 500; }
+
+/* --- Timeline / Calendar --- */
+.timeline-item { display: flex; gap: 16px; margin-bottom: 20px; }
+.date-box { background-color: #eff6ff; color: #1d4ed8; border-radius: 8px; padding: 8px 12px; text-align: center; min-width: 45px; }
+.date-box.bg-gray { background-color: #f3f4f6; color: #4b5563; }
+.date-box .month { display: block; font-size: 0.7rem; font-weight: 700; }
+.date-box .day { display: block; font-size: 1.2rem; font-weight: 700; }
+.timeline-content h4 { margin: 0 0 4px 0; font-size: 0.95rem; color: #111827; }
+.timeline-content p { margin: 0; font-size: 0.85rem; color: #6b7280; }
+
+/* --- Progress Bars --- */
+.stat-block { margin-bottom: 24px; }
+.stat-text-row { display: flex; justify-content: space-between; margin-bottom: 8px; }
+.stat-name { font-weight: 600; font-size: 0.95rem; color: #111827; }
+.stat-value { font-weight: 700; color: #2563eb; }
+.progress-track { width: 100%; height: 12px; background-color: #f1f5f9; border-radius: 50px; overflow: hidden; margin-bottom: 8px;}
+.progress-fill { height: 100%; background-color: #2563eb; border-radius: 50px; transition: width 0.5s ease-in-out;}
+.stat-subtext { margin: 0; font-size: 0.8rem; color: #6b7280; }
+.mt-4 { margin-top: 32px; }
+
+/* --- Audit Logs --- */
+.audit-list { list-style: none; padding: 0; margin: 0; }
+.audit-item { display: flex; align-items: center; margin-bottom: 20px; font-size: 0.9rem; color: #4b5563; }
+.audit-item.active { color: #111827; font-weight: 500; }
+.audit-dot { width: 8px; height: 8px; background-color: #cbd5e1; border-radius: 50%; margin-right: 12px; flex-shrink: 0;}
+.audit-dot.blue { background-color: #3b82f6; }
+.audit-text { flex: 1; }
+.audit-time { font-size: 0.75rem; color: #9ca3af; }
+
+/* ==========================================================================
+   CRUD MODAL STYLES
+   ========================================================================== */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(17, 24, 39, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 1000; opacity: 1; transition: opacity 0.2s ease;
+}
+.modal-overlay.hidden { opacity: 0; pointer-events: none; }
+.modal-content {
+    background: #ffffff; width: 100%; max-width: 500px;
+    border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    transform: translateY(0); transition: transform 0.2s ease;
+}
+.modal-overlay.hidden .modal-content { transform: translateY(-20px); }
+.modal-header { padding: 20px 24px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
+.modal-header h2 { margin: 0; font-size: 1.25rem; color: #111827; }
+.close-btn { background: none; border: none; font-size: 1.5rem; color: #9ca3af; cursor: pointer; }
+.close-btn:hover { color: #111827; }
+.modal-form { padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+.modal-form label { font-size: 0.85rem; font-weight: 600; color: #374151; margin-bottom: 4px; display: block;}
+.modal-actions { display: flex; align-items: center; gap: 12px; margin-top: 16px; border-top: 1px solid #e5e7eb; padding-top: 24px; }
+.btn-danger {
+    background-color: #fef2f2; color: #dc2626; border: 1px solid #fecaca;
+    padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+.btn-danger:hover { background-color: #fee2e2; border-color: #f87171; }
+.hidden { display: none !important; }
+
+/* --- Form Inputs & Sleek Dropdowns --- */
+.form-input, .form-select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    background-color: #ffffff;
+    color: #111827;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+    font-family: inherit;
+}
+
+.form-input:focus, .form-select:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Custom Dropdown Arrow */
+.form-select {
+    appearance: none; /* Removes native OS styling */
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M5%207.5L10%2012.5L15%207.5%22%20stroke%3D%22%236B7280%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 40px; /* Make room for the arrow */
+}
+
+/* --- Toast Notification System --- */
+/* --- Premium Toast Notification System --- */
+.toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 9999;
+}
+
+.toast {
+    background-color: #ffffff;
+    border-radius: 8px;
+    color: #111827;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    min-width: 300px;
+    animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.toast.success { border-left: 4px solid #10b981; }
+.toast.error { border-left: 4px solid #ef4444; }
+
+.toast-icon { font-size: 1.25rem; }
+.toast-content { display: flex; flex-direction: column; gap: 4px; }
+.toast-title { font-weight: 600; font-size: 0.95rem; }
+.toast.success .toast-title { color: #047857; }
+.toast.error .toast-title { color: #b91c1c; }
+.toast-message { font-size: 0.85rem; color: #4b5563; font-weight: 400; line-height: 1.4; }
+
+@keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* ==========================================================================
+   CUSTOM DOWNLOAD TOAST (Bottom Center)
+   ========================================================================== */
+
+.contact-toast-container {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px); 
+    background-color: #112a46; 
+    color: #ffffff;
+    padding: 12px 24px 12px 16px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease, visibility 0.4s;
+    min-width: 280px;
+}
+
+.contact-toast-container.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+    visibility: visible;
+}
+
+.toast-icon-circle {
+    background-color: #ffffff;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.toast-icon-circle svg {
+    width: 16px;
+    height: 16px;
+    color: #112a46; 
+}
+
+.toast-message-text {
+    font-size: 1.1rem;
+    font-weight: 500;
+    flex-grow: 1;
+    letter-spacing: 0.3px;
+}
+
+.toast-close-btn {
+    background: none;
+    border: none;
+    color: #9ca3af;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+    margin-left: 8px;
+}
+
+.toast-close-btn:hover {
+    color: #ffffff;
+}

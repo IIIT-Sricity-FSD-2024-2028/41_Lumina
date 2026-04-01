@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Lumina — Course Section Allocation for Assistant Dean 1.">
+  <title>Lumina — Course Section Allocation</title>
+  <link rel="stylesheet" href="css/Dean1_shared.css">
+  <link rel="stylesheet" href="css/Dean1_course-section.css">
+</head>
+
+<body>
+
+  <header id="navbar" class="navbar"></header>
+
+  <main class="main-content">
+
+    <!-- ── Page Header ── -->
+    <div class="page-header">
+      <h1 class="page-title">Course Section Allocation</h1>
+      <p class="page-subtitle">Manage student assignments across sections, import rosters, and keep section distribution organized.</p>
+    </div>
+
+    <!-- ── Filter Bar ── -->
+    <div class="filter-bar card">
+      <div class="filter-group">
+        <label class="filter-label" for="filterTerm">Academic Term</label>
+        <select class="select-field select-field--static" id="filterTerm" disabled>
+          <option value="Monsoon 2026" selected>Monsoon 2026</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label" for="filterUG">UG Year</label>
+        <select class="select-field" id="filterUG">
+          <option value="" disabled selected>Select Year</option>
+          <option value="UG1">UG1</option>
+          <option value="UG2">UG2</option>
+          <option value="UG3">UG3</option>
+          <option value="UG4">UG4</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label" for="filterType">Course Type</label>
+        <select class="select-field" id="filterType">
+          <option value="" disabled selected>Select Type</option>
+          <option value="Institute Core">Institute Core</option>
+          <option value="Program Core">Program Core</option>
+          <option value="Elective">Elective</option>
+          <option value="Seed Course">Seed Course</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label" for="filterDept">Department</label>
+        <select class="select-field" id="filterDept">
+          <option value="" disabled selected>Select Dept</option>
+          <option value="All Departments">All Departments</option>
+          <option value="CSE">CSE</option>
+          <option value="ECE">ECE</option>
+          <option value="AIDS">AIDS</option>
+        </select>
+      </div>
+
+      <div class="filter-group" style="flex: 1.5;">
+        <label class="filter-label" for="filterCourse">Course</label>
+        <select class="select-field" id="filterCourse">
+          <option value="" disabled selected>Select Course</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label" for="filterSection">Show Section</label>
+        <select class="select-field" id="filterSection">
+          <option value="" disabled selected>Select Section</option>
+          <!-- Options populated dynamically based on Course -->
+        </select>
+      </div>
+      
+      <div class="filter-group" id="configSectionsGroup" style="display: none; align-items: flex-end;">
+        <button class="btn btn--secondary btn--sm" id="configureSectionsBtn" style="height: 38px; padding: 0 12px;" title="Configure Sections">⚙️ Config</button>
+      </div>
+    </div>
+
+    <!-- ── Top Stats ── -->
+    <section class="stat-cards" id="statCards">
+      <!-- JS Rendered -->
+    </section>
+
+    <!-- ── Section Cards Panel ── -->
+    <div class="section-cards-wrapper" id="sectionCardsWrapper" style="display: none;">
+      <h2 class="section-cards-title">Section Overview</h2>
+      <div class="section-cards" id="sectionCards">
+        <!-- JS Rendered -->
+      </div>
+    </div>
+
+    <!-- ── Workspace (Main View) ── -->
+    <div class="workspace card">
+      
+      <div class="workspace-header">
+        <div class="workspace-search">
+          <input type="text" id="searchStudent" class="input-field" placeholder="Search by ID or Name...">
+          <button class="btn btn--secondary" id="searchBtn">🔍 Filter</button>
+        </div>
+        <div class="workspace-actions">
+          <label class="btn btn--primary" id="importBtnLabel">
+            <span>📥</span> Import Students
+            <input type="file" id="importFile" accept=".csv,.xlsx" style="display:none">
+          </label>
+        </div>
+      </div>
+
+      <!-- Error / Warning Messages -->
+      <div id="messagesContainer" class="messages-container"></div>
+
+      <div class="workspace-utility">
+        <p class="workspace-utility__text" id="workspaceUtilityText">Choose a course and section to review assignments and section load.</p>
+        <button class="workspace-utility__action" id="clearAssignmentsBtn" type="button" disabled>Clear assignments for selected course</button>
+      </div>
+
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width: 40px;"><input type="checkbox" id="selectAllCheckbox"></th>
+              <th>Student ID</th>
+              <th>Student Name</th>
+              <th>Program / Year</th>
+              <!-- Course removed per prompt: table shows ONLY students for selected course -->
+              <th>Assigned Section</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="studentTableBody">
+            <!-- JS Rendered -->
+            <tr><td colspan="6" class="table-empty">Please populate all filters to load students.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Bottom Pagination & Info -->
+      <div class="workspace-footer">
+        <div class="pagination" id="paginationControls">
+          <!-- JS Rendered -->
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ── Bottom Action Bar ── -->
+  <div class="bottom-action-bar">
+    <div class="bottom-action-bar__left">
+      <button class="btn btn--secondary" id="exportBtn"><span>📤</span> Export Section List</button>
+    </div>
+    <div class="bottom-action-bar__right">
+      <div class="sync-status">
+        <span class="sync-status__icon">✅</span>
+        <div class="sync-status__text">
+          <div class="sync-status__title">All data synchronized</div>
+          <div class="sync-status__time" id="lastSavedTime">Last saved: Just now</div>
+        </div>
+      </div>
+      <button class="btn btn--outline" id="resetChangesBtn">Reset Changes</button>
+      <button class="btn btn--primary" id="saveAssignmentBtn">Save Assignments</button>
+    </div>
+  </div>
+
+  <!-- ── Edit Section Modal ── -->
+  <div class="modal-overlay" id="editSectionModal" style="display: none;">
+    <div class="modal-content" style="max-width: 400px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Change Section</h3>
+        <button class="modal-close" id="closeEditModalBtn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="margin-bottom: var(--space-md);">
+          <strong>Student:</strong> <span id="modalStudentName"></span> (<span id="modalStudentId"></span>)
+        </div>
+        <div style="margin-bottom: var(--space-md);">
+          <strong>Current Section:</strong> <span id="modalCurrentSection"></span>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Assign to Section</label>
+          <select class="select-field" id="modalSectionSelect">
+            <!-- Dynamically populated based on Course -->
+          </select>
+        </div>
+
+        <div id="modalWarning" class="msg-alert msg-alert--warning" style="display: none; font-size: 0.8rem;">
+          <span>⚠️</span> <span id="modalWarningText">Section is at full capacity (100 students)</span>
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; gap: var(--space-sm); justify-content: flex-end;">
+        <button class="btn btn--secondary" id="cancelEditBtn">Cancel</button>
+        <button class="btn btn--primary" id="confirmEditBtn">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Configure Sections Modal ── -->
+  <div class="modal-overlay" id="configSectionModal" style="display: none;">
+    <div class="modal-content" style="max-width: 450px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="configModalTitle">Configure Sections</h3>
+        <button class="modal-close" id="closeConfigModalBtn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="margin-bottom: var(--space-md);">
+          <strong>Course:</strong> <span id="configCourseName"></span>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Current Sections</label>
+            <input type="text" class="input-field" id="configCurrentSections" disabled>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Max Capacity / Section</label>
+            <input type="text" class="input-field" value="100" disabled>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom: var(--space-lg);">
+          <label class="form-label">New Number of Sections (1-6)</label>
+          <input type="number" class="input-field" id="configNewSections" min="1" max="6">
+        </div>
+        
+        <div id="configWarning" class="msg-alert msg-alert--danger" style="display: none; font-size: 0.85rem; margin-bottom: var(--space-md);">
+          <span>⚠️</span> <span id="configWarningText"></span>
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; gap: var(--space-sm); justify-content: flex-end;">
+        <button class="btn btn--secondary" id="cancelConfigBtn">Cancel</button>
+        <button class="btn btn--primary" id="saveConfigBtn">Save Configuration</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Toast Container ── -->
+  <div class="modal-overlay" id="confirmActionModal" style="display: none;">
+    <div class="modal-content" style="max-width: 430px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="confirmActionTitle">Confirm Action</h3>
+        <button class="modal-close" id="closeConfirmModalBtn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="confirmActionMessage">Please confirm this action.</p>
+      </div>
+      <div class="modal-footer" style="display: flex; gap: var(--space-sm); justify-content: flex-end;">
+        <button class="btn btn--secondary" id="cancelConfirmBtn" type="button">Cancel</button>
+        <button class="btn btn--danger" id="confirmActionBtn" type="button">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <footer id="footer" class="footer" style="margin-bottom: 80px;"></footer>
+
+  <script src="js/mockData.js"></script>
+  <script src="js/Dean1_data.js"></script>
+  <script src="js/Dean1_layout.js"></script>
+  <script src="js/Dean1_course-section.js"></script>
+  
+</body>
+</html>

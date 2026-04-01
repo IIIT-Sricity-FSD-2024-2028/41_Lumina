@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lumina - Grade Sheets</title>
+    <link rel="stylesheet" href="css/Dean2_styles.css">
+</head>
+<body>
+
+    <header>
+        <div class="logo-container">
+        <div class="logo-icon">
+            <img src="assets/icons/logo.svg" alt="Lumina Logo" width="20" height="20">
+        </div>
+        Lumina
+    </div>
+        <nav class="main-nav">
+            <a href="Dean2_index.html">Home</a>
+            <a href="Dean2_policies.html">Academic Terms &amp; Policies</a>
+            <a href="Dean2_enrollment.html">Enrollment Configuration</a>
+            <a href="Dean2_overrides.html">Override Requests</a>
+            <a href="Dean2_analytics.html">Enrollment Analytics</a>
+        </nav>
+        <div class="user-controls">
+            <div class="notification-wrapper">
+                <span class="notif-bell">🔔</span>
+                <div class="notif-dot"></div>
+            </div>
+            <div class="user-info">
+                <div class="user-text">
+                    <h4>Dr. Sarah Jenkins</h4>
+                    <p>Assistant Dean 2</p>
+                </div>
+                <img src="https://ui-avatars.com/api/?name=Sarah+Jenkins&background=f0e6ff&color=5c3c92" alt="Avatar" class="avatar">
+            </div>
+        <a href="login.html" class="sign-out" id="signOutBtn">
+            Sign Out 
+            <img src="assets/icons/logout.svg" alt="Logout" width="16" height="16" style="vertical-align: middle; margin-left: 5px;">
+        </a>
+    </div>
+    </header>
+
+    <main class="container">
+        <div class="page-header flex-between">
+            <div>
+                <h1>Grade Sheets Workspace</h1>
+                <p>Manage and review academic course grading records. and submit it to Students</p>
+            </div>
+            <button class="btn btn-primary">📥 Export Records</button>
+        </div>
+
+        <div class="tabs-nav">
+            <a href="Dean2_gradesheets.html" class="tab-link active">Grade Sheets List</a>
+            <a href="Dean2_gradesheets-detail.html" class="tab-link">Grade Sheet Details</a>
+        </div>
+
+        <div class="card">
+            <div class="flex-between" style="margin-bottom: 1.5rem;">
+                <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-dark);">Course Grade Sheets Overview</h3>
+                <div class="gs-search-wrap">
+                    <span class="gs-search-icon">🔍</span>
+                    <input type="text" class="gs-search-input" placeholder="Search courses..." id="courseSearch">
+                </div>
+            </div>
+
+            <table id="gradesheetsTable">
+                <thead>
+                    <tr>
+                        <th>Course Code</th>
+                        <th>Course Name</th>
+                        <th>Semester</th>
+                        <th>Status</th>
+                        <th>Last Updated</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>CS201</strong></td>
+                        <td>Data Structures</td>
+                        <td><span class="badge badge-upcoming">Fall 2023</span></td>
+                        <td><span class="badge badge-pending">Pending</span></td>
+                        <td style="color: var(--text-muted);">2023-10-15</td>
+                        <td><a href="Dean2_gradesheets-detail.html" class="btn-view-dark">View Grade Sheet →</a></td>
+                    </tr>
+                    <tr>
+                        <td><strong>CS101</strong></td>
+                        <td>Intro to Programming</td>
+                        <td><span class="badge badge-upcoming">Fall 2023</span></td>
+                        <td><span class="badge badge-active">Published</span></td>
+                        <td style="color: var(--text-muted);">2023-10-10</td>
+                        <td><a href="#" class="btn-view-outline">View Grade Sheet →</a></td>
+                    </tr>
+                    <tr>
+                        <td><strong>MA301</strong></td>
+                        <td>Linear Algebra</td>
+                        <td><span class="badge badge-completed">Spring 2023</span></td>
+                        <td><span class="badge badge-active">Published</span></td>
+                        <td style="color: var(--text-muted);">2023-06-15</td>
+                        <td><a href="#" class="btn-view-outline">View Grade Sheet →</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+   <footer class="site-footer">
+    <div class="footer-top">
+        <div class="logo-group">
+            <div class="logo-white" style="width:28px;height:28px;padding:5px;">
+                <img src="assets/icons/logo_white.svg" alt="Lumina Logo" width="18" height="18">
+            </div>
+            <span class="logo-text">Lumina</span>
+        </div>
+        <nav class="footer-nav">
+            <a href="#">Help Desk</a>
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+        </nav>
+    </div>
+    <div class="footer-bottom">
+        <p>© 2026 Lumina Academic Systems. All rights reserved.</p>
+        <div class="social-links">
+            <a href="#">Twitter</a>
+            <a href="#">LinkedIn</a>
+            <a href="#">GitHub</a>
+        </div>
+    </div>
+</footer> 
+
+    <script>
+        document.getElementById('courseSearch').addEventListener('input', function() {
+            const query = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#gradesheetsTable tbody tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        });
+    </script>
+</body>
+</html>

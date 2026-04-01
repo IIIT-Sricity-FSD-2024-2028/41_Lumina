@@ -1,0 +1,1053 @@
+/* ==========================================
+   style.css – Lumina Student Dashboard
+   
+   HOW THIS FILE IS ORGANISED:
+   1. General settings (fonts, colours, reset)
+   2. Navbar (top bar)
+   3. Main page content + cards
+   4. Footer
+   5. Popups (modals)
+   6. Timetable table inside popup
+   7. Responsive (makes it work on phones)
+========================================== */
+
+
+/* ==========================================
+   1. GENERAL SETTINGS
+========================================== */
+
+/* Use the DM Sans font everywhere */
+body {
+  font-family: 'DM Sans', sans-serif;
+  background-color: #f4f6f9;
+  color: #1a2744;
+  margin: 0;
+  padding: 0;
+}
+
+/* Remove bullet points from lists */
+ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Make every element include padding in its width */
+* {
+  box-sizing: border-box;
+}
+
+/* Remove underline from links */
+a {
+  text-decoration: none;
+}
+
+
+/* ==========================================
+   2. NAVBAR (top bar)
+========================================== */
+
+.navbar {
+  background-color: white;
+  border-bottom: 1px solid #e2e8f0;
+  height: 52px;
+  padding: 0 28px;
+  display: flex;              /* puts children side by side */
+  align-items: center;        /* vertically centres them */
+  justify-content: space-between; /* pushes left and right groups apart */
+  position: sticky;           /* sticks to top when you scroll */
+  top: 0;
+  z-index: 100;               /* stays above everything else */
+}
+
+/* Logo text */
+.logo {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1a2744;
+  white-space: nowrap;
+}
+
+.lumina-icon-btn {
+  background-color: #1a2744;
+  border: none;
+  border-radius: 8px;
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+  vertical-align: middle;
+}
+
+/* Left group: logo + links */
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 24px;               /* space between logo and nav links */
+}
+
+/* Container for the navigation links */
+.nav-links {
+  display: flex;
+  gap: 4px;
+}
+
+/* Each navigation link */
+.nav-link {
+  color: #64748b;
+  font-size: 13.5px;
+  padding: 6px 12px;
+  border-radius: 6px;
+}
+
+.nav-link:hover {
+  color: #1a2744;
+  background-color: #f4f6f9;
+}
+
+/* The currently active page link */
+.nav-link.active {
+  color: #1a2744;
+  font-weight: 600;
+  border-bottom: 2px solid #1a2744;
+  border-radius: 0;
+}
+
+/* Right group: bell, name, avatar, sign out */
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.signout-text {
+  color: #dc2626;
+  font-size: 11px;
+  font-weight: 600;
+  margin-left: -6px;
+  white-space: nowrap;
+}
+
+/* Small icon buttons in navbar */
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 5px;
+  border-radius: 6px;
+}
+
+.icon-btn:hover {
+  background-color: #f4f6f9;
+}
+
+/* Username text */
+.username {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #1a2744;
+}
+
+/* Circular avatar with initials */
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;          /* makes it a circle */
+  background: linear-gradient(135deg, #1a7a6e, #1a2744);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* Hamburger button - hidden on desktop, shown on mobile */
+.hamburger {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: #1a2744;
+}
+
+/* Mobile menu - hidden by default */
+.mobile-menu {
+  display: none;
+  background-color: white;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 12px 24px;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* When JS adds the class "open", we show the mobile menu */
+.mobile-menu.open {
+  display: flex;
+}
+
+
+/* ==========================================
+   3. MAIN CONTENT + CARDS
+========================================== */
+
+.main-content {
+  max-width: 1060px;
+  margin: 0 auto;             /* centres the content */
+  padding: 32px 24px 40px;
+}
+
+/* Page heading area */
+.page-title {
+  margin-bottom: 24px;
+}
+
+.page-title h1 {
+  font-size: 26px;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+}
+
+.page-title p {
+  font-size: 13.5px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Top row: 3 cards in a row */
+.top-row {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+/* Bottom row: 2 cards in a row */
+.bottom-row {
+  display: flex;
+  gap: 18px;
+}
+
+/* Both rows share "flex" which puts cards side by side.
+   Each card grows equally to fill space */
+.top-row .card,
+.bottom-row .card {
+  flex: 1;                    /* each card takes equal width */
+}
+
+/* ---- THE CARD BOX ---- */
+.card {
+  background-color: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;     /* stacks children top to bottom */
+  gap: 12px;
+}
+
+/* Card heading row: icon + title */
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.card-title h2 {
+  font-size: 13.5px;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* "Next Class" card is centred */
+.card-center {
+  text-align: center;
+}
+
+/* ---- COURSE ITEMS in My Courses card ---- */
+.course-item {
+  background-color: #f4f6f9;
+  border-radius: 7px;
+  padding: 9px 12px;
+}
+
+.course-name {
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.course-prof {
+  font-size: 11.5px;
+  color: #1a7a6e;             /* teal colour */
+}
+
+/* ---- NEXT CLASS info ---- */
+.next-class-info {
+  text-align: left;
+  display: inline-block;
+}
+
+.next-class-info h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 10px 0;
+}
+
+.next-class-info p {
+  font-size: 12.5px;
+  color: #64748b;
+  margin: 0 0 5px 0;
+}
+
+/* ---- MINI TIMETABLE in timetable card ---- */
+.mini-timetable {
+  flex: 1;
+}
+
+/* Day labels: MON TUE WED THU FRI */
+.tt-days {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 5px;
+}
+
+.tt-days span {
+  flex: 1;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+/* One row of the mini timetable */
+.tt-row {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+/* Each coloured box */
+.tt-box {
+  flex: 1;
+  height: 28px;
+  border-radius: 4px;
+  background-color: #edf2f7;  /* grey = empty */
+}
+
+/* Colours for filled boxes */
+.tt-box.filled      { background-color: #c5d4e0; }
+.tt-box.filled.blue { background-color: #bfdbfe; }
+.tt-box.filled.dark { background-color: #8fa3b8; }
+
+/* ---- EMPTY STATE in Announcements card ---- */
+.empty-box {
+  text-align: center;
+  padding: 24px 0;
+}
+
+.empty-icon {
+  font-size: 32px;
+  color: #e2e8f0;
+  margin-bottom: 8px;
+}
+
+.empty-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+  margin: 0 0 4px 0;
+}
+
+.empty-subtext {
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 0;
+}
+
+/* ---- GRADESHEETS card ---- */
+.semester-badge {
+  margin-left: auto;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #94a3b8;
+}
+.sem-badge-inner {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 12px;
+  text-align: left;
+}
+
+.sem-badge-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.sem-badge-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #22c55e;
+  border-radius: 50%;
+}
+
+.sem-badge-status {
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.05em;
+}
+
+.sem-badge-main {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a2744;
+}
+
+.sem-badge-sub {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.gradesheet-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background-color: #f4f6f9;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.file-icon {
+  font-size: 20px;
+}
+
+.gradesheet-text {
+  flex: 1;                    /* takes up remaining space */
+}
+
+.gradesheet-name {
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.gradesheet-date {
+  font-size: 11.5px;
+  color: #1a7a6e;
+}
+
+.gpa-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px solid #e2e8f0;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.gpa-number {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a2744;
+}
+
+/* ---- BUTTONS ---- */
+
+/* Dark navy button */
+.dark-btn {
+  background-color: #1a2744;
+  color: white;
+  border: none;
+  border-radius: 7px;
+  padding: 7px 14px;
+  font-size: 12.5px;
+  font-weight: 500;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.dark-btn:hover {
+  background-color: #243356;
+}
+
+/* Smaller version of the dark button */
+.small-btn {
+  padding: 6px 14px;
+  font-size: 12px;
+}
+
+/* Plain text button (no background) */
+.text-btn {
+  background: none;
+  border: none;
+  color: #1a2744;
+  font-size: 12.5px;
+  font-weight: 500;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  padding: 0;
+  align-self: center;         /* centres horizontally in the card */
+}
+
+.text-btn:hover {
+  opacity: 0.6;
+}
+
+
+/* ==========================================
+   4. FOOTER
+========================================== */
+
+.footer {
+  background-color: #1a2744;
+  color: #94a3b8;
+  padding: 24px 40px 18px;
+}
+
+.footer-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.footer-logo {
+  color: white;
+}
+
+.footer-links {
+  display: flex;
+  gap: 20px;
+}
+
+.footer-links a {
+  color: #94a3b8;
+  font-size: 12.5px;
+}
+
+.footer-links a:hover {
+  color: white;
+}
+
+.footer-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 14px;
+  font-size: 11.5px;
+}
+
+.social-links {
+  display: flex;
+  gap: 16px;
+}
+
+.social-links a {
+  color: #94a3b8;
+  font-size: 11.5px;
+}
+
+.social-links a:hover {
+  color: white;
+}
+
+
+/* ==========================================
+   5. POPUPS
+   
+   A popup has two parts:
+   - .popup-bg   = the dark background overlay
+   - .popup      = the white box in the centre
+========================================== */
+
+/* The dark background that covers the whole page */
+.popup-bg {
+  display: none;              /* hidden by default */
+  position: fixed;            /* stays in place when you scroll */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(26, 39, 68, 0.45); /* dark semi-transparent */
+  z-index: 500;
+  /* Centre the white popup box */
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* When JS adds the class "open", show the popup */
+.popup-bg.open {
+  display: flex;
+}
+
+/* The white popup box */
+.popup {
+  background-color: white;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 540px;
+  max-height: 90vh;           /* never taller than 90% of screen */
+  overflow-y: auto;           /* scroll inside if content is long */
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.18);
+}
+
+/* Wider popup for the timetable */
+.popup-wide {
+  max-width: 900px;
+}
+
+/* Popup title row: heading + close button */
+.popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.popup-header h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* Dark navy header (used in Course Detail popup) */
+.dark-popup-header {
+  background-color: #1a2744;
+  border-bottom: none;
+}
+
+.dark-popup-header h2 {
+  color: white;
+}
+
+/* Close (✕) button */
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: #64748b;
+  padding: 4px 8px;
+  border-radius: 5px;
+}
+
+.close-btn:hover {
+  background-color: #f4f6f9;
+  color: #1a2744;
+}
+
+/* White close button (for dark header) */
+.white-close {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.white-close:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: white;
+}
+
+/* Content area inside popup */
+.popup-body {
+  padding: 16px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ---- COURSE ROW inside My Courses popup ---- */
+.popup-course-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 9px;
+  cursor: pointer;
+}
+
+.popup-course-row:hover {
+  background-color: #e8f5f3;
+  border-color: #22a699;
+}
+
+.popup-course-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Small icon box next to course name */
+.course-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background-color: #e8f5f3;
+  color: #1a7a6e;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.popup-course-name {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.popup-course-credits {
+  font-size: 12px;
+  color: #1a7a6e;
+}
+
+/* ---- MODULE ROWS inside Course Detail popup ---- */
+.module-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.module-row:last-child {
+  border-bottom: none;
+}
+
+/* The thin teal bar on the left of each module */
+.module-bar {
+  width: 3px;
+  height: 28px;
+  border-radius: 3px;
+  background-color: #22a699;
+}
+
+.module-name {
+  flex: 1;
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+
+/* ==========================================
+   6. TIMETABLE (inside Timetable popup)
+========================================== */
+
+/* Horizontal scroll wrapper (for small screens) */
+.tt-scroll {
+  overflow-x: auto;
+  padding: 18px 24px;
+}
+
+/* The table itself */
+.timetable {
+  width: 100%;
+  border-collapse: collapse;   /* removes space between cells */
+  min-width: 620px;            /* prevents too-narrow columns */
+  font-size: 12.5px;
+}
+
+/* Table column headers */
+.timetable thead th {
+  background-color: #f4f6f9;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  padding: 10px 12px;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: center;
+}
+
+/* Table body cells */
+.timetable td {
+  padding: 5px 7px;
+  vertical-align: top;
+  border: 1px solid #e2e8f0;
+  min-width: 110px;
+}
+
+/* Time column (left column) */
+.time-col {
+  font-size: 11.5px;
+  color: #64748b;
+  text-align: right;
+  vertical-align: middle;
+  min-width: 90px;
+  padding: 6px 10px;
+  line-height: 1.6;
+}
+
+/* Each class box inside a cell */
+.slot {
+  border-radius: 7px;
+  padding: 8px 10px;
+  font-weight: 700;
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+.slot small {
+  font-weight: 400;
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+/* Slot colour styles */
+.dark-slot  { background-color: #8fa3b8; color: white; }
+.light-slot { background-color: #c5d4e0; color: #1a2744; }
+.teal-slot  { background-color: #7ec8c2; color: #1a2744; }
+
+/* Break / Gap rows */
+.break-row td {
+  background-color: #f8fafc;
+}
+
+.break-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 0.08em;
+  text-align: right;
+  padding: 5px 10px;
+}
+
+.break-time {
+  font-size: 11.5px;
+  color: #94a3b8;
+  text-align: center;
+  letter-spacing: 0.06em;
+}
+
+/* Timetable title group (icon + heading) */
+.tt-popup-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tt-cal-icon {
+  font-size: 20px;
+}
+
+/* Download PDF button at the bottom of timetable */
+.tt-footer {
+  padding: 14px 24px 18px;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+
+
+/* ==========================================
+   NOTIFICATION DROPDOWN
+   
+   Appears below the bell button when clicked.
+   Uses position:absolute so it floats over
+   the page without pushing anything down.
+========================================== */
+
+/* This wrapper is needed so the dropdown
+   can be positioned relative to the bell button */
+.bell-wrapper {
+  position: relative;   /* children with position:absolute will anchor to this */
+}
+
+/* The dropdown box itself */
+.notif-dropdown {
+  display: none;            /* hidden by default */
+  position: absolute;       /* floats over the page */
+  top: 38px;                /* just below the bell button */
+  right: 0;                 /* aligned to the right edge of the bell */
+  width: 220px;
+  background-color: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+  z-index: 200;             /* sits above other content */
+  overflow: hidden;
+}
+
+/* When JS adds class "open", show it */
+.notif-dropdown.open {
+  display: block;
+}
+
+/* Top bar of the dropdown */
+.notif-header {
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #f1f5f9;
+  text-transform: uppercase;
+}
+
+/* The message row inside the dropdown */
+.notif-body {
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.notif-icon {
+  font-size: 18px;
+}
+
+
+/* ==========================================
+   TOAST NOTIFICATION
+   
+   A small green bar that slides up from
+   the bottom-right corner of the screen.
+   Used to confirm "PDF downloaded".
+========================================== */
+
+/* ==========================================
+   TOAST NOTIFICATION
+========================================== */
+.toast {
+  position: fixed;
+  top: 78px;
+  right: 28px;
+  background-color: #ffffff;
+  color: #1a2744;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border-left: 4px solid #16a34a;
+  font-size: 12.5px;
+  font-weight: 600;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+  z-index: 1000;
+  min-width: 220px;
+  
+  /* Animation states */
+  opacity: 0;
+  transform: translateX(24px);
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ==========================================
+   7. RESPONSIVE 
+========================================== */
+@media (max-width: 900px) {
+  .top-row {
+    flex-wrap: wrap;
+  }
+  .top-row .card {
+    flex: 1 1 calc(50% - 9px);
+    min-width: 240px;
+  }
+}
+
+@media (max-width: 680px) {
+  .top-row, .bottom-row {
+    flex-direction: column;
+  }
+  .top-row .card, .bottom-row .card {
+    flex: 1 1 100%;
+  }
+  .nav-links, .username {
+    display: none;
+  }
+  .hamburger {
+    display: block;
+  }
+}
+
+/* ── SEMESTER TABS (Roadmap Page) ── */
+.sem-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  padding-bottom: 4px;
+}
+
+.sem-tab {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.sem-tab:hover {
+  border-color: #1a2744;
+  color: #1a2744;
+  background-color: #f8fafc;
+}
+
+/* The active tab (Dark Navy) */
+.sem-tab.active-tab {
+  background: #1a2744;
+  border-color: #1a2744;
+  color: white;
+  box-shadow: 0 4px 12px rgba(26, 39, 68, 0.15);
+}
+
+/* ── ADDITIONAL ROADMAP TWEAKS ── */
+
+/* Warning card (for prerequisites not met) */
+.course-card.warning-card {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.cc-warning-msg {
+  font-size: 11px;
+  color: #b45309;
+  font-weight: 500;
+  margin-top: 6px;
+  margin-left: 28px;
+  display: none;
+}
+
+.cc-warning-msg.show {
+  display: block;
+}
+
+/* Elective Section Badges */
+.sec-status {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+}
+
+.sec-status.ok {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.sec-status.pending {
+  background: #fef3c7;
+  color: #d97706;
+}

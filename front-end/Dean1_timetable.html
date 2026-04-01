@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Lumina — Institutional Timetable and Course Slot Allocation for Assistant Dean 1.">
+  <title>Lumina — Allocate Course Slots</title>
+  <link rel="stylesheet" href="css/Dean1_shared.css">
+  <link rel="stylesheet" href="css/Dean1_timetable.css">
+</head>
+
+<body>
+
+  <header id="navbar" class="navbar"></header>
+
+  <main class="main-content">
+
+    <!-- ── Page Header ── -->
+    <div class="tt-header">
+      <h1 class="tt-header__title">Institutional Timetable</h1>
+      <div class="tt-header__actions">
+        <button class="btn btn--secondary" id="downloadPdfBtn">
+          <span>⬇</span> Download PDF
+        </button>
+        <button class="btn btn--edit-mode" id="editModeBtn">
+          <span>✏️</span> Activate Edit Mode
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Filter Bar ── -->
+    <div class="tt-filters card" id="filterBar" style="display: flex; gap: var(--space-md); flex-wrap: wrap; margin-bottom: var(--space-lg);">
+
+      <div class="tt-filter-group" style="flex: 1; min-width: 150px;">
+        <label class="tt-filter-label" style="display: block; margin-bottom: var(--space-xs); font-weight: 500; color: var(--text-secondary);">Academic Term</label>
+        <select class="select-field select-field--static" id="filterTerm" style="width: 100%;" disabled>
+          <option value="Monsoon 2026" selected>Monsoon 2026</option>
+        </select>
+      </div>
+
+      <div class="tt-filter-group" style="flex: 1; min-width: 120px;">
+        <label class="tt-filter-label" style="display: block; margin-bottom: var(--space-xs); font-weight: 500; color: var(--text-secondary);">UG Year</label>
+        <select class="select-field" id="filterUG" style="width: 100%;">
+          <option value="UG1">UG1</option>
+          <option value="UG2">UG2</option>
+          <option value="UG3">UG3</option>
+          <option value="UG4">UG4</option>
+        </select>
+      </div>
+
+      <div class="tt-filter-group" style="flex: 1; min-width: 150px;">
+        <label class="tt-filter-label" style="display: block; margin-bottom: var(--space-xs); font-weight: 500; color: var(--text-secondary);">Course Type</label>
+        <select class="select-field" id="filterCourseType" style="width: 100%;">
+          <option value="Institute Core">Institute Core</option>
+          <option value="Program Core">Program Core</option>
+          <option value="Elective">Elective</option>
+          <option value="Seed Course">Seed Course</option>
+        </select>
+      </div>
+
+      <div class="tt-filter-group" style="flex: 1; min-width: 150px;">
+        <label class="tt-filter-label" style="display: block; margin-bottom: var(--space-xs); font-weight: 500; color: var(--text-secondary);">Department</label>
+        <select class="select-field" id="filterDept" style="width: 100%;">
+          <option value="All Departments">All Departments</option>
+        </select>
+      </div>
+
+      <div class="tt-filter-group" style="flex: 1.25; min-width: 220px;">
+        <label class="tt-filter-label" style="display: block; margin-bottom: var(--space-xs); font-weight: 500; color: var(--text-secondary);">Course</label>
+        <select class="select-field" id="filterCourse" style="width: 100%;">
+          <option value="">All Courses</option>
+        </select>
+      </div>
+
+      <div class="tt-filter-group" id="filterSectionGroup" style="flex: 1; min-width: 120px;">
+        <label class="tt-filter-label" style="display: block; margin-bottom: var(--space-xs); font-weight: 500; color: var(--text-secondary);">Section</label>
+        <select class="select-field" id="filterSection" style="width: 100%;">
+          <option value="">All Sections</option>
+          <option value="Section 1">Section 1</option>
+          <option value="Section 2">Section 2</option>
+          <option value="Section 3">Section 3</option>
+          <option value="Section 4">Section 4</option>
+        </select>
+      </div>
+
+    </div><!-- /filter bar -->
+
+    <!-- ── Timetable Grid ── -->
+    <div class="tt-grid-wrapper">
+      <table class="tt-grid" id="timetableGrid">
+        <thead>
+          <tr>
+            <th class="tt-grid__time-header">TIME</th>
+            <th>Monday</th>
+            <th>Tuesday</th>
+            <th>Wednesday</th>
+            <th>Thursday</th>
+            <th>Friday</th>
+          </tr>
+        </thead>
+        <tbody id="timetableBody">
+          <!-- JS renders rows -->
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+
+  <!-- ══ SIDE PANEL ══ -->
+  <div class="side-panel-overlay" id="sidePanelOverlay"></div>
+  <aside class="side-panel" id="sidePanel" role="complementary" aria-label="Modify Allocation">
+
+    <div class="side-panel__header">
+      <div>
+        <h2 class="side-panel__title">Modify Allocation</h2>
+        <p class="side-panel__subtitle" id="panelSubtitle"></p>
+      </div>
+      <button class="side-panel__close" id="sidePanelClose" aria-label="Close panel">&times;</button>
+    </div>
+
+    <div class="side-panel__body">
+
+      <!-- Course -->
+      <div class="form-group">
+        <label class="form-label" for="panelCourse">Course</label>
+        <select class="select-field" id="panelCourse">
+        </select>
+      </div>
+
+      <!-- Section (shown only when non-elective selected) -->
+      <div class="form-group" id="panelSectionGroup">
+        <label class="form-label" for="panelSection">Section</label>
+        <select class="select-field" id="panelSection">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+        </select>
+      </div>
+
+      <!-- Faculty -->
+      <div class="form-group">
+        <label class="form-label" for="panelFaculty">Faculty</label>
+        <select class="select-field" id="panelFaculty">
+          <option value="">Select Faculty</option>
+        </select>
+      </div>
+
+      <!-- Room -->
+      <div class="form-group">
+        <label class="form-label" for="panelRoom">Room</label>
+        <select class="select-field" id="panelRoom">
+          <option value="">Select Room</option>
+        </select>
+      </div>
+
+      <!-- Validation Feed -->
+      <div class="validation-feed" id="validationFeed">
+        <h3 class="validation-feed__title">Validation Feed</h3>
+        <div class="validation-item" id="valFaculty">
+          <img src="assets/icons/minus.svg" alt="" class="validation-icon">
+          <span>Faculty Available</span>
+        </div>
+        <div class="validation-item" id="valRoom">
+          <img src="assets/icons/minus.svg" alt="" class="validation-icon">
+          <span>Room Available</span>
+        </div>
+      </div>
+
+    </div><!-- /body -->
+
+    <div class="side-panel__footer">
+      <button class="btn btn--primary" id="updateSlotBtn" style="width:100%" disabled>Update Slot</button>
+      <div class="side-panel__links" style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 16px; gap: 8px;">
+        <button class="side-panel__link" id="cancelPanelBtn" style="color: var(--gray-600);">Cancel</button>
+        <button class="side-panel__link side-panel__link--danger" id="removeAllocationBtn" style="display:none; text-transform: uppercase; font-weight: 800; font-size: 0.75rem;">REMOVE ALLOCATION</button>
+      </div>
+    </div>
+
+  </aside>
+
+  <footer id="footer" class="footer"></footer>
+
+  <!-- Load scripts: data first, then modules, then page init -->
+  <script src="js/mockData.js"></script>
+  <script src="js/Dean1_data.js"></script>
+  <script src="js/Dean1_layout.js"></script>
+  <script src="js/Dean1_validation.js"></script>
+  <script src="js/Dean1_slotAllocation.js"></script>
+  <script src="js/Dean1_timetable.js"></script>
+
+</body>
+
+</html>

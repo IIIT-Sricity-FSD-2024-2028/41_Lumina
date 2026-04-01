@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lumina - Override Requests</title>
+    <link rel="stylesheet" href="css/Dean2_styles.css">
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+        <div class="logo-icon">
+            <img src="assets/icons/logo.svg" alt="Lumina Logo" width="20" height="20">
+        </div>
+        Lumina
+    </div>
+        <nav class="main-nav">
+            <a href="Dean2_index.html">Home</a>
+            <a href="Dean2_policies.html">Academic Terms &amp; Policies</a>
+            <a href="Dean2_enrollment.html">Enrollment Configuration</a>
+            <a href="Dean2_overrides.html" class="active">Override Requests</a>
+            <a href="Dean2_analytics.html">Enrollment Analytics</a>
+        </nav>
+        <div class="user-controls">
+            <div class="notification-wrapper">
+                <span class="notif-bell">🔔</span>
+                <div class="notif-dot"></div>
+            </div>
+            <div class="user-info">
+                <div class="user-text">
+                    <h4>Dr. Sarah Jenkins</h4>
+                    <p>Assistant Dean 2</p>
+                </div>
+                <img src="https://ui-avatars.com/api/?name=Sarah+Jenkins&background=f0e6ff&color=5c3c92" alt="Avatar" class="avatar">
+            </div>
+        <a href="login.html" class="sign-out" id="signOutBtn">
+            Sign Out 
+            <img src="assets/icons/logout.svg" alt="Logout" width="16" height="16" style="vertical-align: middle; margin-left: 5px;">
+        </a>
+    </div>
+    </header>
+
+    <main class="container">
+        <div class="page-header">
+            <h1>Override Requests</h1>
+            <p>Review and manage student enrollment exception requests.</p>
+        </div>
+
+        <div class="overrides-layout">
+            <!-- LEFT COLUMN -->
+            <div>
+                <!-- Filters -->
+                <div class="filters-bar">
+                    <div class="form-group">
+                        <label>Search</label>
+                        <div class="filter-search-wrap">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" id="searchInput" placeholder="Student Name or ID">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Department</label>
+                        <select id="deptFilter">
+                            <option>All Departments</option>
+                            <option>CSE</option>
+                            <option>ECE</option>
+                            <option>AIDS</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="statusFilter">
+                            <option>All Status</option>
+                            <option>Pending</option>
+                            <option>Approved</option>
+                            <option>Rejected</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" id="filterBtn" style="height:42px;flex-shrink:0;">Filter</button>
+                </div>
+
+                <!-- Table -->
+                <div class="overrides-table-card">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Dept / Course</th>
+                                <th>Reason</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="overridesTableBody"></tbody>
+                    </table>
+                </div>
+
+                <!-- Metrics -->
+                <div class="metrics-grid">
+                    <div class="metric-card" style="background:#FFFBEB;border-color:#FDE68A;">
+                        <div class="metric-icon" style="background:#F59E0B;color:white;">📋</div>
+                        <div>
+                            <div class="metric-label" style="color:#92400E;">Pending</div>
+                            <div class="metric-value" id="metricPending">0</div>
+                        </div>
+                    </div>
+                    <div class="metric-card" style="background:#F0FDF4;border-color:#A7F3D0;">
+                        <div class="metric-icon" style="background:#059669;color:white;">✓</div>
+                        <div>
+                            <div class="metric-label" style="color:#047857;">Approved</div>
+                            <div class="metric-value" id="metricApproved">0</div>
+                        </div>
+                    </div>
+                    <div class="metric-card" style="background:#FFF1F2;border-color:#FECACA;">
+                        <div class="metric-icon" style="background:#EF4444;color:white;">✕</div>
+                        <div>
+                            <div class="metric-label" style="color:#991B1B;">Rejected</div>
+                            <div class="metric-value" id="metricRejected">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Insights -->
+                <div class="card" style="margin-bottom:0;">
+                    <div style="font-weight:700;font-size:0.95rem;color:var(--primary-blue);margin-bottom:1rem;">Quick Insights</div>
+                    <ul class="bullet-list" id="quickInsights"></ul>
+                </div>
+            </div>
+
+            <!-- RIGHT SIDEBAR -->
+            <div class="override-sidebar">
+                <div class="sidebar-card">
+                    <!-- Empty State -->
+                    <div class="sidebar-empty" id="sideEmpty">
+                        <div class="empty-icon">📋</div>
+                        <p>No Request Selected</p>
+                        <p>Click Review or View on any request to see its details here.</p>
+                    </div>
+
+                    <!-- Detail State -->
+                    <div class="sidebar-detail" id="sideDetail">
+                        <div class="review-header">
+                            <h3>Review Request</h3>
+                            <span class="badge badge-pending" id="side-req-id">OR-XXXX</span>
+                        </div>
+
+                        <div class="sidebar-section-label">Student Information</div>
+
+                        <div class="student-card">
+                            <div class="student-avatar">👤</div>
+                            <div>
+                                <div style="font-weight:700;font-size:0.95rem;color:var(--text-dark);" id="side-name"></div>
+                                <div style="font-size:0.82rem;color:var(--text-muted);" id="side-meta"></div>
+                            </div>
+                        </div>
+
+                        <div class="sidebar-section-label">Request Details</div>
+
+                        <div class="req-detail-item">
+                            <span class="req-detail-icon">📘</span>
+                            <div>
+                                <div class="req-detail-label">Course</div>
+                                <div class="req-detail-value" id="side-course"></div>
+                            </div>
+                        </div>
+
+                        <div class="req-detail-item">
+                            <span class="req-detail-icon">⚠️</span>
+                            <div>
+                                <div class="req-detail-label">Reason</div>
+                                <div class="req-detail-value" id="side-reason"></div>
+                            </div>
+                        </div>
+
+                        <div class="req-detail-item" style="border-bottom:none;">
+                            <span class="req-detail-icon">📅</span>
+                            <div>
+                                <div class="req-detail-label">Requested Date</div>
+                                <div class="req-detail-value" id="side-date"></div>
+                            </div>
+                        </div>
+
+                        <!-- Resolved Banner -->
+                        <div class="resolved-banner" id="side-resolved-banner"></div>
+
+                        <!-- Action Buttons -->
+                        <div class="sidebar-actions" id="side-actions">
+                            <button class="btn btn-primary" id="btnApprove">✓ Approve Request</button>
+                            <button class="btn btn-danger-outline" id="btnReject">✕ Reject Request</button>
+                            <button class="btn btn-light" id="btnMoreInfo">💬 Request More Info</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+    <div class="footer-top">
+        <div class="logo-group">
+            <div class="logo-white" style="width:28px;height:28px;padding:5px;">
+                <img src="assets/icons/logo_white.svg" alt="Lumina Logo" width="18" height="18">
+            </div>
+            <span class="logo-text">Lumina</span>
+        </div>
+        <nav class="footer-nav">
+            <a href="#">Help Desk</a>
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+        </nav>
+    </div>
+    <div class="footer-bottom">
+        <p>© 2026 Lumina Academic Systems. All rights reserved.</p>
+        <div class="social-links">
+            <a href="#">Twitter</a>
+            <a href="#">LinkedIn</a>
+            <a href="#">GitHub</a>
+        </div>
+    </div>
+</footer> 
+
+   <script src="js/Dean2_app.js"></script>
+    <script src="js/Dean2_database.js"></script>
+</body>
+</html>

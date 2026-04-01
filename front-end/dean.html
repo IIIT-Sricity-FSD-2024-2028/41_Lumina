@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dean's Dashboard - Lumina</title>
+    <link rel="stylesheet" href="css/global.css" />
+    <link rel="stylesheet" href="css/dean.css" />
+  </head>
+  <body class="dashboard-body">
+    
+    <header class="dashboard-header">
+      <div class="header-left">
+        <div class="logo-group">
+          <img src="assets/icons/logo.svg" alt="Lumina logo" class="logo-icon" style="width: 24px" />
+          <span class="logo-text" style="font-size: 1.2rem;">Lumina</span>
+        </div>
+        <nav class="dean-nav">
+          <a href="#" class="active">Home</a>
+        </nav>
+      </div>
+      <div class="header-right">
+        <span style="font-size: 1.2rem; cursor: pointer;">🔔</span>
+        <div class="user-profile">
+          <span class="user-role">Dean</span>
+          <div class="avatar-circle"></div>
+        </div>
+        <button id="logout-btn" class="sign-out-btn">
+          Sign Out 
+          <img src="assets/icons/logout.svg" alt="Sign out" style="width: 18px; height: 18px;" />
+        </button>
+      </div>
+    </header>
+
+    <main class="dashboard-main">
+      <div class="page-header">
+        <h1>Dean's Dashboard</h1>
+        <p class="text-muted">Institutional oversight and administrative management.</p>
+      </div>
+
+      <section class="top-grid">
+        <div class="dash-card">
+          <h3 class="card-title">👥 Assistant Deans</h3>
+          <div id="assistant-deans-list" class="deans-list"></div>
+        </div>
+
+        <div class="dash-card">
+          <h3 class="card-title">❗ Override Interventions</h3>
+          <div class="alert-box alert-high">
+            <h4>High-priority enrollment conflict</h4>
+            <p>CS401 - Advanced Algorithms: 12 students pending override approval for graduation requirements.</p>
+            <a href="#" id="download-forms-link" class="alert-link">Download and Review forms ↗</a>
+          </div>
+          <div class="alert-box alert-minor">
+            <h4>Minor Pre-requisite Bypass</h4>
+            <p>AD101 - 1 student request.</p>
+          </div>
+        </div>
+
+        <div class="dash-card">
+          <h3 class="card-title">📅 Enrollment Window Calendar</h3>
+          <div class="timeline-item">
+            <div class="date-box"><span class="month">SEP</span><span class="day">01</span></div>
+            <div class="timeline-content">
+              <h4>Enrollment Window Start</h4>
+              <p>All undergraduate programs</p>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="date-box"><span class="month">SEP</span><span class="day">15</span></div>
+            <div class="timeline-content">
+              <h4>Late Registration</h4>
+              <p>Sep 15 - Sep 20 (Penalty fees apply)</p>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="date-box bg-gray"><span class="month">SEP</span><span class="day">30</span></div>
+            <div class="timeline-content">
+              <h4>Enrollment Window End</h4>
+              <p>Final date for enrollment without marked record</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="bottom-grid">
+        <div class="dash-card">
+          <div class="card-header-flex">
+            <h3 class="card-title">📊 Enrollment Statistics</h3>
+            <span class="text-xs text-muted">REAL-TIME DATA</span>
+          </div>
+          <div class="stat-block">
+            <div class="stat-text-row">
+              <span class="stat-name">Courses with seat availability</span>
+              <span class="stat-value" id="course-availability-percent">0%</span>
+            </div>
+            <div class="progress-track"><div class="progress-fill" id="course-bar" style="width: 0%;"></div></div>
+            <p class="stat-subtext" id="course-availability-text">Loading...</p>
+          </div>
+          <div class="stat-block mt-4">
+            <div class="stat-text-row">
+              <span class="stat-name">Total Enrolled Students</span>
+              <span class="stat-value" id="student-enrollment-count">0/0</span>
+            </div>
+            <div class="progress-track"><div class="progress-fill" id="student-bar" style="width: 0%;"></div></div>
+            <p class="stat-subtext" id="student-enrollment-text">Loading...</p>
+          </div>
+        </div>
+
+        <div class="dash-card">
+          <h3 class="card-title">⏱ Critical Audit Logs</h3>
+          <ul class="audit-list">
+            <li class="audit-item active">
+              <span class="audit-dot blue"></span>
+              <span class="audit-text">Enrollment Policy Updated</span>
+              <span class="audit-time">10m ago</span>
+            </li>
+            <li class="audit-item">
+              <span class="audit-dot"></span>
+              <span class="audit-text">Override Approved (Case #882)</span>
+              <span class="audit-time">2h ago</span>
+            </li>
+            <li class="audit-item">
+              <span class="audit-dot"></span>
+              <span class="audit-text">New Staff Credential Issued</span>
+              <span class="audit-time">Yesterday</span>
+            </li>
+            <li class="audit-item">
+              <span class="audit-dot"></span>
+              <span class="audit-text">System Backup Completed</span>
+              <span class="audit-time">Yesterday</span>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="dash-card mt-4" style="padding: 0; overflow: hidden;">
+        <div class="card-header-flex" style="padding: 24px; border-bottom: 1px solid #e5e7eb;">
+          <h3 class="card-title" style="margin: 0;">System Directory</h3>
+          <div style="display: flex; gap: 12px;">
+            <button id="import-data-btn" class="btn-outline" style="padding: 8px 16px; font-size: 0.85rem;">Import Excel</button>
+            <button id="add-user-btn" class="btn-primary" style="padding: 8px 16px; font-size: 0.85rem;">+ Add New User</button>
+          </div>
+        </div>
+        <div class="table-container" style="padding: 0 24px 24px 24px;">
+          <table class="data-table" style="width: 100%; text-align: left; border-collapse: collapse; margin-top: 16px;">
+            <thead>
+              <tr style="border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 0.8rem; text-transform: uppercase;">
+                <th style="padding: 12px 8px;">ID</th>
+                <th style="padding: 12px 8px;">Name</th>
+                <th style="padding: 12px 8px;">Role</th>
+                <th style="padding: 12px 8px;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="user-table-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+
+    <div id="crud-modal" class="modal-overlay hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="modal-title">Manage User</h2>
+          <button type="button" id="close-modal-btn" class="close-btn">&times;</button>
+        </div>
+        
+        <form id="crud-form" class="modal-form">
+          <div class="form-group">
+            <label>User ID (Primary Key)</label>
+            <input type="text" id="modal-id" class="form-input" placeholder="e.g., S2024099" required />
+          </div>
+          
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="modal-name" class="form-input" required />
+          </div>
+          
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" id="modal-email" class="form-input" required />
+          </div>
+
+          <div class="form-row" style="display: flex; gap: 16px;">
+            <div class="form-group" style="flex: 1;">
+              <label>System Role</label>
+              <select id="modal-role" class="form-select" required>
+                <option value="Student">Student</option>
+                <option value="Faculty">Faculty</option>
+                <option value="Assistant_Dean_1">Assistant Dean 1</option>
+                <option value="Assistant_Dean_2">Assistant Dean 2</option>
+              </select>
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label>Department</label>
+              <select id="modal-dept" class="form-select" required>
+                <option value="CSE">CSE</option>
+                <option value="ECE">ECE</option>
+                <option value="AIDS">AIDS</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" id="delete-btn" class="btn-danger hidden">Delete User</button>
+            <div style="flex: 1;"></div>
+            <button type="button" id="cancel-btn" class="btn-outline">Cancel</button>
+            <button type="submit" class="btn-primary">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="download-toast" class="contact-toast-container">
+      <div class="toast-icon-circle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+        </svg>
+      </div>
+      <span class="toast-message-text">PDF Downloaded Successfully</span>
+      <button type="button" id="close-download-toast" class="toast-close-btn">&times;</button>
+    </div>
+
+    <div id="import-toast" class="contact-toast-container">
+      <div class="toast-icon-circle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+        </svg>
+      </div>
+      <span class="toast-message-text">Excel Data Imported Successfully</span>
+      <button type="button" id="close-import-toast" class="toast-close-btn">&times;</button>
+    </div>
+
+    <footer class="site-footer">
+      <div class="footer-top">
+        <div class="logo-group">
+          <img src="assets/icons/logo_white.svg" alt="Lumina logo" class="logo-icon" />
+          <span class="logo-text">Lumina</span>
+        </div>
+        <nav class="footer-nav">
+          <a href="#">Help Desk</a>
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Service</a>
+        </nav>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2026 Lumina Academic Systems. All rights reserved.</p>
+        <div class="social-links">
+          <a href="#">Twitter</a>
+          <a href="#">LinkedIn</a>
+          <a href="#">GitHub</a>
+        </div>
+      </div>
+    </footer>
+
+    <script src="js/data/mockData.js"></script>
+    <script src="js/dean.js"></script>
+  </body>
+</html>

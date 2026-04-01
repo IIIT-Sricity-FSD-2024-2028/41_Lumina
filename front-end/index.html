@@ -94,7 +94,7 @@
 
       <section id="about" class="about-section">
         <div class="about-container">
-          <h2>About Lumina</h2>
+          <h1>About Lumina</h1>
           <p class="about-lead">
             Empowering Academic Journeys Through
             <strong>Intelligent Architecture</strong>.<br />Lumina is more than
@@ -129,7 +129,7 @@
 
       <section id="contact" class="contact-section">
         <div class="contact-info">
-          <h2>Get in Touch</h2>
+          <h1>Get in Touch</h1>
           <p>
             Have questions about the planning system? Our technical support team
             is here to assist you with any inquiries.
@@ -176,7 +176,7 @@
           </div>
         </div>
 
-        <form class="contact-form">
+        <form id="main-contact-form" class="contact-form">
           <div class="form-row">
             <div class="form-group">
               <label>FULL NAME</label>
@@ -206,14 +206,12 @@
               required
             ></textarea>
           </div>
-          <button type="submit" class="btn-primary">
+          <button
+            type="submit"
+            class="btn-primary"
+            style="width: 100%; justify-content: center; padding: 20px;; font-size: 16px;"
+          >
             Send Message
-            <img
-              src="img/image.svg"
-              alt=""
-              aria-hidden="true"
-              style="width: 16px; margin-left: 8px; filter: invert(1)"
-            />
           </button>
         </form>
       </section>
@@ -244,7 +242,52 @@
         </div>
       </div>
     </footer>
+
+    <div id="contact-toast" class="contact-toast-container">
+      <div class="toast-icon-circle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+      <span class="toast-message-text">Message Sent</span>
+      <button type="button" id="close-contact-toast" class="toast-close-btn">&times;</button>
+    </div>
+
     <script src="js/mockData.js"></script>
     <script src="js/validation.js"></script>
+    
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const contactForm = document.getElementById('main-contact-form');
+        const toast = document.getElementById('contact-toast');
+        const closeBtn = document.getElementById('close-contact-toast');
+        let toastTimeout;
+
+        if (contactForm) {
+          contactForm.addEventListener('submit', (e) => {
+            e.preventDefault(); // Stop page reload
+            
+            // Show toast
+            toast.classList.add('show');
+            
+            // Clear form fields
+            contactForm.reset();
+
+            // Auto-hide after 4 seconds
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+              toast.classList.remove('show');
+            }, 4000);
+          });
+        }
+
+        if (closeBtn) {
+          closeBtn.addEventListener('click', () => {
+            toast.classList.remove('show');
+            clearTimeout(toastTimeout);
+          });
+        }
+      });
+    </script>
   </body>
 </html>

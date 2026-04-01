@@ -1,0 +1,186 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lumina â€“ Grades</title>
+  <link rel="stylesheet" href="css/faculty_common.css"/>
+  <link rel="stylesheet" href="css/faculty_grades.css"/>
+</head>
+<body>
+
+<!-- â•â•â•â•â•â•â•â•â•â• FIXED NAVBAR â•â•â•â•â•â•â•â•â•â• -->
+<nav class="navbar">
+  <div class="navbar-left">
+
+    <!-- Brand -->
+    <a href="faculty_home.html" class="navbar-brand">
+      <img src="assets/" alt="Lumina"/>
+      Lumina
+    </a>
+
+    <!-- Nav Links -->
+    <ul class="navbar-links">
+      <li><a href="faculty_home.html"    class="nav-link">Home</a></li>
+      <li><a href="faculty_mycourses.html"      class="nav-link">My Courses</a></li>
+      <li><a href="faculty_announcements.html"  class="nav-link">Announcements</a></li>
+    </ul>
+  </div>
+
+  <div class="navbar-right">
+    <!-- Search -->
+    <div class="navbar-search">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <input type="text" id="globalSearch" placeholder="Search students or courses"/>
+    </div>
+
+    <!-- Bell -->
+    <button class="navbar-bell" id="notifBtn" title="Notifications">
+      <svg viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.003 6.003 0 00-5-5.917V4a1 1 0 10-2 0v1.083A6.003 6.003 0 006 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+
+    <!-- User -->
+    <div class="navbar-user">
+      <div class="navbar-user-text">
+        <span class="navbar-user-name">Prof. Manoj</span>
+        <span class="navbar-user-dept">Computer Science</span>
+      </div>
+      <div class="navbar-avatar">PM</div>
+    </div>
+
+    <!-- Sign Out -->
+    <a href="login.html" class="navbar-signout" title="Sign Out"><span>Sign Out</span><img src="assets//icons/logout.svg" alt="Sign Out"/></a>
+  </div>
+</nav>
+<!-- â•â•â•â•â•â•â•â•â•â• END NAVBAR â•â•â•â•â•â•â•â•â•â• -->
+
+<div class="page-body">
+  <main class="wrap gr-main">
+
+    <button class="back-btn" onclick="history.back()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+        <path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Back to My Courses
+    </button>
+
+    <div class="page-header" style="margin-bottom:20px;">
+      <h1 class="page-title">Grades Management</h1>
+      <p class="page-sub">Enter and manage grades. The sheet works like Excel â€” click any cell to edit.</p>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="gr-toolbar">
+      <div class="gr-toolbar-left">
+        <div class="tb-group">
+          <label class="tb-label">Course</label>
+          <select class="tb-select" id="grCourseSelect">
+            <option value="CS402">CS402 â€“ C Programming Language</option>
+            <option value="CS305">CS305 â€“ Operating Systems</option>
+            <option value="CS210">CS210 â€“ Data Structures</option>
+            <option value="CS101">CS101 â€“ Intro to Programming</option>
+          </select>
+        </div>
+        <div class="tb-group">
+          <label class="tb-label">Semester</label>
+          <select class="tb-select" id="grSemSelect">
+            <option>Fall 2024</option>
+            <option>Spring 2024</option>
+          </select>
+        </div>
+        <div class="tb-group">
+          <label class="tb-label">Search</label>
+          <div class="nav-search" style="background:#fff;border:1px solid #e2e8f0;height:34px;">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/></svg>
+            <input type="text" id="grStudentSearch" placeholder="Search by name or roll..." style="color:#0f172a;width:180px;"/>
+          </div>
+        </div>
+      </div>
+      <div class="gr-toolbar-right">
+        <button class="btn-export-xl" id="exportXlBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="15" height="15">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Export as Excel
+        </button>
+      </div>
+    </div>
+
+    <!-- Excel-style grade sheet -->
+    <div class="xl-sheet-wrap">
+      <div class="xl-sheet-header">
+        <span class="xl-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="1.8" width="20" height="20">
+            <rect x="3" y="3" width="18" height="18" rx="1"/>
+            <path d="M3 9h18M3 15h18M9 3v18M15 3v18" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span class="xl-sheet-name" id="xlSheetName">CS402 â€“ C Programming Language</span>
+        <span class="xl-sheet-sem" id="xlSheetSem">Fall 2024</span>
+        <span class="xl-saved-tag" id="xlSavedTag" style="display:none;">&#10003; Draft Saved</span>
+      </div>
+
+      <div class="xl-table-wrap">
+        <table class="xl-table" id="xlTable">
+          <thead>
+            <tr class="xl-head-row">
+              <th class="xl-th xl-th-num">#</th>
+              <th class="xl-th">Roll Number</th>
+              <th class="xl-th">Student Name</th>
+              <th class="xl-th xl-th-score">Midterm<br/><span class="xl-max">/100</span></th>
+              <th class="xl-th xl-th-score">Final<br/><span class="xl-max">/100</span></th>
+              <th class="xl-th xl-th-score">Total<br/><span class="xl-max">/100</span></th>
+              <th class="xl-th xl-th-grade">Grade</th>
+            </tr>
+          </thead>
+          <tbody id="xlTableBody"></tbody>
+          <tfoot id="xlTableFoot"></tfoot>
+        </table>
+      </div>
+
+      <div class="xl-footer">
+        <span class="xl-count" id="xlCount">6 students</span>
+        <div class="xl-actions">
+          <button class="xl-btn-draft" id="saveDraftBtn">Save Draft</button>
+          <button class="xl-btn-submit" id="submitGradesBtn">Submit Grades</button>
+        </div>
+      </div>
+    </div>
+
+    <p class="gr-hint">&#9432; Click any Midterm or Final cell to edit. Total and Grade are auto-calculated.</p>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-top">
+      <div class="logo-group">
+        <img src="assets//icons/logo_white.svg" alt="Lumina"/>
+        <span class="logo-text">Lumina</span>
+      </div>
+      <nav class="footer-nav">
+        <a href="#">Help Desk</a>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+      </nav>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 Lumina Academic Systems. All rights reserved.</p>
+      <div class="social-links">
+        <a href="#">Twitter</a>
+        <a href="#">LinkedIn</a>
+        <a href="#">GitHub</a>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/mockData.js"></script>
+<script src="js/faculty_data.js"></script>
+<script src="js/faculty_grades.js"></script>
+</body>
+</html>
+
+
+

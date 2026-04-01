@@ -90,10 +90,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 isValid = false;
             }
 
-            if (isValid) {
+            /*if (isValid) {
                 alert("Message sent successfully to Lumina Support!");
                 contactForm.reset();
-            }
+            }*/
         });
     }
 });

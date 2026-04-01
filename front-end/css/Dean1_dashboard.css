@@ -1,0 +1,242 @@
+/* ============================================
+   PAGE-SPECIFIC: Home Dashboard
+   ============================================ */
+
+/* ── Progress Section ── */
+.progress-section {
+  margin-bottom: var(--space-xl);
+}
+
+.progress-section__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-md);
+}
+
+.progress-section__title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--gray-900);
+}
+
+.progress-section__pct {
+  font-size: .9rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.progress-bar {
+  width: 100%;
+  height: 10px;
+  background: var(--gray-200);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.progress-bar__fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #2563eb);
+  border-radius: var(--radius-full);
+  transition: width 0.8s var(--ease);
+}
+
+/* ── Dashboard Bottom Layout ── */
+.dashboard-bottom {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: var(--space-xl);
+  align-items: start;
+  margin-top: var(--space-sm);
+}
+
+/* ── Room Panel ── */
+.room-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.room-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-lg);
+}
+
+.room-panel__title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--gray-900);
+}
+
+.room-panel__filter {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.room-panel__filter-label {
+  font-size: .85rem;
+  font-weight: 500;
+  color: var(--gray-500);
+}
+
+.select-field--sm {
+  width: auto;
+  min-width: 130px;
+  padding: 8px 32px 8px 12px;
+  font-size: .85rem;
+}
+
+.room-panel__view-all {
+  display: inline-block;
+  margin-top: var(--space-lg);
+  font-size: .875rem;
+  font-weight: 600;
+  color: var(--navy);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color var(--duration) var(--ease);
+}
+
+.room-panel__view-all:hover {
+  color: var(--accent);
+}
+
+/* ── Time Slot Tags ── */
+@keyframes fade-in-row {
+  from { opacity: 0; transform: translateY(3px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+#roomTableBody tr {
+  animation: fade-in-row 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.time-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  background: #f8fafc;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--radius-full);
+  font-size: .75rem;
+  font-weight: 600;
+  margin: 2px 4px 2px 0;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+}
+
+.time-tag--empty {
+  background: transparent;
+  color: var(--gray-400);
+  font-style: italic;
+  padding: 4px 0;
+}
+
+/* ── Activity Panel ── */
+.activity-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.activity-panel__title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: var(--space-lg);
+}
+
+.activity-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.activity-item {
+  display: flex;
+  gap: var(--space-md);
+  align-items: flex-start;
+}
+
+.activity-item__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: var(--accent-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.activity-item__icon-img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.activity-item__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.activity-item__title {
+  font-size: .875rem;
+  font-weight: 600;
+  color: var(--gray-800);
+  margin-bottom: 2px;
+}
+
+.activity-item__detail {
+  font-size: .8rem;
+  color: var(--gray-500);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.activity-item__time {
+  font-size: .75rem;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.activity-panel__btn {
+  width: 100%;
+  padding: 12px;
+}
+
+/* ── Stat Card Icons (Dashboard specific) ── */
+.stat-card__icon--dash-blue {
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+.stat-card__icon--dash-green {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.stat-card__icon--dash-red {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.stat-card__icon--dash-amber {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .dashboard-bottom {
+    grid-template-columns: 1fr;
+  }
+}

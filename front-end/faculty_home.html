@@ -1,0 +1,165 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lumina - Faculty Dashboard</title>
+  <link rel="stylesheet" href="css/faculty_common.css"/>
+  <link rel="stylesheet" href="css/faculty_home.css"/>
+</head>
+<body>
+
+<div class="notif-overlay" id="notifOverlay">
+  <div class="notif-popup">
+    <div class="notif-header">
+      <span>System Alerts</span>
+      <button id="closeNotif">&times;</button>
+    </div>
+    <ul id="alertsList"></ul>
+  </div>
+</div>
+
+<nav class="navbar">
+  <div class="navbar-left">
+    <a href="faculty_home.html" class="navbar-brand">
+      <img src="assets/icons/logo.svg" alt="Lumina"/>
+      Lumina
+    </a>
+
+    <ul class="navbar-links">
+      <li><a href="faculty_home.html" class="nav-link active">Home</a></li>
+      <li><a href="faculty_mycourses.html" class="nav-link">My Courses</a></li>
+      <li><a href="faculty_announcements.html" class="nav-link">Announcements</a></li>
+    </ul>
+  </div>
+
+  <div class="navbar-right">
+    <button class="navbar-bell" id="notifBtn" title="Notifications">
+      <svg viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.003 6.003 0 00-5-5.917V4a1 1 0 10-2 0v1.083A6.003 6.003 0 006 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+
+    <div class="navbar-user">
+      <div class="navbar-user-text">
+        <span class="navbar-user-name">Prof. Manoj</span>
+        <span class="navbar-user-dept">Computer Science</span>
+      </div>
+      <div class="navbar-avatar">PM</div>
+    </div>
+
+    <a href="login.html" class="navbar-signout" title="Sign Out"><span>Sign Out</span><img src="assets/icons/logout.svg" alt="Sign Out"/></a>
+  </div>
+</nav>
+
+<div class="page-body">
+  <main class="dash-main wrap">
+    <div class="dash-grid">
+      <div class="left-col">
+        <div class="welcome-block">
+          <h1 class="welcome-title">Welcome Prof. Manoj</h1>
+          <p class="welcome-sub">Here's what's happening in your department today.</p>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat-card">
+            <div>
+              <p class="stat-label">Active Courses</p>
+              <p class="stat-value" id="statActive">4</p>
+            </div>
+            <div class="stat-icon-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22">
+                <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 10h8M8 14h5" stroke-linecap="round"/>
+              </svg>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div>
+              <p class="stat-label">Total Enrolled</p>
+              <p class="stat-value" id="statEnrolled">128</p>
+            </div>
+            <div class="stat-icon-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22">
+                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke-linecap="round"/>
+              </svg>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div>
+              <p class="stat-label">Classes Today</p>
+              <p class="stat-value" id="statToday">3</p>
+            </div>
+            <div class="stat-icon-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22">
+                <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18" stroke-linecap="round"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <section class="section-block">
+          <h2 class="section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="15" height="15">
+              <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3" stroke-linecap="round"/>
+            </svg>
+            Today's Classes
+          </h2>
+          <div id="todaysClasses"></div>
+        </section>
+
+        <section class="section-block">
+          <div class="section-row">
+            <h2 class="section-title">My Courses</h2>
+            <a href="faculty_mycourses.html" class="link-blue">View All Courses</a>
+          </div>
+          <div class="mini-grid" id="miniCoursesGrid"></div>
+        </section>
+      </div>
+
+      <div class="right-col">
+        <div class="widget-card">
+          <h3 class="widget-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="15" height="15">
+              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke-linecap="round"/>
+            </svg>
+            Quick Roster
+          </h3>
+          <input type="text" id="rosterSearch" class="roster-search" placeholder="Search student...">
+          <ul id="quickRosterList"></ul>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-top">
+      <div class="logo-group">
+        <img src="assets/icons/logo_white.svg" alt="Lumina"/>
+        <span class="logo-text">Lumina</span>
+      </div>
+      <nav class="footer-nav">
+        <a href="#">Help Desk</a>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+      </nav>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 Lumina Academic Systems. All rights reserved.</p>
+      <div class="social-links">
+        <a href="#">Twitter</a>
+        <a href="#">LinkedIn</a>
+        <a href="#">GitHub</a>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<script src="js/mockData.js"></script>
+<script src="js/faculty_data.js"></script>
+<script src="js/faculty_home.js"></script>
+</body>
+</html>
+
+
+
+

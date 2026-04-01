@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lumina – Course Registration</title>
+  <link rel="stylesheet" href="css/student_style.css" />
+  <link rel="stylesheet" href="css/student_registration.css" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <script src="js/mockData.js"></script>
+
+  <div id="navbar-placeholder"></div>
+
+  <!-- SUB NAV -->
+  <div class="reg-subnav">
+    <div class="reg-subnav-inner">
+      <button class="sub-nav-btn active" data-target="view-selection">Course Selection</button>
+      <button class="sub-nav-btn" data-target="view-status">Validation Status</button>
+      <button class="sub-nav-btn" data-target="view-override">Override Request</button>
+    </div>
+  </div>
+
+  <main class="main-content">
+
+    <!-- ── VIEW: COURSE SELECTION ── -->
+    <section id="view-selection" class="reg-view active">
+
+      <div class="page-title">
+        <h1>Course Registration</h1>
+        <p>Select courses for the upcoming semester. Monitor your credit load from the sidebar.</p>
+      </div>
+
+      <div class="reg-layout">
+
+        <!-- LEFT: filters + grid -->
+        <div class="reg-main-col">
+
+          <div class="card filters-card">
+            <input type="text" id="searchInput" placeholder="🔍 Search courses by name or code" class="reg-search" />
+            <div class="filter-row">
+              <span class="filter-lbl">TYPE:</span>
+              <div class="pill active" data-filter="type" data-value="All">All</div>
+              <div class="pill" data-filter="type" data-value="Institute Core">Institute Core</div>
+              <div class="pill" data-filter="type" data-value="Program Core">Program Core</div>
+              <div class="pill" data-filter="type" data-value="Elective">Elective</div>
+              <div class="pill" data-filter="type" data-value="SEED">SEED</div>
+            </div>
+            <div class="filter-row">
+              <span class="filter-lbl">CREDITS:</span>
+              <div class="pill" data-filter="credit" data-value="2">2 Credits</div>
+              <div class="pill" data-filter="credit" data-value="4">4 Credits</div>
+            </div>
+          </div>
+
+          <div class="courses-grid" id="coursesGrid"></div>
+
+        </div>
+
+        <!-- RIGHT: sidebar -->
+        <aside class="reg-sidebar">
+          <div class="sidebar-head">
+            <h2>My Selected Courses</h2>
+          </div>
+          <div class="sidebar-body">
+            <div id="selectedList"></div>
+            <div class="credit-box">
+              <div class="credit-top">
+                <span class="credit-lbl">CREDIT LOAD</span>
+                <strong><span id="currentCredits">0</span> / 20 <span class="light">credits</span></strong>
+              </div>
+              <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
+              <p class="min-note">* Minimum 16 credits required for full-time status.</p>
+            </div>
+          </div>
+        </aside>
+
+      </div>
+    </section>
+
+    <!-- ── VIEW: VALIDATION STATUS ── -->
+    <section id="view-status" class="reg-view">
+      <div class="page-title">
+        <h1>Validation Status</h1>
+        <p>Review the status of your current enrollment requests.</p>
+      </div>
+      <div class="card" style="padding:32px;text-align:center;color:#64748b;">
+        <div style="font-size:36px;margin-bottom:12px;">📋</div>
+        <p>No pending validation requests.</p>
+      </div>
+    </section>
+
+    <!-- ── VIEW: SUCCESS ── -->
+    <section id="view-success" class="reg-view">
+      <div class="status-card">
+        <div class="status-icon success">✓</div>
+        <h2>Enrollment Successful!</h2>
+        <p>Your enrollment has been processed for <strong>Spring 2026</strong>.</p>
+        <div class="status-btns">
+          <button class="dark-btn" onclick="navigate('view-selection')">Back to Course Selection</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── VIEW: PREREQ ERROR ── -->
+    <section id="view-error" class="reg-view">
+      <div class="status-card">
+        <div class="status-icon error">🔒</div>
+        <h2>Enrollment Error: Missing Prerequisite</h2>
+        <div class="error-badge" id="errorBadge">⚠️ MISSING PREREQUISITE</div>
+        <p id="errorMsg">You cannot enroll in this course until the prerequisite is completed.</p>
+        <div class="status-btns">
+          <button class="dark-btn" onclick="navigate('view-override')">Request Override</button>
+          <button class="outline-btn" onclick="navigate('view-selection')">Cancel</button>
+        </div>
+        <a href="#" class="help-link">Believe this is an error? <strong>Contact the Registrar's Office</strong></a>
+      </div>
+    </section>
+
+    <!-- ── VIEW: OVERRIDE FORM ── -->
+    <section id="view-override" class="reg-view">
+      <div class="page-title">
+        <h1>Override Request</h1>
+        <p>Submit a formal request to override a prerequisite or enroll in a restricted course.</p>
+      </div>
+      <div class="override-grid">
+
+        <div class="override-info">
+          <div class="info-card">
+            <span class="info-icon">👤</span>
+            <div>
+              <div class="info-lbl">STUDENT ID</div>
+              <div class="info-val">S2024002</div>
+            </div>
+          </div>
+          <div class="info-card">
+            <span class="info-icon">📅</span>
+            <div>
+              <div class="info-lbl">ACADEMIC TERM</div>
+              <div class="info-val">Spring 2026</div>
+            </div>
+          </div>
+          <div class="guidelines-card">
+            <h3>GUIDELINES</h3>
+            <ul>
+              <li>Overrides are granted based on space availability and academic necessity.</li>
+              <li>You must provide valid supporting documentation for prerequisite waivers.</li>
+              <li>Standard processing time is 3–5 business days.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="override-form-wrap card">
+          <form id="overrideForm">
+            <div class="form-row-2">
+              <div class="form-group">
+                <label>Course Code</label>
+                <select><option>CS-451 Deep Learning</option></select>
+              </div>
+              <div class="form-group">
+                <label>Override Reason</label>
+                <select><option>Prerequisite Waiver</option></select>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="label-row">
+                <label>Justification Statement</label>
+                <span class="char-count" id="charCount">0 / 1500</span>
+              </div>
+              <textarea id="justification" placeholder="Provide detailed academic reasons for your request..." rows="5"></textarea>
+            </div>
+            <div class="form-group">
+              <label>Supporting Documents</label>
+              <div class="upload-area">
+                <span style="font-size:24px">☁️</span>
+                <p><strong>Click to upload</strong> or drag and drop</p>
+                <p style="font-size:12px;color:#94a3b8;">PDF, JPG or PNG (max 5MB)</p>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="outline-btn" onclick="navigate('view-selection')">Cancel</button>
+              <button type="submit" class="dark-btn">Submit Request →</button>
+            </div>
+          </form>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- COURSE DETAIL POPUP (reuses dashboard popup styles) -->
+  <div class="popup-bg" id="courseDetailPopup">
+    <div class="popup">
+      <div class="popup-header dark-popup-header">
+        <h2 id="courseDetailTitle">Course Name</h2>
+        <button class="close-btn white-close" onclick="closeCourseDetail()">✕</button>
+      </div>
+      <div class="popup-body" id="courseDetailBody"></div>
+    </div>
+  </div>
+
+  <div id="footer-placeholder"></div>
+  <div class="toast" id="toast">✅ Enrolled successfully!</div>
+
+  <script src="js/student_loader.js"></script>
+  <script src="js/student_registration.js"></script>
+  <script>
+    loadSharedComponents('student_registration.html');
+  </script>
+</body>
+</html>

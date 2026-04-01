@@ -1,0 +1,158 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lumina â€“ Academic Rosters</title>
+  <link rel="stylesheet" href="css/faculty_common.css"/>
+  <link rel="stylesheet" href="css/faculty_rosters.css"/>
+</head>
+<body>
+
+<!-- â•â•â•â•â•â•â•â•â•â• FIXED NAVBAR â•â•â•â•â•â•â•â•â•â• -->
+<nav class="navbar">
+  <div class="navbar-left">
+
+    <!-- Brand -->
+    <a href="faculty_home.html" class="navbar-brand">
+      <img src="assets/icons/logo.svg" alt="Lumina"/>
+      Lumina
+    </a>
+
+    <!-- Nav Links -->
+    <ul class="navbar-links">
+      <li><a href="faculty_home.html"    class="nav-link">Home</a></li>
+      <li><a href="faculty_mycourses.html"      class="nav-link">My Courses</a></li>
+      <li><a href="faculty_announcements.html"  class="nav-link">Announcements</a></li>
+    </ul>
+  </div>
+
+  <div class="navbar-right">
+    <!-- Search -->
+    <div class="navbar-search">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <input type="text" id="globalSearch" placeholder="Search students or courses"/>
+    </div>
+
+    <!-- Bell -->
+    <button class="navbar-bell" id="notifBtn" title="Notifications">
+      <svg viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.003 6.003 0 00-5-5.917V4a1 1 0 10-2 0v1.083A6.003 6.003 0 006 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+
+    <!-- User -->
+    <div class="navbar-user">
+      <div class="navbar-user-text">
+        <span class="navbar-user-name">Prof. Manoj</span>
+        <span class="navbar-user-dept">Computer Science</span>
+      </div>
+      <div class="navbar-avatar">PM</div>
+    </div>
+
+    <!-- Sign Out -->
+    <a href="login.html" class="navbar-signout" title="Sign Out"><span>Sign Out</span><img src="assets/icons/logout.svg" alt="Sign Out"/></a>
+  </div>
+</nav>
+<!-- â•â•â•â•â•â•â•â•â•â• END NAVBAR â•â•â•â•â•â•â•â•â•â• -->
+
+<div class="page-body">
+  <main class="wrap ros-main">
+
+    <!-- Back button (shown when coming from My Courses) -->
+    <button class="back-btn" id="backBtn" onclick="history.back()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+        <path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Back to My Courses
+    </button>
+
+    <div class="ros-page-header">
+      <div>
+        <h1 class="page-title">Academic Rosters</h1>
+        <p class="page-sub">View and manage students enrolled in your active courses.</p>
+      </div>
+      <button class="export-btn" id="exportBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="15" height="15">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Download and Export Roster
+      </button>
+    </div>
+
+    <!-- Course selector -->
+    <div class="course-select-block">
+      <label class="cs-label">Select Course</label>
+      <select class="cs-select" id="courseSelector">
+        <option value="CS210">CS210 â€“ Data Structures</option>
+        <option value="CS402">CS402 â€“ C Programming Language</option>
+        <option value="CS305">CS305 â€“ Operating Systems</option>
+        <option value="CS101">CS101 â€“ Intro to Programming</option>
+      </select>
+    </div>
+
+    <!-- Table card -->
+    <div class="table-card">
+      <div class="table-top-row">
+        <div class="enrolled-info">
+          <span class="enrolled-count" id="enrolledCount">45</span>
+          <span class="enrolled-label"> students enrolled</span>
+        </div>
+        <div class="table-search nav-search" style="background:#fff;border:1px solid #e2e8f0;">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/></svg>
+          <input type="text" id="studentSearch" placeholder="Search student..."/>
+        </div>
+      </div>
+
+      <table class="roster-table">
+        <thead>
+          <tr>
+            <th>ROLL NUMBER</th>
+            <th>STUDENT NAME</th>
+            <th>EMAIL ADDRESS</th>
+            <th>PROGRAM</th>
+          </tr>
+        </thead>
+        <tbody id="rosterTableBody"></tbody>
+      </table>
+
+      <p class="no-results" id="rosterEmpty" style="display:none;">No students found.</p>
+
+      <div class="pagination-row">
+        <span class="pag-info" id="pagInfo">Showing 1â€“4 of 45 students</span>
+        <div class="pag-btns" id="pagBtns"></div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-top">
+      <div class="logo-group">
+        <img src="assets/icons/logo_white.svg" alt="Lumina"/>
+        <span class="logo-text">Lumina</span>
+      </div>
+      <nav class="footer-nav">
+        <a href="#">Help Desk</a>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+      </nav>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 Lumina Academic Systems. All rights reserved.</p>
+      <div class="social-links">
+        <a href="#">Twitter</a>
+        <a href="#">LinkedIn</a>
+        <a href="#">GitHub</a>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/mockData.js"></script>
+<script src="js/faculty_data.js"></script>
+<script src="js/faculty_rosters.js"></script>
+</body>
+</html>
+
+
+

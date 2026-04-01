@@ -1,5 +1,10 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 100px; /* Adjust this number if your header is taller/shorter */
+}
+
 :root {
   /* Lumina Design Tokens */
   --primary-dark: #071932;
@@ -149,15 +154,14 @@ textarea:focus-visible {
   font-size: 0.75rem;
   font-weight: 600;
 }
-.badge-core {
-  background-color: #eff6ff;
-  color: #1d4ed8;
-  border: 1px solid #dbeafe;
-}
-.badge-elective {
-  background-color: #f3f4f6;
-  color: #374151;
-  border: 1px solid var(--border-color);
+/* --- Minimalist Gray Badges --- */
+.badge-institute-core,
+.badge-program-core,
+.badge-elective,
+.badge-seed {
+    background-color: #f1f5f9; /* Light slate gray */
+    color: #475569;            /* Darker slate gray text */
+    border: 1px solid #e2e8f0; /* Subtle border for crispness */
 }
 
 /* --- Validation States --- */

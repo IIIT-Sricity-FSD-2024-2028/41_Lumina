@@ -39,7 +39,7 @@
       </header>
 
       <section class="filter-section" aria-label="Course search filters">
-        <form class="filter-bar" role="search">
+        <form class="filter-bar" id="course-filter-form" role="search">
           <div class="form-group search-group">
             <label for="search-input">Search Courses</label>
             <div class="input-with-icon">
@@ -57,11 +57,9 @@
             <label for="dept-select">Department</label>
             <select id="dept-select" class="form-select">
               <option value="all">All Depts</option>
-              <option value="cse">CSE</option>
-              <option value="math">MATH</option>
-              <option value="hum">HUM</option>
-              <option value="phys">PHYS</option>
-              <option value="econ">ECON</option>
+              <option value="CSE">CSE</option>
+              <option value="ECE">ECE</option>
+              <option value="AIDS">AIDS</option>
             </select>
           </div>
 
@@ -69,8 +67,10 @@
             <label for="type-select">Course Type</label>
             <select id="type-select" class="form-select">
               <option value="all">All Types</option>
-              <option value="core">Core</option>
-              <option value="elective">Elective</option>
+              <option value="Institute Core">Institute Core</option>
+              <option value="Program Core">Program Core</option>
+              <option value="Elective">Elective</option>
+              <option value="SEED">SEED</option>
             </select>
           </div>
 
@@ -88,111 +88,13 @@
         </form>
       </section>
 
-      <section class="course-grid" aria-label="Course listings">
-        <article class="course-card">
-          <div class="card-top">
-            <span class="course-code">CS201</span>
-            <span class="badge badge-core">Core</span>
-          </div>
-          <h2 class="course-title">Introduction to Algorithms</h2>
-          <div class="course-meta">
-            <span class="meta-item"
-              ><img src="assets/icons/credit_icon.svg" alt="" /> Credits: 4</span
-            >
-            <span class="meta-item"
-              ><img src="assets/icons/dept.svg" alt="" /> Department: CSE</span
-            >
-          </div>
-        </article>
-
-        <article class="course-card">
-          <div class="card-top">
-            <span class="course-code">MAT305</span>
-            <span class="badge badge-core">Core</span>
-          </div>
-          <h2 class="course-title">Linear Algebra & Applications</h2>
-          <div class="course-meta">
-            <span class="meta-item"
-              ><img src="assets/icons/credit_icon.svg" alt="" /> Credits: 3</span
-            >
-            <span class="meta-item"
-              ><img src="assets/icons/dept.svg" alt="" /> Department: MATH</span
-            >
-          </div>
-        </article>
-
-        <article class="course-card">
-          <div class="card-top">
-            <span class="course-code">ENG102</span>
-            <span class="badge badge-elective">Elective</span>
-          </div>
-          <h2 class="course-title">Technical Writing for Engineers</h2>
-          <div class="course-meta">
-            <span class="meta-item"
-              ><img src="assets/icons/credit_icon.svg" alt="" /> Credits: 2</span
-            >
-            <span class="meta-item"
-              ><img src="assets/icons/dept.svg" alt="" /> Department: HUM</span
-            >
-          </div>
-        </article>
-
-        <article class="course-card">
-          <div class="card-top">
-            <span class="course-code">PHY101</span>
-            <span class="badge badge-core">Core</span>
-          </div>
-          <h2 class="course-title">Classical Mechanics</h2>
-          <div class="course-meta">
-            <span class="meta-item"
-              ><img src="assets/icons/credit_icon.svg" alt="" /> Credits: 4</span
-            >
-            <span class="meta-item"
-              ><img src="assets/icons/dept.svg" alt="" /> Department: PHYS</span
-            >
-          </div>
-        </article>
-
-        <article class="course-card">
-          <div class="card-top">
-            <span class="course-code">CS440</span>
-            <span class="badge badge-elective">Elective</span>
-          </div>
-          <h2 class="course-title">Artificial Intelligence</h2>
-          <div class="course-meta">
-            <span class="meta-item"
-              ><img src="assets/icons/credit_icon.svg" alt="" /> Credits: 4</span
-            >
-            <span class="meta-item"
-              ><img src="assets/icons/dept.svg" alt="" /> Department: CSE</span
-            >
-          </div>
-        </article>
-
-        <article class="course-card">
-          <div class="card-top">
-            <span class="course-code">ECO201</span>
-            <span class="badge badge-core">Core</span>
-          </div>
-          <h2 class="course-title">Macroeconomics 101</h2>
-          <div class="course-meta">
-            <span class="meta-item"
-              ><img src="assets/icons/credit_icon.svg" alt="" /> Credits: 3</span
-            >
-            <span class="meta-item"
-              ><img src="assets/icons/dept.svg" alt="" /> Department: ECON</span
-            >
-          </div>
-        </article>
-      </section>
+      <section class="course-grid" id="course-grid" aria-label="Course listings">
+          </section>
 
       <nav class="pagination" aria-label="Pagination">
         <button class="page-btn text-muted">Previous</button>
         <button class="page-btn active">1</button>
         <button class="page-btn">2</button>
-        <button class="page-btn">3</button>
-        <span class="page-dots">...</span>
-        <button class="page-btn">8</button>
         <button class="page-btn">Next</button>
       </nav>
     </main>
@@ -225,5 +127,6 @@
     </footer>
     <script src="js/mockData.js"></script>
     <script src="js/validation.js"></script>
+    <script src="js/course.js"></script>
   </body>
 </html>

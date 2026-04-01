@@ -1,0 +1,197 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lumina - Announcements</title>
+  <link rel="stylesheet" href="css/faculty_common.css"/>
+  <link rel="stylesheet" href="css/faculty_announcements.css"/>
+</head>
+<body>
+
+<div class="notif-overlay" id="notifOverlay">
+  <div class="notif-popup">
+    <div class="notif-header">
+      <span>System Alerts</span>
+      <button id="closeNotif">&times;</button>
+    </div>
+    <ul id="alertsList"></ul>
+  </div>
+</div>
+
+<nav class="navbar">
+  <div class="navbar-left">
+    <a href="faculty_home.html" class="navbar-brand">
+      <img src="assets/icons/logo.svg" alt="Lumina"/>
+      Lumina
+    </a>
+
+    <ul class="navbar-links">
+      <li><a href="faculty_home.html" class="nav-link">Home</a></li>
+      <li><a href="faculty_mycourses.html" class="nav-link">My Courses</a></li>
+      <li><a href="faculty_announcements.html" class="nav-link active">Announcements</a></li>
+    </ul>
+  </div>
+
+  <div class="navbar-right">
+    <button class="navbar-bell" id="notifBtn" title="Notifications">
+      <svg viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.003 6.003 0 00-5-5.917V4a1 1 0 10-2 0v1.083A6.003 6.003 0 006 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+
+    <div class="navbar-user">
+      <div class="navbar-user-text">
+        <span class="navbar-user-name">Prof. Manoj</span>
+        <span class="navbar-user-dept">Computer Science</span>
+      </div>
+      <div class="navbar-avatar">PM</div>
+    </div>
+
+    <a href="login.html" class="navbar-signout" title="Sign Out"><span>Sign Out</span><img src="assets/icons/logout.svg" alt="Sign Out"/></a>
+  </div>
+</nav>
+
+<div class="page-body">
+  <main class="wrap ann-main">
+    <div class="ann-page-header">
+      <div>
+        <h1 class="page-title">Announcements</h1>
+        <p class="page-sub">Create and manage course-related announcements for your students.</p>
+      </div>
+      <button class="new-ann-btn" id="newAnnBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+          <circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8" stroke-linecap="round"/>
+        </svg>
+        New Announcement
+      </button>
+    </div>
+
+    <div class="ann-filters">
+      <div class="ann-filter-group ann-filter-search">
+        <label class="af-label">SEARCH FEED</label>
+        <div class="nav-search ann-search-box">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/></svg>
+          <input type="text" id="annSearch" placeholder="Search by title or keywords..."/>
+        </div>
+      </div>
+      <div class="ann-filter-group">
+        <label class="af-label">FILTER BY COURSE</label>
+        <select class="af-select" id="annCourseFilter">
+          <option value="all">All Courses</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="ann-grid" id="annGrid"></div>
+    <p class="no-results" id="annEmpty" style="display:none;">No announcements found.</p>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-top">
+      <div class="logo-group">
+        <img src="assets/icons/logo_white.svg" alt="Lumina"/>
+        <span class="logo-text">Lumina</span>
+      </div>
+      <nav class="footer-nav">
+        <a href="#">Help Desk</a>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+      </nav>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 Lumina Academic Systems. All rights reserved.</p>
+      <div class="social-links">
+        <a href="#">Twitter</a>
+        <a href="#">LinkedIn</a>
+        <a href="#">GitHub</a>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<div class="overlay" id="annModal">
+  <div class="modal ann-modal-box">
+    <h2 class="modal-title" id="annModalTitle">New Announcement</h2>
+    <p class="modal-sub">Create and publish an announcement for your students</p>
+    <hr class="modal-hr"/>
+
+    <form id="annForm" novalidate>
+      <input type="hidden" id="editAnnId" value=""/>
+
+      <div class="form-group">
+        <label class="form-label" for="annCourse">Course</label>
+        <select class="form-select" id="annCourse" required>
+          <option value="">Select a course</option>
+        </select>
+        <span class="form-error" id="errCourse"></span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="annTitle">Announcement Title</label>
+        <input class="form-input" type="text" id="annTitle" placeholder="Enter title here" maxlength="120" required/>
+        <span class="form-error" id="errTitle"></span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="annMsg">Message</label>
+        <textarea class="form-textarea" id="annMsg" placeholder="Write your announcement details here..." maxlength="1000" required></textarea>
+        <span class="form-error" id="errMsg"></span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Audience</label>
+        <div class="radio-row">
+          <label class="radio-opt">
+            <input type="radio" name="audience" value="all" checked/>
+            <span class="radio-circle"></span> All Students
+          </label>
+          <label class="radio-opt">
+            <input type="radio" name="audience" value="section"/>
+            <span class="radio-circle"></span> Specific Section
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Attachment</label>
+        <div class="file-drop" id="fileDrop">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" width="28" height="28">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
+            <line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/>
+          </svg>
+          <p class="fd-text">Click to upload or drag and drop</p>
+          <p class="fd-sub">PDF, DOCX up to 10MB</p>
+          <input type="file" id="annFile" accept=".pdf,.docx" style="display:none;"/>
+        </div>
+        <p class="fd-selected" id="fdSelected" style="display:none;"></p>
+      </div>
+
+      <div class="ann-modal-footer">
+        <button type="button" class="btn-secondary" id="cancelAnnBtn">Cancel</button>
+        <button type="submit" class="btn-post" id="postAnnBtn">&#9654; Post Announcement</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="overlay" id="deleteModal">
+  <div class="modal" style="max-width:400px;">
+    <h2 class="modal-title">Delete Announcement</h2>
+    <p style="font-size:13.5px;color:#475569;margin:12px 0 20px;">Are you sure you want to delete this announcement? This cannot be undone.</p>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn-secondary" id="cancelDelBtn">Cancel</button>
+      <button class="btn-danger" id="confirmDelBtn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/mockData.js"></script>
+<script src="js/faculty_data.js"></script>
+<script src="js/faculty_announcements.js"></script>
+</body>
+</html>
+
+
+
+

@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Lumina — Course Catalog Management for Dean1.">
+  <title>Lumina — Course Catalog</title>
+  <link rel="stylesheet" href="css/Dean1_shared.css">
+  <link rel="stylesheet" href="css/Dean1_course-catalog.css">
+</head>
+<body>
+
+  <header id="navbar" class="navbar"></header>
+
+  <main class="main-content">
+
+    <!-- ── Page Header ── -->
+    <div class="catalog-header">
+      <h1 class="catalog-header__title">Course Catalog Management</h1>
+      <button class="btn btn--primary" id="addCourseBtn">+ Add New Course</button>
+    </div>
+
+    <!-- ── Stat Cards ── -->
+    <section class="stat-cards" id="statCards"></section>
+
+    <!-- ── Search & Filters ── -->
+    <div class="filter-bar" id="filterBar">
+      <div class="filter-bar__search">
+        <span class="filter-bar__search-icon">🔍</span>
+        <input type="text" class="input-field filter-bar__input" id="searchInput"
+               placeholder="Search by course code or name...">
+      </div>
+      <select class="select-field select-field--filter" id="filterUG">
+        <option value="">UG</option>
+        <option value="UG1">UG1</option>
+        <option value="UG2">UG2</option>
+        <option value="UG3">UG3</option>
+        <option value="UG4">UG4</option>
+      </select>
+      <select class="select-field select-field--filter" id="filterSemester">
+        <option value="">Semester</option>
+        <option value="Monsoon">Monsoon</option>
+        <option value="Spring">Spring</option>
+      </select>
+      <select class="select-field select-field--filter" id="filterType">
+        <option value="">Course Type</option>
+        <option value="Institute Core">Institute Core</option>
+        <option value="Program Core">Program Core</option>
+        <option value="Elective">Elective</option>
+        <option value="Seed Course">Seed Course</option>
+      </select>
+      <select class="select-field select-field--filter" id="filterDept">
+        <option value="">Department</option>
+        <option value="CSE">CSE</option>
+        <option value="ECE">ECE</option>
+        <option value="AIDS">AIDS</option>
+      </select>
+      <select class="select-field select-field--filter" id="filterStatus">
+        <option value="">Status</option>
+        <option value="Active">Active</option>
+        <option value="Inactive">Inactive</option>
+      </select>
+      <button class="filter-bar__clear-btn" id="clearFiltersBtn" title="Clear all filters">⟳</button>
+    </div>
+
+    <!-- ── Course Table ── -->
+    <div class="card catalog-table-card">
+      <table class="data-table" id="courseTable">
+        <thead>
+          <tr>
+            <th>Course Code</th>
+            <th>Course Name</th>
+            <th>Dept</th>
+            <th>Credits</th>
+            <th>Course Type</th>
+            <th>Prerequisites</th>
+            <th>UG Year</th>
+            <th>Semester</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="courseTableBody"></tbody>
+      </table>
+
+      <!-- Pagination -->
+      <div class="pagination" id="pagination">
+        <span class="pagination__info" id="paginationInfo"></span>
+        <div class="pagination__controls" id="paginationControls"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer id="footer" class="footer"></footer>
+
+  <!-- ══════════ ADD COURSE MODAL ══════════ -->
+  <div class="modal-overlay" id="addModal">
+    <div class="modal">
+      <div class="modal__header">
+        <h2 class="modal__title">Add New Course</h2>
+        <button class="modal__close" id="addModalClose">&times;</button>
+      </div>
+      <form id="addCourseForm" novalidate>
+        <div class="modal__body">
+
+          <div class="form-row">
+            <div class="form-group" id="addCodeGroup">
+              <label class="form-label" for="addCode">Course Code</label>
+              <input class="input-field" id="addCode" placeholder="e.g. CS101">
+              <span class="form-error" id="addCodeError">Course code is required</span>
+            </div>
+            <div class="form-group" id="addNameGroup">
+              <label class="form-label" for="addName">Course Name</label>
+              <input class="input-field" id="addName" placeholder="e.g. Intro to Logic">
+              <span class="form-error" id="addNameError">Course name is required</span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" id="addCreditsGroup">
+              <label class="form-label" for="addCredits">Credits</label>
+              <input class="input-field" id="addCredits" type="number" min="1" max="6" placeholder="e.g. 4">
+              <span class="form-error" id="addCreditsError">Credits (1-6) required</span>
+            </div>
+            <div class="form-group" id="addUGGroup">
+              <label class="form-label" for="addUG">UG Year</label>
+              <select class="select-field" id="addUG">
+                <option value="">Select Year</option>
+                <option value="UG1">UG1</option>
+                <option value="UG2">UG2</option>
+                <option value="UG3">UG3</option>
+                <option value="UG4">UG4</option>
+              </select>
+              <span class="form-error" id="addUGError">UG Year is required</span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" id="addSemesterGroup">
+              <label class="form-label">Semester</label>
+              <div class="radio-group">
+                <label class="radio-label">
+                  <input type="radio" name="addSemester" value="Monsoon"> Monsoon
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="addSemester" value="Spring"> Spring
+                </label>
+              </div>
+              <span class="form-error" id="addSemesterError">Semester is required</span>
+            </div>
+            <div class="form-group" id="addTypeGroup">
+              <label class="form-label" for="addType">Type</label>
+              <select class="select-field" id="addType">
+                <option value="">Select Type</option>
+                <option value="Institute Core">Institute Core</option>
+                <option value="Program Core">Program Core</option>
+                <option value="Elective">Elective</option>
+                <option value="Seed Course">Seed Course</option>
+              </select>
+              <span class="form-error" id="addTypeError">Type is required</span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" id="addDeptGroup">
+              <label class="form-label" for="addDept">Department</label>
+              <select class="select-field" id="addDept">
+                <option value="">Select Department</option>
+                <option value="All Departments (CSE, ECE, AIDS)">All Departments (CSE, ECE, AIDS)</option>
+                <option value="CSE">CSE</option>
+                <option value="ECE">ECE</option>
+                <option value="AIDS">AIDS</option>
+              </select>
+              <span class="form-error" id="addDeptError">Department is required</span>
+            </div>
+          </div>
+
+          <div class="form-group form-group--full" id="addPrereqGroup">
+            <label class="form-label">Prerequisites</label>
+            <div class="tag-input-wrapper" id="addPrereqWrapper">
+              <input class="tag-input" id="addPrereqInput" placeholder="Add code...">
+            </div>
+          </div>
+
+        </div>
+        <div class="modal__footer">
+          <button type="button" class="btn btn--secondary" id="addCancelBtn">Cancel</button>
+          <button type="submit" class="btn btn--primary">Add Course</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ══════════ EDIT COURSE MODAL ══════════ -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal">
+      <div class="modal__header">
+        <h2 class="modal__title">Edit Course</h2>
+        <button class="modal__close" id="editModalClose">&times;</button>
+      </div>
+      <form id="editCourseForm" novalidate>
+        <div class="modal__body">
+
+          <div class="form-row">
+            <div class="form-group" id="editCodeGroup">
+              <label class="form-label" for="editCode">Course Code</label>
+              <input class="input-field" id="editCode" readonly>
+              <span class="form-error" id="editCodeError">Course code is required</span>
+            </div>
+            <div class="form-group" id="editNameGroup">
+              <label class="form-label" for="editName">Course Name</label>
+              <input class="input-field" id="editName">
+              <span class="form-error" id="editNameError">Course name is required</span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" id="editCreditsGroup">
+              <label class="form-label" for="editCredits">Credits</label>
+              <input class="input-field" id="editCredits" type="number" min="1" max="6">
+              <span class="form-error" id="editCreditsError">Credits (1-6) required</span>
+            </div>
+            <div class="form-group" id="editUGGroup">
+              <label class="form-label" for="editUG">UG Year</label>
+              <select class="select-field" id="editUG">
+                <option value="UG1">UG1</option>
+                <option value="UG2">UG2</option>
+                <option value="UG3">UG3</option>
+                <option value="UG4">UG4</option>
+              </select>
+              <span class="form-error" id="editUGError">UG Year is required</span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" id="editSemesterGroup">
+              <label class="form-label">Semester</label>
+              <div class="radio-group">
+                <label class="radio-label">
+                  <input type="radio" name="editSemester" value="Monsoon"> Monsoon
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="editSemester" value="Spring"> Spring
+                </label>
+              </div>
+              <span class="form-error" id="editSemesterError">Semester is required</span>
+            </div>
+            <div class="form-group" id="editTypeGroup">
+              <label class="form-label" for="editType">Type</label>
+              <select class="select-field" id="editType">
+                <option value="Institute Core">Institute Core</option>
+                <option value="Program Core">Program Core</option>
+                <option value="Elective">Elective</option>
+                <option value="Seed Course">Seed Course</option>
+              </select>
+              <span class="form-error" id="editTypeError">Type is required</span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" id="editDeptGroup">
+              <label class="form-label" for="editDept">Department</label>
+              <select class="select-field" id="editDept">
+                <option value="All Departments (CSE, ECE, AIDS)">All Departments (CSE, ECE, AIDS)</option>
+                <option value="CSE">CSE</option>
+                <option value="ECE">ECE</option>
+                <option value="AIDS">AIDS</option>
+              </select>
+              <span class="form-error" id="editDeptError">Department is required</span>
+            </div>
+            <div class="form-group" id="editStatusGroup">
+              <label class="form-label">Status</label>
+              <div class="radio-group">
+                <label class="radio-label">
+                  <input type="radio" name="editStatus" value="Active"> Active
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="editStatus" value="Inactive"> Inactive
+                </label>
+              </div>
+              <span class="form-error" id="editStatusError">Status is required</span>
+            </div>
+          </div>
+
+          <div class="form-group form-group--full" id="editPrereqGroup">
+            <label class="form-label">Prerequisites</label>
+            <div class="tag-input-wrapper" id="editPrereqWrapper">
+              <input class="tag-input" id="editPrereqInput" placeholder="Add course code...">
+            </div>
+          </div>
+
+        </div>
+        <div class="modal__footer">
+          <button type="button" class="btn btn--secondary" id="editCancelBtn">Cancel</button>
+          <button type="submit" class="btn btn--primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/mockData.js"></script>
+  <script src="js/Dean1_data.js"></script>
+  <script src="js/Dean1_layout.js"></script>
+  <script src="js/Dean1_course-catalog.js"></script>
+</body>
+</html>
