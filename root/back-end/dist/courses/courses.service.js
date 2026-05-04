@@ -17,15 +17,77 @@ let CoursesService = class CoursesService {
     constructor(db) {
         this.db = db;
     }
+    normalizeSemester(semester) {
+        return String(semester || 'Spring').trim().toLowerCase() === 'monsoon'
+            ? 'Monsoon'
+            : 'Spring';
+    }
+    normalizeCourseType(courseType) {
+        if (courseType === 'Seed Course' || courseType === 'SEED')
+            return 'SEED';
+        if (courseType === 'Institute Core')
+            return 'Institute Core';
+        if (courseType === 'Elective')
+            return 'Elective';
+        return 'Program Core';
+    }
+    getTargetSemester(ugYear, semester) {
+        const ugNum = parseInt(String(ugYear || 'UG1').replace('UG', ''), 10) || 1;
+        return this.normalizeSemester(semester) === 'Spring' ? ugNum * 2 : ugNum * 2 - 1;
+    }
+    getLatestTermIdForSemester(semester) {
+        const normalizedSemester = this.normalizeSemester(semester);
+        const matchingTerms = this.db.academicTerms
+            .filter(t => t.termName.toLowerCase().includes(normalizedSemester.toLowerCase()))
+            .sort((a, b) => new Date(b.startTimestamp).getTime() - new Date(a.startTimestamp).getTime());
+        return matchingTerms.length > 0
+            ? matchingTerms[0].termId
+            : (normalizedSemester === 'Monsoon' ? 'MONSOON2025' : 'SPRING2026');
+    }
     findAll() {
         return this.db.courseCatalog;
     }
-    create(course) {
-        const existing = this.db.courseCatalog.find(c => c.courseId === course.courseId);
+    create(dto) {
+        const existing = this.db.courseCatalog.find(c => c.courseId === dto.courseId);
         if (existing) {
-            throw new common_1.BadRequestException(`Course with ID ${course.courseId} already exists.`);
+            throw new common_1.BadRequestException(`Course with ID ${dto.courseId} already exists.`);
         }
+        const course = {
+            courseId: dto.courseId,
+            courseName: dto.courseName,
+            credits: dto.credits,
+            courseCapacity: dto.courseCapacity,
+            status: dto.status,
+            deptId: dto.deptId,
+        };
         this.db.courseCatalog.push(course);
+        if (dto.ugYear || dto.semester || dto.courseType) {
+            const targetSemester = this.getTargetSemester(dto.ugYear, dto.semester);
+            const courseType = this.normalizeCourseType(dto.courseType);
+            const maxId = this.db.degreeRequirements.reduce((max, r) => Math.max(max, r.requirementId), 0);
+            this.db.degreeRequirements.push({
+                requirementId: maxId + 1,
+                deptId: dto.deptId,
+                courseId: dto.courseId,
+                courseType,
+                targetSemester,
+            });
+        }
+        if (dto.prerequisites && dto.prerequisites.length > 0) {
+            for (const prereqId of dto.prerequisites) {
+                this.db.coursePrerequisites.push({
+                    targetCourseId: dto.courseId,
+                    requiredCourseId: prereqId,
+                });
+            }
+        }
+        const termId = this.getLatestTermIdForSemester(dto.semester);
+        this.db.sections.push({
+            sectionId: `${dto.courseId}-S1`,
+            sectionName: 'S1',
+            courseId: dto.courseId,
+            termId: termId,
+        });
         return course;
     }
     getCoursesForStudent(studentId) {
@@ -66,6 +128,9 @@ let CoursesService = class CoursesService {
             activeTerm: activeTerm.termName,
             courses: result,
         };
+    }
+    findAllPrerequisites() {
+        return this.db.coursePrerequisites;
     }
     update(courseId, updates) {
         const courseIndex = this.db.courseCatalog.findIndex(c => c.courseId === courseId);

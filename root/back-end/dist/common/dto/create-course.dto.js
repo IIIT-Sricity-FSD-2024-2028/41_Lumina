@@ -19,6 +19,10 @@ class CreateCourseDto {
     courseCapacity;
     status;
     deptId;
+    ugYear;
+    semester;
+    courseType;
+    prerequisites;
 }
 exports.CreateCourseDto = CreateCourseDto;
 __decorate([
@@ -57,4 +61,28 @@ __decorate([
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], CreateCourseDto.prototype, "deptId", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: 'UG2', description: 'UG Year (UG1-UG4)' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateCourseDto.prototype, "ugYear", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: 'Spring', description: 'Semester (Monsoon or Spring)' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateCourseDto.prototype, "semester", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: 'Program Core', description: 'Course type for degree requirements' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateCourseDto.prototype, "courseType", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: ['CS101'], description: 'Prerequisite course IDs' }),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Array)
+], CreateCourseDto.prototype, "prerequisites", void 0);
 //# sourceMappingURL=create-course.dto.js.map

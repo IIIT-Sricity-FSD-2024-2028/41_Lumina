@@ -1,22 +1,95 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
-import { CourseCatalog } from '../database/interfaces';
+import { CourseCatalog, CoursePrerequisite } from '../database/interfaces';
+import { CreateCourseDto } from '../common/dto';
 
 @Injectable()
 export class CoursesService {
   constructor(private readonly db: DatabaseService) { }
 
+  private normalizeSemester(semester?: string): 'Monsoon' | 'Spring' {
+    return String(semester || 'Spring').trim().toLowerCase() === 'monsoon'
+      ? 'Monsoon'
+      : 'Spring';
+  }
+
+  private normalizeCourseType(courseType?: string): 'Institute Core' | 'Program Core' | 'SEED' | 'Elective' {
+    if (courseType === 'Seed Course' || courseType === 'SEED') return 'SEED';
+    if (courseType === 'Institute Core') return 'Institute Core';
+    if (courseType === 'Elective') return 'Elective';
+    return 'Program Core';
+  }
+
+  private getTargetSemester(ugYear?: string, semester?: string): number {
+    const ugNum = parseInt(String(ugYear || 'UG1').replace('UG', ''), 10) || 1;
+    return this.normalizeSemester(semester) === 'Spring' ? ugNum * 2 : ugNum * 2 - 1;
+  }
+
+  private getLatestTermIdForSemester(semester?: string): string {
+    const normalizedSemester = this.normalizeSemester(semester);
+    const matchingTerms = this.db.academicTerms
+      .filter(t => t.termName.toLowerCase().includes(normalizedSemester.toLowerCase()))
+      .sort((a, b) => new Date(b.startTimestamp).getTime() - new Date(a.startTimestamp).getTime());
+
+    return matchingTerms.length > 0
+      ? matchingTerms[0].termId
+      : (normalizedSemester === 'Monsoon' ? 'MONSOON2025' : 'SPRING2026');
+  }
+
   findAll(): CourseCatalog[] {
     return this.db.courseCatalog;
   }
 
-  create(course: CourseCatalog): CourseCatalog {
+  create(dto: CreateCourseDto): CourseCatalog {
     // Check if course already exists
-    const existing = this.db.courseCatalog.find(c => c.courseId === course.courseId);
+    const existing = this.db.courseCatalog.find(c => c.courseId === dto.courseId);
     if (existing) {
-      throw new BadRequestException(`Course with ID ${course.courseId} already exists.`);
+      throw new BadRequestException(`Course with ID ${dto.courseId} already exists.`);
     }
+
+    const course: CourseCatalog = {
+      courseId: dto.courseId,
+      courseName: dto.courseName,
+      credits: dto.credits,
+      courseCapacity: dto.courseCapacity,
+      status: dto.status,
+      deptId: dto.deptId,
+    };
     this.db.courseCatalog.push(course);
+
+    // Create a degree requirement entry so the course has a proper semester/type on reload
+    if (dto.ugYear || dto.semester || dto.courseType) {
+      const targetSemester = this.getTargetSemester(dto.ugYear, dto.semester);
+      const courseType = this.normalizeCourseType(dto.courseType);
+      const maxId = this.db.degreeRequirements.reduce((max, r) => Math.max(max, r.requirementId), 0);
+      this.db.degreeRequirements.push({
+        requirementId: maxId + 1,
+        deptId: dto.deptId,
+        courseId: dto.courseId,
+        courseType,
+        targetSemester,
+      });
+    }
+
+    // Create prerequisite entries
+    if (dto.prerequisites && dto.prerequisites.length > 0) {
+      for (const prereqId of dto.prerequisites) {
+        this.db.coursePrerequisites.push({
+          targetCourseId: dto.courseId,
+          requiredCourseId: prereqId,
+        });
+      }
+    }
+
+    // Create a default section so the course appears for students immediately
+    const termId = this.getLatestTermIdForSemester(dto.semester);
+    this.db.sections.push({
+      sectionId: `${dto.courseId}-S1`,
+      sectionName: 'S1',
+      courseId: dto.courseId,
+      termId: termId,
+    });
+
     return course;
   }
 
@@ -97,6 +170,10 @@ export class CoursesService {
   }
 
 
+
+  findAllPrerequisites(): CoursePrerequisite[] {
+    return this.db.coursePrerequisites;
+  }
 
   update(courseId: string, updates: Partial<CourseCatalog>): CourseCatalog {
     const courseIndex = this.db.courseCatalog.findIndex(c => c.courseId === courseId);

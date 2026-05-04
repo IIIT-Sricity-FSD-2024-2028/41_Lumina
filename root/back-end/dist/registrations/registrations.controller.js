@@ -37,7 +37,7 @@ let RegistrationsController = class RegistrationsController {
 exports.RegistrationsController = RegistrationsController;
 __decorate([
     (0, common_1.Get)(),
-    (0, roles_decorator_1.Roles)('Dean', 'Assistant_Dean_1', 'Assistant_Dean_2', 'Faculty'),
+    (0, roles_decorator_1.Roles)('Dean', 'Assistant_Dean_1', 'Assistant_Dean_2', 'Faculty', 'Student'),
     (0, swagger_1.ApiOperation)({ summary: 'Get all registrations' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'List of all registration records.' }),
     (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden.' }),

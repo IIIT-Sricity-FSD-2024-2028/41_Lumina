@@ -1,5 +1,5 @@
-import { IsNotEmpty, IsString, IsNumber, IsIn } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsString, IsNumber, IsIn, IsOptional, IsArray } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import type { CourseStatus } from '../../database/interfaces';
 
 export class CreateCourseDto {
@@ -32,4 +32,24 @@ export class CreateCourseDto {
   @IsString()
   @IsNotEmpty()
   deptId!: string;
+
+  @ApiPropertyOptional({ example: 'UG2', description: 'UG Year (UG1-UG4)' })
+  @IsString()
+  @IsOptional()
+  ugYear?: string;
+
+  @ApiPropertyOptional({ example: 'Spring', description: 'Semester (Monsoon or Spring)' })
+  @IsString()
+  @IsOptional()
+  semester?: string;
+
+  @ApiPropertyOptional({ example: 'Program Core', description: 'Course type for degree requirements' })
+  @IsString()
+  @IsOptional()
+  courseType?: string;
+
+  @ApiPropertyOptional({ example: ['CS101'], description: 'Prerequisite course IDs' })
+  @IsArray()
+  @IsOptional()
+  prerequisites?: string[];
 }

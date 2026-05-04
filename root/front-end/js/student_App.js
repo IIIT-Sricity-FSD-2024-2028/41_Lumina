@@ -1,15 +1,30 @@
 async function initStudentApp() {
   if (!window._studentAppCache) window._studentAppCache = {};
   var session = localStorage.getItem('Lumina_Session');
-  var role = session ? JSON.parse(session).Role : 'Student';
+  var sessionUser = session ? JSON.parse(session) : null;
+  var role = sessionUser ? sessionUser.Role : 'Student';
   var headers = { 'x-role': role };
 
+  if (sessionUser && sessionUser.Role === 'Student') {
+    window._studentAppCache['Users'] = [{
+      User_ID: sessionUser.User_ID,
+      Full_Name: sessionUser.Full_Name,
+      Email: sessionUser.Email,
+      Role: sessionUser.Role,
+      Dept_ID: sessionUser.Dept_ID
+    }];
+    window._studentAppCache['Students'] = [{
+      Student_ID: sessionUser.User_ID,
+      Current_Semester: Number(sessionUser.Current_Semester) || 4
+    }];
+  }
+
   try {
-    var [coursesRes, regsRes, sectionsRes, termsRes] = await Promise.all([
+    var [coursesRes, regsRes, sectionsRes, slotsRes] = await Promise.all([
       fetch('http://localhost:3000/courses', { headers }),
       fetch('http://localhost:3000/registrations', { headers }),
       fetch('http://localhost:3000/sections', { headers }),
-      fetch('http://localhost:3000/enrollment-phases', { headers }),
+      fetch('http://localhost:3000/course-slots', { headers }),
     ]);
     if (coursesRes.ok) {
       var courses = await coursesRes.json();
@@ -22,6 +37,19 @@ async function initStudentApp() {
     if (sectionsRes.ok) {
       var secs = await sectionsRes.json();
       window._studentAppCache['Section'] = secs.map(s => ({ Section_ID: s.sectionId, Course_ID: s.courseId, Term_ID: s.termId, Section_Name: s.sectionName }));
+    }
+    if (slotsRes.ok) {
+      var slots = await slotsRes.json();
+      window._studentAppCache['Course_Slot'] = slots.map(s => ({
+        Slot_ID: s.slotId,
+        Section_ID: s.sectionId,
+        Faculty_ID: s.facultyId,
+        Room_Number: s.roomNumber,
+        Day_of_Week: s.dayOfWeek,
+        Start_Time: s.startTime,
+        End_Time: s.endTime,
+        Syllabus: s.syllabus
+      }));
     }
     /* Derive Academic_Term from registrations — use SPRING2026 as active term */
     window._studentAppCache['Academic_Term'] = [
@@ -71,8 +99,17 @@ function syncCurrentStudentContext() {
   _users = getTable('Users');
   _students = getTable('Students');
   _depts = getTable('Department');
-  currentUser = _users.find(function (u) { return u.User_ID === CURRENT_STUDENT_ID; }) || {};
-  currentStudent = _students.find(function (s) { return s.Student_ID === CURRENT_STUDENT_ID; }) || {};
+  currentUser = _users.find(function (u) { return u.User_ID === CURRENT_STUDENT_ID; }) || {
+    User_ID: _appUser && _appUser.User_ID,
+    Full_Name: _appUser && _appUser.Full_Name,
+    Email: _appUser && _appUser.Email,
+    Role: _appUser && _appUser.Role,
+    Dept_ID: _appUser && _appUser.Dept_ID
+  };
+  currentStudent = _students.find(function (s) { return s.Student_ID === CURRENT_STUDENT_ID; }) || {
+    Student_ID: CURRENT_STUDENT_ID,
+    Current_Semester: Number(_appUser && _appUser.Current_Semester) || 4
+  };
 }
 
 function getCurrentSemesterCourseIds() {
@@ -414,7 +451,7 @@ window.addEventListener('resize', function () {
 ========================================== */
 function loadDashboardCourses() {
   syncCurrentStudentContext();
-  var semNum = currentStudent.Current_Semester || 3;
+  var semNum = Number(currentStudent.Current_Semester || (_appUser && _appUser.Current_Semester)) || 4;
 
   /* ── Update navbar name + avatar ── */
   if (currentUser.Full_Name) {
@@ -502,6 +539,61 @@ function loadDashboardCourses() {
   populateNextClass(enrolled);
   if (window.populateNavbarIdentity) {
     window.populateNavbarIdentity();
+  }
+  
+  loadStudentAnnouncements();
+}
+
+/* ── Fetch and Display Announcements ── */
+async function loadStudentAnnouncements() {
+  try {
+    var session = localStorage.getItem('Lumina_Session');
+    var role = session ? JSON.parse(session).Role : 'Student';
+    var headers = { 'x-role': role };
+
+    var res = await fetch('http://localhost:3000/announcements', { headers });
+    if (!res.ok) return;
+    var allAnns = await res.json();
+
+    var enrolledIds = getEnrolledFromDB().map(function(c) { return c.id; });
+    
+    // Filter announcements for enrolled courses, sort by newest first (descending ID)
+    var myAnns = allAnns.filter(function(a) { return enrolledIds.includes(a.courseId); });
+    myAnns.sort(function(a, b) { return b.announcementId - a.announcementId; });
+
+    var listEl = document.getElementById('announcementsList');
+    var emptyBox = document.getElementById('annEmptyBox');
+
+    if (!listEl) return;
+
+    if (myAnns.length === 0) {
+      if (emptyBox) emptyBox.style.display = 'flex';
+      Array.from(listEl.querySelectorAll('.ann-item')).forEach(function(el) { el.remove(); });
+    } else {
+      if (emptyBox) emptyBox.style.display = 'none';
+      
+      Array.from(listEl.querySelectorAll('.ann-item')).forEach(function(el) { el.remove(); });
+
+      myAnns.slice(0, 5).forEach(function(ann) {
+        var div = document.createElement('div');
+        div.className = 'ann-item';
+        div.style.cssText = 'padding: 12px 0; border-bottom: 1px solid #f1f5f9; text-align: left;';
+        
+        var dateObj = new Date(ann.createdAt);
+        var dateStr = !isNaN(dateObj) ? dateObj.toLocaleDateString() : 'Just now';
+        
+        div.innerHTML = 
+          '<div style="display:flex; justify-content:space-between; margin-bottom:6px;">' +
+            '<span style="font-size:10px; font-weight:700; color:#6366f1; background:#e0e7ff; padding:2px 6px; border-radius:4px;">' + ann.courseId + '</span>' +
+            '<span style="font-size:11px; color:#94a3b8;">' + dateStr + '</span>' +
+          '</div>' +
+          '<div style="font-weight:600; font-size:13px; color:#1e293b; margin-bottom:4px;">' + ann.title + '</div>' +
+          '<div style="font-size:12.5px; color:#64748b; line-height:1.4;">' + ann.message + '</div>';
+        listEl.appendChild(div);
+      });
+    }
+  } catch (err) {
+    console.error("Error loading student announcements", err);
   }
 }
 

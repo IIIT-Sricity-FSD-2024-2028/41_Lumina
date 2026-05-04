@@ -7,6 +7,21 @@ const API_HEADERS = {
 };
 
 // ==========================================
+// DB MOCK FOR AD2 SETTINGS
+// ==========================================
+const DB = {
+    get: function(key) {
+        try {
+            const data = localStorage.getItem('Lumina_AD2_' + key);
+            return data ? JSON.parse(data) : null;
+        } catch(e) { return null; }
+    },
+    set: function(key, value) {
+        localStorage.setItem('Lumina_AD2_' + key, JSON.stringify(value));
+    }
+};
+
+// ==========================================
 // HELPERS
 // ==========================================
 

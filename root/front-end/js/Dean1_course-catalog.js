@@ -467,7 +467,11 @@ async function handleAddCourse(e) {
               credits: newCourse.credits,
               courseCapacity: newCourse.courseCapacity,
               status: newCourse.status,
-              deptId: newCourse.dept === '-' || newCourse.dept.startsWith('All') ? 'CSE' : newCourse.dept
+              deptId: newCourse.dept === '-' || newCourse.dept.startsWith('All') ? 'CSE' : newCourse.dept,
+              ugYear: newCourse.ugYear,
+              semester: newCourse.semester,
+              courseType: newCourse.type,
+              prerequisites: newCourse.prerequisites
           })
       });
       if (res.ok) {

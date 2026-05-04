@@ -19,6 +19,14 @@ export class CoursesController {
     return this.coursesService.findAll();
   }
 
+  @Get('prerequisites')
+  @Roles('Student', 'Faculty', 'Dean', 'Assistant_Dean_1', 'Assistant_Dean_2')
+  @ApiOperation({ summary: 'Get all course prerequisites', description: 'Returns all prerequisite mappings.' })
+  @ApiResponse({ status: 200, description: 'Prerequisites returned successfully.' })
+  findAllPrerequisites() {
+    return this.coursesService.findAllPrerequisites();
+  }
+
   @Get('for-student/:studentId')
   @Roles('Student', 'Dean', 'Assistant_Dean_1', 'Assistant_Dean_2')
   @ApiOperation({ summary: 'Get enrollable courses for a student', description: 'Returns courses for the student\'s current semester that have sections in the active term. Read-only.' })

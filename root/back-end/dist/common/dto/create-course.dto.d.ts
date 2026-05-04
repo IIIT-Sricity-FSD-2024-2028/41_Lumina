@@ -6,4 +6,8 @@ export declare class CreateCourseDto {
     courseCapacity: number;
     status: CourseStatus;
     deptId: string;
+    ugYear?: string;
+    semester?: string;
+    courseType?: string;
+    prerequisites?: string[];
 }

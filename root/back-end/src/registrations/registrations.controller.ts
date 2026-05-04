@@ -12,7 +12,7 @@ export class RegistrationsController {
   constructor(private readonly registrationsService: RegistrationsService) {}
 
   @Get()
-  @Roles('Dean', 'Assistant_Dean_1', 'Assistant_Dean_2', 'Faculty')
+  @Roles('Dean', 'Assistant_Dean_1', 'Assistant_Dean_2', 'Faculty', 'Student')
   @ApiOperation({ summary: 'Get all registrations' })
   @ApiResponse({ status: 200, description: 'List of all registration records.' })
   @ApiResponse({ status: 403, description: 'Forbidden.' })

@@ -26,6 +26,9 @@ let CoursesController = class CoursesController {
     findAll() {
         return this.coursesService.findAll();
     }
+    findAllPrerequisites() {
+        return this.coursesService.findAllPrerequisites();
+    }
     getCoursesForStudent(studentId) {
         return this.coursesService.getCoursesForStudent(studentId);
     }
@@ -47,6 +50,15 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], CoursesController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Get)('prerequisites'),
+    (0, roles_decorator_1.Roles)('Student', 'Faculty', 'Dean', 'Assistant_Dean_1', 'Assistant_Dean_2'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get all course prerequisites', description: 'Returns all prerequisite mappings.' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Prerequisites returned successfully.' }),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], CoursesController.prototype, "findAllPrerequisites", null);
 __decorate([
     (0, common_1.Get)('for-student/:studentId'),
     (0, roles_decorator_1.Roles)('Student', 'Dean', 'Assistant_Dean_1', 'Assistant_Dean_2'),

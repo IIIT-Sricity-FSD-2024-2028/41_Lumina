@@ -40,7 +40,6 @@
       font-weight: 600;
     }
 
-    .acad-courses-sub {}
 
     .acad-sub-title {
       display: flex;
@@ -115,21 +114,7 @@
           </div>
         </div>
 
-        <!-- Divider -->
-        <div style="border-top:1px solid #e2e8f0; margin:12px 0;"></div>
-
-        <!-- My Courses sub-section -->
-        <div class="acad-courses-sub">
-          <div class="acad-sub-title">
-            <span>📚</span>
-            <span>My Courses</span>
-          </div>
-          <!-- Preview: up to 2 enrolled course names -->
-          <div id="acadCoursePreview" style="margin:6px 0 10px 0;">
-            <div class="course-item" id="acadCoursePreviewEmpty" style="display:none;"></div>
-          </div>
-          <button class="text-btn" id="viewAllBtn" onclick="goToMyCourses()">View all enrolled courses ↗</button>
-        </div>
+        <!-- My Courses section removed by user request -->
       </div>
 
 
@@ -216,11 +201,13 @@
           <h2>Latest Announcements</h2>
         </div>
 
-        <!-- Empty state - shown when there are no announcements -->
-        <div class="empty-box">
-          <div class="empty-icon">📥</div>
-          <p class="empty-text">No new announcements today</p>
-          <p class="empty-subtext">We'll notify you when something important comes up.</p>
+        <div id="announcementsList" class="announcements-list">
+          <!-- Empty state - shown when there are no announcements -->
+          <div class="empty-box" id="annEmptyBox">
+            <div class="empty-icon">📥</div>
+            <p class="empty-text">No new announcements today</p>
+            <p class="empty-subtext">We'll notify you when something important comes up.</p>
+          </div>
         </div>
       </div>
 

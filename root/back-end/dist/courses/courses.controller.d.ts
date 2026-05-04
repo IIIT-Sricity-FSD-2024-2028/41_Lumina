@@ -4,6 +4,7 @@ export declare class CoursesController {
     private readonly coursesService;
     constructor(coursesService: CoursesService);
     findAll(): import("../database").CourseCatalog[];
+    findAllPrerequisites(): import("../database").CoursePrerequisite[];
     getCoursesForStudent(studentId: string): {
         currentSemester: number;
         activeTerm: string;

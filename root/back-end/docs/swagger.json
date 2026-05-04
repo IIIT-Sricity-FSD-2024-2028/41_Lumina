@@ -257,6 +257,32 @@
         ]
       }
     },
+    "/courses/prerequisites": {
+      "get": {
+        "description": "Returns all prerequisite mappings.",
+        "operationId": "CoursesController_findAllPrerequisites",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Role of the requesting user",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Prerequisites returned successfully."
+          }
+        },
+        "summary": "Get all course prerequisites",
+        "tags": [
+          "Courses"
+        ]
+      }
+    },
     "/courses/for-student/{studentId}": {
       "get": {
         "description": "Returns courses for the student's current semester that have sections in the active term. Read-only.",
@@ -1212,6 +1238,31 @@
             "type": "string",
             "example": "CSE",
             "description": "Department ID"
+          },
+          "ugYear": {
+            "type": "string",
+            "example": "UG2",
+            "description": "UG Year (UG1-UG4)"
+          },
+          "semester": {
+            "type": "string",
+            "example": "Spring",
+            "description": "Semester (Monsoon or Spring)"
+          },
+          "courseType": {
+            "type": "string",
+            "example": "Program Core",
+            "description": "Course type for degree requirements"
+          },
+          "prerequisites": {
+            "example": [
+              "CS101"
+            ],
+            "description": "Prerequisite course IDs",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": [
@@ -1258,6 +1309,31 @@
             "type": "string",
             "example": "CSE",
             "description": "Department ID"
+          },
+          "ugYear": {
+            "type": "string",
+            "example": "UG2",
+            "description": "UG Year (UG1-UG4)"
+          },
+          "semester": {
+            "type": "string",
+            "example": "Spring",
+            "description": "Semester (Monsoon or Spring)"
+          },
+          "courseType": {
+            "type": "string",
+            "example": "Program Core",
+            "description": "Course type for degree requirements"
+          },
+          "prerequisites": {
+            "example": [
+              "CS101"
+            ],
+            "description": "Prerequisite course IDs",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },

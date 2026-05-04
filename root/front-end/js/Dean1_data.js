@@ -21,13 +21,15 @@ async function fetchDean1Data() {
   const role = sessionData.Role || 'Assistant_Dean_1';
   const headers = { 'x-role': role };
   try {
-    const [coursesRes, usersRes, regsRes, sectionsRes, slotsRes, overridesRes] = await Promise.all([
+    const [coursesRes, usersRes, regsRes, sectionsRes, slotsRes, overridesRes, degreeReqRes, prereqRes] = await Promise.all([
       fetch('http://localhost:3000/courses', { headers }),
       fetch('http://localhost:3000/users', { headers }),
       fetch('http://localhost:3000/registrations', { headers }),
       fetch('http://localhost:3000/sections', { headers }),
       fetch('http://localhost:3000/course-slots', { headers }),
-      fetch('http://localhost:3000/overrides', { headers }).catch(() => null)
+      fetch('http://localhost:3000/overrides', { headers }).catch(() => null),
+      fetch('http://localhost:3000/degree-requirements', { headers }).catch(() => null),
+      fetch('http://localhost:3000/courses/prerequisites', { headers }).catch(() => null)
     ]);
     if (coursesRes.ok) {
       const courses = await coursesRes.json();
@@ -68,6 +70,20 @@ async function fetchDean1Data() {
       _dean1ApiCache['Override_Request'] = overrides.map(o => ({
         Request_ID: o.requestId, Student_ID: o.studentId, Course_ID: o.courseId,
         Reason: o.reason, Approval_Status: o.approvalStatus, Created_At: o.createdAt
+      }));
+    }
+    if (degreeReqRes && degreeReqRes.ok) {
+      const degreeReqs = await degreeReqRes.json();
+      _dean1ApiCache['Degree_Requirements'] = degreeReqs.map(dr => ({
+        Requirement_ID: dr.requirementId, Dept_ID: dr.deptId, Course_ID: dr.courseId,
+        Course_Type: dr.courseType === 'SEED' ? 'Seed Course' : dr.courseType,
+        Target_Semester: dr.targetSemester
+      }));
+    }
+    if (prereqRes && prereqRes.ok) {
+      const prereqs = await prereqRes.json();
+      _dean1ApiCache['Course_Prerequisite'] = prereqs.map(p => ({
+        Target_Course_ID: p.targetCourseId, Required_Course_ID: p.requiredCourseId
       }));
     }
   } catch (e) {
@@ -140,6 +156,16 @@ function getSemesterLabel(targetSemester) {
     return 'Monsoon';
   }
   return Number(targetSemester) % 2 === 0 ? 'Spring' : 'Monsoon';
+}
+
+function getSemesterFromSections(courseId, sections) {
+  const section = sections.find((row) => row.Course_ID === courseId && row.Term_ID);
+  if (!section) return '';
+
+  const termId = String(section.Term_ID).toUpperCase();
+  if (termId.includes('SPRING')) return 'Spring';
+  if (termId.includes('MONSOON')) return 'Monsoon';
+  return '';
 }
 
 function getDefaultSections(courseId, ugYear, type) {
@@ -236,7 +262,9 @@ function buildAppCourses(tableData) {
     const requirement = requirementMap.get(courseRow.Course_ID);
     const type = normalizeCourseType(requirement?.Course_Type, courseRow.Course_ID);
     const ugYear = getUgYearFromTargetSemester(requirement?.Target_Semester, courseRow.Course_ID);
-    const semester = getSemesterLabel(requirement?.Target_Semester);
+    const semester = requirement
+      ? getSemesterLabel(requirement.Target_Semester)
+      : (getSemesterFromSections(courseRow.Course_ID, tableData.sections) || getSemesterLabel(requirement?.Target_Semester));
     const sections = tableData.sections.filter((section) => section.Course_ID === courseRow.Course_ID).length
       || getDefaultSections(courseRow.Course_ID, ugYear, type);
 
@@ -422,8 +450,8 @@ function syncCourseCatalog(appData, tableData) {
 
 function syncRegistrationsAndSections(appData, tableData) {
   const termBySemester = {
-    Monsoon: tableData.terms.find((term) => term.Term_Name.toUpperCase().includes('MONSOON'))?.Term_ID || 'SPRING2026',
-    Spring: tableData.terms.find((term) => term.Term_Name.toUpperCase().includes('SPRING'))?.Term_ID || 'SPRING2027'
+    Monsoon: tableData.terms.find((term) => term.Term_Name.toUpperCase().includes('MONSOON'))?.Term_ID || 'MONSOON2025',
+    Spring: tableData.terms.find((term) => term.Term_Name.toUpperCase().includes('SPRING'))?.Term_ID || 'SPRING2026'
   };
 
   const sectionRows = [];
