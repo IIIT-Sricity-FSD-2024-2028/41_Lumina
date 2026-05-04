@@ -1,17 +1,67 @@
-﻿(function(){
-  function readTable(name) {
-    try {
-      var stored = localStorage.getItem('Lumina_' + name);
-      if (stored) {
-        return JSON.parse(stored);
-      }
-    } catch (e) {}
+(function () {
+  var _facultyApiCache = {};
 
-    if (typeof mockDatabase !== 'undefined' && mockDatabase[name]) {
-      return mockDatabase[name];
+  function readTable(name) {
+    // Return from pre-fetched API cache
+    return _facultyApiCache[name] || [];
+  }
+
+  async function fetchFacultyData() {
+    var sessionData = JSON.parse(localStorage.getItem('Lumina_Session') || '{}');
+    var role = sessionData.Role || 'Faculty';
+    var headers = { 'x-role': role };
+
+    try {
+      var [usersRes, coursesRes, regsRes, sectionsRes, slotsRes, annRes] = await Promise.all([
+        fetch('http://localhost:3000/users', { headers: headers }),
+        fetch('http://localhost:3000/courses', { headers: headers }),
+        fetch('http://localhost:3000/registrations', { headers: headers }),
+        fetch('http://localhost:3000/sections', { headers: headers }),
+        fetch('http://localhost:3000/course-slots', { headers: headers }),
+        fetch('http://localhost:3000/announcements', { headers: headers })
+      ]);
+
+      if (usersRes.ok) {
+        var users = await usersRes.json();
+        _facultyApiCache['Users'] = users.map(function (u) {
+          return { User_ID: u.userId, Full_Name: u.fullName, Email: u.email, Role: u.role, Dept_ID: u.deptId };
+        });
+      }
+      if (coursesRes.ok) {
+        var courses = await coursesRes.json();
+        _facultyApiCache['Course_Catalog'] = courses.map(function (c) {
+          return { Course_ID: c.courseId, Course_Name: c.courseName, Credits: c.credits, Status: c.status, Dept_ID: c.deptId, Course_Capacity: c.courseCapacity };
+        });
+      }
+      if (regsRes.ok) {
+        var regs = await regsRes.json();
+        _facultyApiCache['Registration'] = regs.map(function (r) {
+          return { Enrollment_ID: r.enrollmentId, Student_ID: r.studentId, Course_ID: r.courseId, Term_ID: r.termId, Section_ID: r.sectionId, Status: r.status, Final_Grade: r.finalGrade };
+        });
+      }
+      if (sectionsRes && sectionsRes.ok) {
+        var sections = await sectionsRes.json();
+        _facultyApiCache['Section'] = sections.map(function(s) {
+          return { Section_ID: s.sectionId, Course_ID: s.courseId, Term_ID: s.termId, Capacity: s.capacity };
+        });
+      }
+      if (slotsRes && slotsRes.ok) {
+        var slots = await slotsRes.json();
+        _facultyApiCache['Course_Slot'] = slots.map(function(s) {
+          return { Slot_ID: s.slotId, Section_ID: s.sectionId, Faculty_ID: s.facultyId, Room_Number: s.roomNumber, Day_of_Week: s.dayOfWeek, Start_Time: s.startTime, End_Time: s.endTime, Syllabus: s.syllabus };
+        });
+      }
+      if (annRes && annRes.ok) {
+        _facultyApiCache['Announcements'] = await annRes.json();
+      }
+    } catch (e) {
+      console.error('Faculty data fetch error:', e);
     }
 
-    return [];
+    // Provide empty arrays for tables not fetched from API
+    ['Department', 'Students', 'Degree_Requirements', 'Section', 'Course_Slot', 'Course_Prerequisite', 'Academic_Term', 'Override_Request', 'Academic_Roadmap', 'Announcements'].forEach(function (t) {
+      if (!_facultyApiCache[t]) _facultyApiCache[t] = [];
+    });
   }
 
   function unique(list) {
@@ -19,7 +69,7 @@
   }
 
   function initials(name) {
-    return name.split(/\s+/).filter(Boolean).slice(0, 2).map(function(part){
+    return name.split(/\s+/).filter(Boolean).slice(0, 2).map(function (part) {
       return part.charAt(0).toUpperCase();
     }).join('');
   }
@@ -37,7 +87,7 @@
 
   function uniqueBy(list, keyFn) {
     var seen = {};
-    return list.filter(function(item) {
+    return list.filter(function (item) {
       var key = keyFn(item);
       if (seen[key]) return false;
       seen[key] = true;
@@ -47,6 +97,13 @@
 
   function semesterLabel(num) {
     return 'SEMESTER ' + num;
+  }
+
+  function termLabel(termId) {
+    var match = String(termId || '').match(/(\d{4})/);
+    var year = match ? match[1] : '';
+    var season = String(termId || '').toUpperCase().indexOf('SPRING') !== -1 ? 'Spring' : 'Monsoon';
+    return (season + ' ' + year).trim();
   }
 
   function yearLabel(sem) {
@@ -88,33 +145,33 @@
     var sections = readTable('Section');
     var sectionSlots = readTable('Course_Slot');
     var enrollments = readTable('Registration');
-    var facultyUser = users.find(function(user){ return user.User_ID === facultyId; }) || {};
+    var facultyUser = users.find(function (user) { return user.User_ID === facultyId; }) || {};
 
     var deptMap = {};
-    departments.forEach(function(d){ deptMap[d.Dept_ID] = d; });
+    departments.forEach(function (d) { deptMap[d.Dept_ID] = d; });
 
     var userMap = {};
-    users.forEach(function(u){ userMap[u.User_ID] = u; });
+    users.forEach(function (u) { userMap[u.User_ID] = u; });
 
     var studentMetaMap = {};
-    studentsMeta.forEach(function(s){ studentMetaMap[s.Student_ID] = s; });
+    studentsMeta.forEach(function (s) { studentMetaMap[s.Student_ID] = s; });
 
     var courseMap = {};
-    courseCatalog.forEach(function(c){ courseMap[c.Course_ID] = c; });
+    courseCatalog.forEach(function (c) { courseMap[c.Course_ID] = c; });
 
     var semesterMap = {};
-    degreeRequirements.forEach(function(r){
+    degreeRequirements.forEach(function (r) {
       if (!semesterMap[r.Course_ID]) semesterMap[r.Course_ID] = r.Target_Semester;
     });
 
     var sectionMap = {};
-    sections.forEach(function(s){ sectionMap[s.Section_ID] = s; });
+    sections.forEach(function (s) { sectionMap[s.Section_ID] = s; });
 
-    var facultySlots = sectionSlots.filter(function(slot){
+    var facultySlots = sectionSlots.filter(function (slot) {
       return slot.Faculty_ID === facultyId;
     });
 
-    var facultySections = uniqueBy(facultySlots.map(function(slot) {
+    var facultySections = uniqueBy(facultySlots.map(function (slot) {
       var section = sectionMap[slot.Section_ID];
       if (!section) return null;
       return {
@@ -123,33 +180,33 @@
         termId: section.Term_ID,
         slot: slot
       };
-    }).filter(Boolean), function(item) {
+    }).filter(Boolean), function (item) {
       return item.sectionId;
     });
 
-    var facultyCourseIds = unique(facultySections.map(function(item) {
+    var facultyCourseIds = unique(facultySections.map(function (item) {
       return item.courseId;
     }).filter(Boolean));
 
     var studentsByCourse = {};
-    facultyCourseIds.forEach(function(courseId){
-      var relatedSections = facultySections.filter(function(item) {
+    facultyCourseIds.forEach(function (courseId) {
+      var relatedSections = facultySections.filter(function (item) {
         return item.courseId === courseId;
       });
 
-      var relatedSectionIds = relatedSections.map(function(item) {
+      var relatedSectionIds = relatedSections.map(function (item) {
         return item.sectionId;
       });
 
-      var relatedTermIds = unique(relatedSections.map(function(item) {
+      var relatedTermIds = unique(relatedSections.map(function (item) {
         return item.termId;
       }).filter(Boolean));
 
-      studentsByCourse[courseId] = enrollments.filter(function(enrollment){
+      studentsByCourse[courseId] = enrollments.filter(function (enrollment) {
         return enrollment.Status === 'Enrolled'
           && relatedSectionIds.indexOf(enrollment.Section_ID) !== -1
           && (!relatedTermIds.length || relatedTermIds.indexOf(enrollment.Term_ID) !== -1);
-      }).map(function(enrollment){
+      }).map(function (enrollment) {
         var user = userMap[enrollment.Student_ID] || {};
         var meta = studentMetaMap[enrollment.Student_ID] || {};
         return {
@@ -165,16 +222,18 @@
       });
     });
 
-    var courses = facultyCourseIds.map(function(courseId){
+    var courses = facultyCourseIds.map(function (courseId) {
       var course = courseMap[courseId] || {};
       var sem = semesterMap[courseId] || (studentsByCourse[courseId][0] ? studentsByCourse[courseId][0].semester : 1);
-      var relatedSection = facultySections.find(function(item) {
+      var relatedSection = facultySections.find(function (item) {
         return item.courseId === courseId;
       }) || {};
       return {
         id: courseId,
         name: course.Course_Name || courseId,
         sectionId: relatedSection.sectionId || '',
+        termId: relatedSection.termId || '',
+        termLabel: termLabel(relatedSection.termId),
         year: yearLabel(sem),
         credits: Number(course.Credits || 0),
         students: (studentsByCourse[courseId] || []).length,
@@ -194,9 +253,9 @@
     };
 
     var dayOrder = { Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6, Sunday: 7 };
-    var todaysClasses = facultySlots.slice().sort(function(a, b){
+    var todaysClasses = facultySlots.slice().sort(function (a, b) {
       return (dayOrder[a.Day_of_Week] || 99) - (dayOrder[b.Day_of_Week] || 99) || sortByTime(a, b);
-    }).slice(0, 3).map(function(slot, index){
+    }).slice(0, 3).map(function (slot, index) {
       var courseId = sectionMap[slot.Section_ID] ? sectionMap[slot.Section_ID].Course_ID : '';
       var course = courseMap[courseId] || {};
       var time = formatTime24to12(slot.Start_Time || '09:00');
@@ -206,11 +265,12 @@
         course: courseId + ' - ' + (course.Course_Name || 'Course'),
         room: 'Room ' + (slot.Room_Number || 'TBA'),
         end: endLabel(slot.End_Time || slot.Start_Time || '10:00'),
-        status: index === 0 ? 'upcoming' : index === 1 ? 'pending' : 'upcoming'
+        status: 'upcoming',
+        dayOfWeek: slot.Day_of_Week || 'Mon'
       };
     });
 
-    var alerts = facultyCourseIds.slice(0, 3).map(function(courseId, index){
+    var alerts = facultyCourseIds.slice(0, 3).map(function (courseId, index) {
       var course = courseMap[courseId] || {};
       return {
         text: index === 0 ? 'Enrollment open for ' + courseId : index === 1 ? 'Syllabus updated for ' + courseId : 'New activity in ' + courseId,
@@ -220,8 +280,8 @@
     });
 
     var materials = {};
-    facultyCourseIds.forEach(function(courseId){
-      var slot = facultySlots.find(function(item){
+    facultyCourseIds.forEach(function (courseId) {
+      var slot = facultySlots.find(function (item) {
         return sectionMap[item.Section_ID] && sectionMap[item.Section_ID].Course_ID === courseId;
       });
       var topic = slot && slot.Syllabus ? slot.Syllabus : 'Course Overview';
@@ -234,29 +294,56 @@
       ];
     });
 
-    var announcements = facultyCourseIds.slice(0, 4).map(function(courseId, index){
-      var course = courseMap[courseId] || {};
-      return {
-        id: index + 1,
-        courseId: courseId,
-        courseLabel: courseId + ' - ' + String(course.Course_Name || '').toUpperCase(),
-        title: index === 0 ? 'Course Schedule Update' : index === 1 ? 'Assessment Reminder' : index === 2 ? 'Lab Instructions' : 'Class Notice',
-        msg: 'Please review the latest update for ' + (course.Course_Name || courseId) + '. Details have been shared for the upcoming class activities and submissions.',
-        ago: index === 0 ? '2 hours ago' : index === 1 ? '5 hours ago' : index === 2 ? 'Yesterday' : '3 days ago'
-      };
-    });
+    var apiAnnouncements = readTable('Announcements') || [];
+    var announcements = [];
+    if(apiAnnouncements.length > 0) {
+      announcements = apiAnnouncements.filter(function(a) {
+        return facultyCourseIds.indexOf(a.courseId) !== -1;
+      }).map(function(a) {
+        var course = courseMap[a.courseId] || {};
+        var date = new Date(a.createdAt);
+        // Using approximate current date from the mock database timestamp to make "ago" text reasonable
+        var seconds = Math.floor((new Date('2026-05-04T12:00:00Z') - date) / 1000); 
+        var agoStr = "Just now";
+        if (seconds > 86400) agoStr = Math.floor(seconds / 86400) + " days ago";
+        else if (seconds > 3600) agoStr = Math.floor(seconds / 3600) + " hours ago";
+        else if (seconds > 0) agoStr = Math.floor(seconds / 60) + " mins ago";
+        
+        return {
+          id: a.announcementId,
+          courseId: a.courseId,
+          courseLabel: a.courseId + ' - ' + String(course.Course_Name || '').toUpperCase(),
+          title: a.title,
+          msg: a.message,
+          ago: agoStr
+        };
+      });
+      announcements.sort(function(a, b) { return b.id - a.id; });
+    } else {
+      announcements = facultyCourseIds.slice(0, 4).map(function (courseId, index) {
+        var course = courseMap[courseId] || {};
+        return {
+          id: index + 1,
+          courseId: courseId,
+          courseLabel: courseId + ' - ' + String(course.Course_Name || '').toUpperCase(),
+          title: index === 0 ? 'Course Schedule Update' : index === 1 ? 'Assessment Reminder' : index === 2 ? 'Lab Instructions' : 'Class Notice',
+          msg: 'Please review the latest update for ' + (course.Course_Name || courseId) + '. Details have been shared for the upcoming class activities and submissions.',
+          ago: index === 0 ? '2 hours ago' : index === 1 ? '5 hours ago' : index === 2 ? 'Yesterday' : '3 days ago'
+        };
+      });
+    }
 
     var grades = {};
-    facultyCourseIds.forEach(function(courseId){
-      grades[courseId] = (studentsByCourse[courseId] || []).map(function(student, index){
+    facultyCourseIds.forEach(function (courseId) {
+      grades[courseId] = (studentsByCourse[courseId] || []).map(function (student, index) {
         var seed = index + student.roll.length;
-        var mid = 58 + (seed * 7) % 35;
-        var fin = 62 + (seed * 9) % 33;
+        var mid = 16 + (seed * 3) % 12;
+        var fin = 38 + (seed * 5) % 28;
         return {
           roll: student.roll,
           name: student.name,
-          mid: Math.min(mid, 98),
-          fin: Math.min(fin, 99)
+          mid: Math.min(mid, 30),
+          fin: Math.min(fin, 70)
         };
       });
     });
@@ -270,15 +357,20 @@
       grades: grades,
       materials: materials,
       announcements: announcements,
-      gradeLetter: function(total){
-        if(total >= 90) return { l: 'O', c: '#1d4ed8' };
-        if(total >= 80) return { l: 'A', c: '#15803d' };
-        if(total >= 70) return { l: 'B', c: '#92400e' };
-        if(total >= 60) return { l: 'C', c: '#b45309' };
+      gradeLetter: function (total) {
+        if (total >= 90) return { l: 'O', c: '#1d4ed8' };
+        if (total >= 80) return { l: 'A', c: '#15803d' };
+        if (total >= 70) return { l: 'B', c: '#92400e' };
+        if (total >= 60) return { l: 'C', c: '#b45309' };
         return { l: 'F', c: '#b91c1c' };
       }
     };
   }
 
-  window.LuminaData = buildData();
+  // Async init: fetch API data then build
+  fetchFacultyData().then(function () {
+    window.LuminaData = buildData();
+    // Dispatch event so page scripts know data is ready
+    window.dispatchEvent(new Event('LuminaDataReady'));
+  });
 })();

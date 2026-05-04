@@ -44,7 +44,7 @@
 /* ── Dashboard Bottom Layout ── */
 .dashboard-bottom {
   display: grid;
-  grid-template-columns: 1fr 340px;
+  grid-template-columns: 1fr 1fr;
   gap: var(--space-xl);
   align-items: start;
   margin-top: var(--space-sm);
@@ -57,17 +57,19 @@
   min-height: 100%;
 }
 
-.room-panel__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--space-lg);
-}
-
 .room-panel__title {
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--gray-900);
+  margin-bottom: var(--space-md);
+}
+
+.room-panel__filters {
+  display: flex;
+  gap: var(--space-md);
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: var(--space-lg);
 }
 
 .room-panel__filter {
@@ -104,16 +106,103 @@
   color: var(--accent);
 }
 
+/* ── Room Card (single-room paginated view) ── */
+.room-card {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-md);
+  transition: box-shadow var(--duration) var(--ease);
+}
+
+.room-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.room-card__name {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--gray-900);
+  margin-bottom: var(--space-md);
+}
+
+.room-card__meta {
+  display: flex;
+  gap: var(--space-xl);
+  margin-bottom: var(--space-md);
+}
+
+.room-card__meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.room-card__meta-label {
+  font-size: .72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--gray-500);
+}
+
+.room-card__meta-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--gray-800);
+}
+
+.room-card__slots {
+  margin-top: var(--space-sm);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.room-card__slots-label {
+  width: 100%;
+  font-size: .72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--gray-500);
+  margin-bottom: 4px;
+}
+
+/* ── Activity Panel (inline table) ── */
+.activity-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.activity-panel__title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: var(--space-lg);
+}
+
+.activity-table-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 400px;
+}
+
+.activity-table-wrapper .data-table {
+  margin: 0;
+  box-shadow: none;
+  table-layout: auto;
+}
+
+.activity-table-wrapper .data-table td,
+.activity-table-wrapper .data-table th {
+  word-break: break-word;
+  white-space: normal;
+}
+
 /* ── Time Slot Tags ── */
-@keyframes fade-in-row {
-  from { opacity: 0; transform: translateY(3px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-#roomTableBody tr {
-  animation: fade-in-row 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-}
-
 .time-tag {
   display: inline-flex;
   align-items: center;
@@ -134,83 +223,6 @@
   color: var(--gray-400);
   font-style: italic;
   padding: 4px 0;
-}
-
-/* ── Activity Panel ── */
-.activity-panel {
-  display: flex;
-  flex-direction: column;
-}
-
-.activity-panel__title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--gray-900);
-  margin-bottom: var(--space-lg);
-}
-
-.activity-list {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-  margin-bottom: var(--space-lg);
-}
-
-.activity-item {
-  display: flex;
-  gap: var(--space-md);
-  align-items: flex-start;
-}
-
-.activity-item__icon {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-md);
-  background: var(--accent-light);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.1rem;
-  flex-shrink: 0;
-}
-
-.activity-item__icon-img {
-  width: 20px;
-  height: 20px;
-  object-fit: contain;
-}
-
-.activity-item__content {
-  flex: 1;
-  min-width: 0;
-}
-
-.activity-item__title {
-  font-size: .875rem;
-  font-weight: 600;
-  color: var(--gray-800);
-  margin-bottom: 2px;
-}
-
-.activity-item__detail {
-  font-size: .8rem;
-  color: var(--gray-500);
-  margin-bottom: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.activity-item__time {
-  font-size: .75rem;
-  color: var(--accent);
-  font-weight: 500;
-}
-
-.activity-panel__btn {
-  width: 100%;
-  padding: 12px;
 }
 
 /* ── Stat Card Icons (Dashboard specific) ── */

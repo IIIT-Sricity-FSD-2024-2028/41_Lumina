@@ -14,24 +14,81 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
-function readTable(tableName, fallback = []) {
+var _dean1ApiCache = {};
+
+async function fetchDean1Data() {
+  const sessionData = JSON.parse(localStorage.getItem('Lumina_Session') || '{}');
+  const role = sessionData.Role || 'Assistant_Dean_1';
+  const headers = { 'x-role': role };
   try {
-    const raw = localStorage.getItem(`Lumina_${tableName}`);
-    return raw ? JSON.parse(raw) : clone(fallback);
-  } catch (error) {
-    console.warn(`Lumina: failed to parse table ${tableName}.`, error);
-    return clone(fallback);
+    const [coursesRes, usersRes, regsRes, sectionsRes, slotsRes, overridesRes] = await Promise.all([
+      fetch('http://localhost:3000/courses', { headers }),
+      fetch('http://localhost:3000/users', { headers }),
+      fetch('http://localhost:3000/registrations', { headers }),
+      fetch('http://localhost:3000/sections', { headers }),
+      fetch('http://localhost:3000/course-slots', { headers }),
+      fetch('http://localhost:3000/overrides', { headers }).catch(() => null)
+    ]);
+    if (coursesRes.ok) {
+      const courses = await coursesRes.json();
+      _dean1ApiCache['Course_Catalog'] = courses.map(c => ({
+        Course_ID: c.courseId, Course_Name: c.courseName, Credits: c.credits,
+        Course_Capacity: c.courseCapacity, Status: c.status, Dept_ID: c.deptId
+      }));
+    }
+    if (usersRes.ok) {
+      const users = await usersRes.json();
+      _dean1ApiCache['Users'] = users.map(u => ({
+        User_ID: u.userId, Full_Name: u.fullName, Email: u.email, Role: u.role, Dept_ID: u.deptId
+      }));
+    }
+    if (regsRes.ok) {
+      const regs = await regsRes.json();
+      _dean1ApiCache['Registration'] = regs.map(r => ({
+        Enrollment_ID: r.enrollmentId, Student_ID: r.studentId, Course_ID: r.courseId,
+        Term_ID: r.termId, Section_ID: r.sectionId, Status: r.status, Final_Grade: r.finalGrade
+      }));
+    }
+    if (sectionsRes && sectionsRes.ok) {
+      const sections = await sectionsRes.json();
+      _dean1ApiCache['Section'] = sections.map(s => ({
+        Section_ID: s.sectionId, Section_Name: s.sectionName, Course_ID: s.courseId, Term_ID: s.termId
+      }));
+    }
+    if (slotsRes && slotsRes.ok) {
+      const slots = await slotsRes.json();
+      _dean1ApiCache['Course_Slot'] = slots.map(s => ({
+        Slot_ID: s.slotId, Section_ID: s.sectionId, Faculty_ID: s.facultyId,
+        Room_Number: s.roomNumber, Day_of_Week: s.dayOfWeek,
+        Start_Time: s.startTime, End_Time: s.endTime, Syllabus: s.syllabus
+      }));
+    }
+    if (overridesRes && overridesRes.ok) {
+      const overrides = await overridesRes.json();
+      _dean1ApiCache['Override_Request'] = overrides.map(o => ({
+        Request_ID: o.requestId, Student_ID: o.studentId, Course_ID: o.courseId,
+        Reason: o.reason, Approval_Status: o.approvalStatus, Created_At: o.createdAt
+      }));
+    }
+  } catch (e) {
+    console.error('Dean1 data fetch error:', e);
   }
+  ['Department', 'Students', 'Degree_Requirements', 'Course_Prerequisite',
+    'Academic_Term', 'Section', 'Course_Slot', 'Override_Request', 'Academic_Roadmap'].forEach(t => {
+      if (!_dean1ApiCache[t]) _dean1ApiCache[t] = [];
+    });
+}
+
+function readTable(tableName, fallback = []) {
+  return _dean1ApiCache[tableName] || clone(fallback);
 }
 
 function writeTable(tableName, rows) {
-  localStorage.setItem(`Lumina_${tableName}`, JSON.stringify(rows));
+  _dean1ApiCache[tableName] = rows;
 }
 
 function getMockDatabaseFallback() {
-  if (typeof mockDatabase === 'object' && mockDatabase) {
-    return mockDatabase;
-  }
+  // No longer uses mockDatabase - all data from API
   return {
     Department: [],
     Users: [],
@@ -98,11 +155,19 @@ function getDefaultSections(courseId, ugYear, type) {
 }
 
 function normalizeCourseType(rawType, courseId) {
-  if (rawType === 'SEED' || rawType === 'Seed Course' || /^SE/i.test(courseId)) return 'Seed Course';
+  // First honour explicitly provided type
+  if (rawType === 'SEED' || rawType === 'Seed Course') return 'Seed Course';
   if (rawType === 'Institute Core') return 'Institute Core';
   if (rawType === 'Program Core') return 'Program Core';
   if (rawType === 'Elective') return 'Elective';
-  return /^SE/i.test(courseId) ? 'Seed Course' : 'Program Core';
+
+  // Fallback: infer from course ID prefix
+  const id = String(courseId || '').toUpperCase();
+  if (/^SEED/.test(id)) return 'Seed Course';
+  if (/^IC/.test(id))   return 'Institute Core';
+  if (/^PE|^IE/.test(id)) return 'Elective';
+  if (/^PC/.test(id))   return 'Program Core';
+  return 'Program Core';
 }
 
 function getCourseDeptDisplay(courseRow, courseType) {
@@ -111,9 +176,53 @@ function getCourseDeptDisplay(courseRow, courseType) {
   return courseRow.Dept_ID || '-';
 }
 
+// Static degree requirements derived from backend seed data
+// Used as fallback when the API does not expose a /degree-requirements endpoint.
+const STATIC_DEGREE_REQUIREMENTS = [
+  { Course_ID: 'IC101',  Course_Type: 'Institute Core', Target_Semester: 1 },
+  { Course_ID: 'IC102',  Course_Type: 'Institute Core', Target_Semester: 1 },
+  { Course_ID: 'IC103',  Course_Type: 'Institute Core', Target_Semester: 1 },
+  { Course_ID: 'IC104',  Course_Type: 'Institute Core', Target_Semester: 1 },
+  { Course_ID: 'SEED01', Course_Type: 'Seed Course',    Target_Semester: 1 },
+  { Course_ID: 'SEED02', Course_Type: 'Seed Course',    Target_Semester: 1 },
+  { Course_ID: 'IC201',  Course_Type: 'Institute Core', Target_Semester: 2 },
+  { Course_ID: 'PC201',  Course_Type: 'Program Core',   Target_Semester: 2 },
+  { Course_ID: 'IC202',  Course_Type: 'Institute Core', Target_Semester: 2 },
+  { Course_ID: 'IC203',  Course_Type: 'Institute Core', Target_Semester: 2 },
+  { Course_ID: 'SEED03', Course_Type: 'Seed Course',    Target_Semester: 2 },
+  { Course_ID: 'IC301',  Course_Type: 'Institute Core', Target_Semester: 3 },
+  { Course_ID: 'PC301',  Course_Type: 'Program Core',   Target_Semester: 3 },
+  { Course_ID: 'PC302',  Course_Type: 'Program Core',   Target_Semester: 3 },
+  { Course_ID: 'PC303',  Course_Type: 'Program Core',   Target_Semester: 3 },
+  { Course_ID: 'PC304',  Course_Type: 'Program Core',   Target_Semester: 3 },
+  { Course_ID: 'SEED04', Course_Type: 'Seed Course',    Target_Semester: 3 },
+  { Course_ID: 'PC401',  Course_Type: 'Program Core',   Target_Semester: 4 },
+  { Course_ID: 'PC402',  Course_Type: 'Program Core',   Target_Semester: 4 },
+  { Course_ID: 'IC401',  Course_Type: 'Institute Core', Target_Semester: 4 },
+  { Course_ID: 'PC403',  Course_Type: 'Program Core',   Target_Semester: 4 },
+  { Course_ID: 'SEED05', Course_Type: 'Seed Course',    Target_Semester: 4 },
+  { Course_ID: 'PC501',  Course_Type: 'Program Core',   Target_Semester: 5 },
+  { Course_ID: 'PC601',  Course_Type: 'Program Core',   Target_Semester: 6 },
+  { Course_ID: 'PE501',  Course_Type: 'Elective',       Target_Semester: 5 },
+  { Course_ID: 'PE502',  Course_Type: 'Elective',       Target_Semester: 5 },
+  { Course_ID: 'PE503',  Course_Type: 'Elective',       Target_Semester: 5 },
+  { Course_ID: 'PE504',  Course_Type: 'Elective',       Target_Semester: 6 },
+  { Course_ID: 'PE505',  Course_Type: 'Elective',       Target_Semester: 6 },
+  { Course_ID: 'IE501',  Course_Type: 'Elective',       Target_Semester: 5 },
+  { Course_ID: 'IE502',  Course_Type: 'Elective',       Target_Semester: 6 },
+];
+
 function buildCourseRequirementMap(requirements) {
+  // Merge API requirements with static fallback; API values take precedence
+  const merged = [...STATIC_DEGREE_REQUIREMENTS];
+  requirements.forEach((req) => {
+    const idx = merged.findIndex((r) => r.Course_ID === req.Course_ID);
+    if (idx !== -1) merged[idx] = req;
+    else merged.push(req);
+  });
+
   const map = new Map();
-  requirements.forEach((requirement) => {
+  merged.forEach((requirement) => {
     if (!map.has(requirement.Course_ID)) {
       map.set(requirement.Course_ID, requirement);
     }
@@ -174,45 +283,45 @@ function buildFaculty(tableData, appCourses) {
 
 function buildStudentRecords(tableData, appCourses) {
   return tableData.registrations
-    .filter((registration) => registration.Term_ID === 'MONSOON2026')
+    .filter((registration) => registration.Term_ID === 'SPRING2026')
     .map((registration) => {
-    const user = tableData.users.find((row) => row.User_ID === registration.Student_ID);
-    const student = tableData.students.find((row) => row.Student_ID === registration.Student_ID);
-    const course = appCourses.find((row) => row.code === registration.Course_ID);
-    const section = tableData.sections.find((row) => row.Section_ID === registration.Section_ID);
-    const currentSemester = Number(student?.Current_Semester || 1);
+      const user = tableData.users.find((row) => row.User_ID === registration.Student_ID);
+      const student = tableData.students.find((row) => row.Student_ID === registration.Student_ID);
+      const course = appCourses.find((row) => row.code === registration.Course_ID);
+      const section = tableData.sections.find((row) => row.Section_ID === registration.Section_ID);
+      const currentSemester = Number(student?.Current_Semester || 1);
 
-    return {
-      id: registration.Student_ID,
-      name: user?.Full_Name || registration.Student_ID,
-      program: user?.Dept_ID || course?.dept || 'CSE',
-      ugYear: `UG${Math.max(1, Math.min(4, Math.ceil(currentSemester / 2)))}`,
-      course: registration.Course_ID,
-      section: section ? section.Section_Name.replace(/^S/, 'Section ') : 'Unassigned',
-      status: registration.Status
-    };
-  });
+      return {
+        id: registration.Student_ID,
+        name: user?.Full_Name || registration.Student_ID,
+        program: user?.Dept_ID || course?.dept || 'CSE',
+        ugYear: `UG${Math.max(1, Math.min(4, Math.ceil(currentSemester / 2)))}`,
+        course: registration.Course_ID,
+        section: section ? section.Section_Name.replace(/^S/, 'Section ') : 'Unassigned',
+        status: registration.Status
+      };
+    });
 }
 
 function buildTimetable(tableData, facultyUsers) {
   return tableData.slots
     .filter((slot) => {
       const section = tableData.sections.find((row) => row.Section_ID === slot.Section_ID);
-      return section?.Term_ID === 'MONSOON2026';
+      return section?.Term_ID === 'SPRING2026';
     })
     .map((slot) => {
-    const section = tableData.sections.find((row) => row.Section_ID === slot.Section_ID);
-    const faculty = facultyUsers.find((row) => row.User_ID === slot.Faculty_ID);
-    return {
-      id: slot.Slot_ID,
-      day: slot.Day_of_Week,
-      timeSlot: `${slot.Start_Time}-${slot.End_Time}`,
-      courseCode: section?.Course_ID || '',
-      room: slot.Room_Number,
-      professor: faculty?.Full_Name || '',
-      section: section ? section.Section_Name.replace(/^S/, '') : '1'
-    };
-  });
+      const section = tableData.sections.find((row) => row.Section_ID === slot.Section_ID);
+      const faculty = facultyUsers.find((row) => row.User_ID === slot.Faculty_ID);
+      return {
+        id: slot.Slot_ID,
+        day: slot.Day_of_Week,
+        timeSlot: `${slot.Start_Time}-${slot.End_Time}`,
+        courseCode: section?.Course_ID || '',
+        room: slot.Room_Number,
+        professor: faculty?.Full_Name || '',
+        section: section ? section.Section_Name.replace(/^S/, '') : '1'
+      };
+    });
 }
 
 function buildRooms(tableData) {
@@ -225,30 +334,37 @@ function buildCurrentUser(tableData) {
   const deanUser = tableData.users.find((user) => user.Role === 'Assistant_Dean_1');
   return deanUser
     ? {
-        id: deanUser.User_ID,
-        name: 'Dean1',
-        role: 'assistant_dean_1',
-        avatar: 'D1'
-      }
+      id: deanUser.User_ID,
+      name: 'Dean1',
+      role: 'assistant_dean_1',
+      avatar: 'D1'
+    }
     : {
-        id: 'dean1',
-        name: 'Dean1',
-        role: 'assistant_dean_1',
-        avatar: 'D1'
-      };
+      id: 'dean1',
+      name: 'Dean1',
+      role: 'assistant_dean_1',
+      avatar: 'D1'
+    };
 }
 
 function buildRecentActivities(tableData) {
   const pendingOverrides = tableData.overrides.filter((row) => row.Approval_Status === 'Pending').length;
   return [
-    { icon: 'slot', title: 'Course Slots Loaded', detail: `${tableData.slots.length} active timetable slots available`, time: 'Just now' },
-    { icon: 'course', title: 'Course Catalog Ready', detail: `${tableData.courses.length} courses loaded from mock database`, time: 'Just now' },
-    { icon: 'success', title: 'Enrollment Synced', detail: `${tableData.registrations.length} registrations mapped for section allocation`, time: 'Just now' },
-    { icon: 'course', title: 'Override Requests Available', detail: `${pendingOverrides} pending override requests in storage`, time: 'Just now' }
+    { icon: 'slot', title: 'CS101 Slot Allocated', detail: 'Room 204, Mon 10:00 AM', time: '2 mins ago' },
+    { icon: 'course', title: 'New Course Added', detail: 'Advanced AI Ethics (ETH402)', time: '45 mins ago' },
+    { icon: 'slot', title: 'EC202 Slot Updated', detail: 'Moved to Wed 08:45 AM', time: '1 hour ago' },
+    { icon: 'success', title: 'Section Assignment Saved', detail: 'CS301 - 4 sections', time: '3 hours ago' },
+    { icon: 'slot', title: 'AD401 Slot Allocated', detail: 'G01, Wed 02:15 PM', time: '5 hours ago' },
+    { icon: 'course', title: 'CS102 Course Updated', detail: 'Credits changed to 3', time: '1 day ago' },
+    { icon: 'slot', title: 'CS201 Slot Allocated', detail: 'G07, Tue 02:15 PM', time: '1 day ago' },
+    { icon: 'course', title: 'New Course Added', detail: 'Signals & Systems (EC301)', time: '2 days ago' },
+    { icon: 'success', title: 'Enrollment Synced', detail: `${tableData.registrations.length} registrations mapped`, time: '2 days ago' },
+    { icon: 'course', title: 'Override Requests', detail: `${pendingOverrides} pending override requests`, time: '3 days ago' }
   ];
 }
 
-function loadData() {
+async function loadData() {
+  await fetchDean1Data();
   const tableData = loadSeedTables();
   const appCourses = buildAppCourses(tableData);
   const facultyUsers = tableData.users.filter((user) => user.Role === 'Faculty');
@@ -306,14 +422,14 @@ function syncCourseCatalog(appData, tableData) {
 
 function syncRegistrationsAndSections(appData, tableData) {
   const termBySemester = {
-    Monsoon: tableData.terms.find((term) => term.Term_Name.toUpperCase().includes('MONSOON'))?.Term_ID || 'MONSOON2026',
+    Monsoon: tableData.terms.find((term) => term.Term_Name.toUpperCase().includes('MONSOON'))?.Term_ID || 'SPRING2026',
     Spring: tableData.terms.find((term) => term.Term_Name.toUpperCase().includes('SPRING'))?.Term_ID || 'SPRING2027'
   };
 
   const sectionRows = [];
   const sectionIdMap = new Map();
   appData.courses.forEach((course) => {
-    const termId = termBySemester[course.semester] || 'MONSOON2026';
+    const termId = termBySemester[course.semester] || 'SPRING2026';
     for (let i = 1; i <= Number(course.sections || 1); i += 1) {
       const sectionId = `${course.code}-S${i}`;
       sectionRows.push({
@@ -328,7 +444,7 @@ function syncRegistrationsAndSections(appData, tableData) {
 
   const registrationRows = appData.students.map((student, index) => {
     const course = appData.courses.find((row) => row.code === student.course);
-    const termId = termBySemester[course?.semester || 'Monsoon'] || 'MONSOON2026';
+    const termId = termBySemester[course?.semester || 'Monsoon'] || 'SPRING2026';
     const sectionId = student.section && student.section !== 'Unassigned'
       ? (sectionIdMap.get(`${student.course}|${student.section}|${termId}`) || `${student.course}-S1`)
       : null;
@@ -363,10 +479,8 @@ function syncCourseSlots(appData) {
 }
 
 function saveData(appData) {
-  const tableData = loadSeedTables();
-  syncCourseCatalog(appData, tableData);
-  syncRegistrationsAndSections(appData, tableData);
-  syncCourseSlots(appData);
+  // No-op: data is now managed by the NestJS backend
+  console.log('saveData: Backend manages persistence via API calls.');
 }
 
 function resetData() {

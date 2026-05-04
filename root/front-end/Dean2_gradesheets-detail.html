@@ -93,10 +93,9 @@
             <div style="display:flex; align-items:flex-start; gap: 12px;">
                 <a href="Dean2_gradesheets.html" class="gs-back-btn">←</a>
                 <div>
-                    <h2 class="gs-detail-title">Grade Sheet Details: CS201 - Data Structures</h2>
-                    <div class="gs-detail-meta">
-                        Section A &nbsp;•&nbsp; Dr. Julian Thorne &nbsp;•&nbsp; Fall 2023
-                        <span class="badge-awaiting">AWAITING APPROVAL</span>
+                    <h2 class="gs-detail-title" id="detailCourseTitle">Grade Sheet Details: ...</h2>
+                    <div class="gs-detail-meta" id="detailCourseMeta">
+                        Loading...
                     </div>
                 </div>
             </div>
@@ -108,9 +107,9 @@
 
         <!-- Main grade sheet card -->
         <div class="card gs-detail-card">
-            <h2 class="gs-inner-title">Grade Sheet Details - CS201: Data Structures</h2>
-            <div class="gs-inner-meta">
-                📅 Academic Year 2023-2024 &nbsp;&nbsp;•&nbsp;&nbsp; 🎓 Faculty of Computer Science
+            <h2 class="gs-inner-title" id="detailInnerTitle">Grade Sheet Details</h2>
+            <div class="gs-inner-meta" id="detailInnerMeta">
+                <!-- Loaded via API -->
             </div>
 
             <table id="gradesTable">
@@ -123,35 +122,8 @@
                         <th style="text-align:center;">Grade Point</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td style="color:var(--text-muted);">S101</td>
-                        <td><strong>Alice Johnson</strong></td>
-                        <td style="text-align:center; color:var(--text-muted);">3</td>
-                        <td style="text-align:center;"><span class="grade-badge grade-A">A</span></td>
-                        <td style="text-align:center; color:var(--text-muted);">4.0</td>
-                    </tr>
-                    <tr>
-                        <td style="color:var(--text-muted);">S102</td>
-                        <td><strong>Bob Miller</strong></td>
-                        <td style="text-align:center; color:var(--text-muted);">3</td>
-                        <td style="text-align:center;"><span class="grade-badge grade-B-plus">B+</span></td>
-                        <td style="text-align:center; color:var(--text-muted);">3.5</td>
-                    </tr>
-                    <tr>
-                        <td style="color:var(--text-muted);">S103</td>
-                        <td><strong>Charlie Davis</strong></td>
-                        <td style="text-align:center; color:var(--text-muted);">3</td>
-                        <td style="text-align:center;"><span class="grade-badge grade-B">B</span></td>
-                        <td style="text-align:center; color:var(--text-muted);">3.0</td>
-                    </tr>
-                    <tr>
-                        <td style="color:var(--text-muted);">S104</td>
-                        <td><strong>Diana Prince</strong></td>
-                        <td style="text-align:center; color:var(--text-muted);">3</td>
-                        <td style="text-align:center;"><span class="grade-badge grade-A">A</span></td>
-                        <td style="text-align:center; color:var(--text-muted);">4.0</td>
-                    </tr>
+                <tbody id="gradesDetailTableBody">
+                    <!-- Loaded via API -->
                 </tbody>
             </table>
 
@@ -201,5 +173,6 @@
             alert('GPA sent to all students!');
         });
     </script>
+    <script src="js/Dean2_app.js"></script>
 </body>
 </html> 

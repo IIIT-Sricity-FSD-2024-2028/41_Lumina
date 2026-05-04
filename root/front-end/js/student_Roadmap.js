@@ -1,7 +1,7 @@
 /* ==========================================
    roadmap.js – Academic Roadmap Generation
 ========================================== */
-/* ── SEMESTER HISTORY DATA — from mockDB ── */
+/* ── SEMESTER HISTORY DATA — from API ── */
 function buildSemHistory() {
   var registrations = getTable('Registration');
   var catalog       = getTable('Course_Catalog');
@@ -10,8 +10,13 @@ function buildSemHistory() {
   var users         = getTable('Users');
   var students      = getTable('Students');
 
-  var student  = students.find(function(s) { return s.Student_ID === CURRENT_STUDENT_ID; }) || {};
-  var currentSemNum = student.Current_Semester || 3;
+  var student  = students.find(function(s) { return s.Student_ID === CURRENT_STUDENT_ID; });
+  var currentSemNum = 0;
+  if (student && student.Current_Semester) {
+    currentSemNum = Number(student.Current_Semester);
+  } else if (currentRoadmapProfile && currentRoadmapProfile.student && currentRoadmapProfile.student.Current_Semester) {
+    currentSemNum = Number(currentRoadmapProfile.student.Current_Semester);
+  }
 
   /* Group registrations by term — approximate sem number by term order */
   var terms   = getTable('Academic_Term');
@@ -55,15 +60,16 @@ function buildSemHistory() {
     termToSem[t.Term_ID] = idx + 3; /* offset: sem 3 = first term in DB */
   });
 
-  /* Build sem 3 from mockDB (MONSOON2026 registrations) */
+  /* Build sem 3 from API (MONSOON2026 registrations) */
   var sem3Regs = registrations.filter(function(r) {
-    return r.Student_ID === CURRENT_STUDENT_ID;
+    return (r.studentId === CURRENT_STUDENT_ID || r.Student_ID === CURRENT_STUDENT_ID);
   });
 
   if (sem3Regs.length > 0) {
     var sem3Courses = sem3Regs.map(function(r) {
-      var course = catalog.find(function(c) { return c.Course_ID === r.Course_ID; }) || {};
-      return { name: course.Course_Name || r.Course_ID, credits: course.Credits || 4 };
+      var courseId = r.courseId || r.Course_ID;
+      var course = catalog.find(function(c) { return c.courseId === courseId || c.Course_ID === courseId; }) || {};
+      return { name: course.courseName || course.Course_Name || courseId, credits: course.credits || 4 };
     });
     var sem3Credits = sem3Courses.reduce(function(sum, c) { return sum + c.credits; }, 0);
 
@@ -93,15 +99,34 @@ function buildSemHistory() {
   return history;
 }
 
-/* DB helper for roadmap.js */
-function getTable(name) {
-  try { return JSON.parse(localStorage.getItem('Lumina_' + name)) || []; }
-  catch(e) { return []; }
+/* DB helper for roadmap.js — API backed */
+const ROADMAP_API = 'http://localhost:3000';
+const _roadmapSession = localStorage.getItem('Lumina_Session');
+const _roadmapUser = _roadmapSession ? JSON.parse(_roadmapSession) : null;
+const _roadmapHeaders = { 'x-role': _roadmapUser ? _roadmapUser.Role : 'Student' };
+var _roadmapCache = {};
+
+async function getTableAsync(name) {
+  if (_roadmapCache[name]) return _roadmapCache[name];
+  var endpointMap = { 'Registration': '/registrations', 'Course_Catalog': '/courses' };
+  var endpoint = endpointMap[name];
+  if (!endpoint) return [];
+  try {
+    var res = await fetch(ROADMAP_API + endpoint, { headers: _roadmapHeaders });
+    if (res.ok) { _roadmapCache[name] = await res.json(); return _roadmapCache[name]; }
+  } catch (e) { console.error('Roadmap fetch error:', e); }
+  return [];
 }
 
-var CURRENT_STUDENT_ID = 'S2024002';
+function getTable(name) { return _roadmapCache[name] || []; }
+
+async function prefetchRoadmapData() {
+  await Promise.all([getTableAsync('Registration'), getTableAsync('Course_Catalog')]);
+}
+
+var CURRENT_STUDENT_ID = (_roadmapUser ? _roadmapUser.User_ID : 'S2024002');
 var currentRoadmapProfile = window.getCurrentStudentProfile ? window.getCurrentStudentProfile() : { user: {}, student: {} };
-var semHistory = buildSemHistory();
+var semHistory;
 
 /* ── ELECTIVE POOLS ── */
 var allProgramElectives = [
@@ -783,3 +808,13 @@ document.querySelectorAll('.popup-bg').forEach(function(bg) {
   bg.addEventListener('click', function(e) { if (e.target === bg) closePopup(bg.id); });
 });
 document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closePopup('semModal'); });
+
+// Init roadmap asynchronously
+prefetchRoadmapData().then(function() {
+  semHistory = buildSemHistory();
+  window.roadmapReady = true;
+  // Trigger re-render or event if there was a UI function here, 
+  // but roadmap.js is used by student_App.js.
+  // Dispatch an event so App knows history is ready
+  window.dispatchEvent(new Event('RoadmapReady'));
+});

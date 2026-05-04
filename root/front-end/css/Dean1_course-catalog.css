@@ -219,6 +219,191 @@
   cursor: not-allowed;
 }
 
+/* ── Toast Notification ── */
+.toast {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translate(-50%, -80px);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 24px;
+  background: var(--navy);
+  color: #ffffff;
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  font-size: 0.9rem;
+  font-weight: 600;
+  z-index: 9999;
+  opacity: 0;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.toast--visible {
+  transform: translate(-50%, 0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.toast__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  font-size: 0.85rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.toast__message {
+  white-space: nowrap;
+}
+
+/* ── Prerequisite Searchable Dropdown ── */
+.prereq-select-wrapper {
+  position: relative;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-md);
+  background: var(--white);
+  transition: border-color var(--duration) var(--ease),
+              box-shadow var(--duration) var(--ease);
+}
+
+.prereq-select-wrapper:focus-within {
+  border-color: var(--navy);
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
+}
+
+/* Row of selected-course tags */
+.prereq-tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 10px 0;
+}
+
+.prereq-tags-row:empty {
+  padding: 0;
+}
+
+/* Individual selected tag */
+.prereq-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px 3px 10px;
+  background: var(--navy);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.prereq-tag-code {
+  font-family: 'Courier New', monospace;
+}
+
+.prereq-tag-remove {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.65);
+  cursor: pointer;
+  padding: 0 2px;
+  font-size: 1rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  transition: color var(--duration) var(--ease);
+}
+
+.prereq-tag-remove:hover {
+  color: #fff;
+}
+
+/* Search input inside the wrapper */
+.prereq-search-input {
+  width: 100%;
+  border: none;
+  outline: none;
+  padding: 10px 12px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  color: var(--gray-800);
+  background: transparent;
+  border-radius: var(--radius-md);
+  box-sizing: border-box;
+}
+
+.prereq-search-input::placeholder {
+  color: var(--gray-400);
+}
+
+/* Floating dropdown panel */
+.prereq-dropdown-list {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.13);
+  max-height: 230px;
+  overflow-y: auto;
+  z-index: 1100;
+}
+
+.prereq-dropdown-list--open {
+  display: block;
+}
+
+/* Each course option row */
+.prereq-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background var(--duration) var(--ease);
+}
+
+.prereq-dropdown-item:hover {
+  background: var(--gray-50);
+}
+
+.prereq-item-code {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--navy);
+  min-width: 68px;
+  font-family: 'Courier New', monospace;
+}
+
+.prereq-item-name {
+  font-size: 0.845rem;
+  color: var(--gray-600);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Empty-state message */
+.prereq-dropdown-empty {
+  padding: 16px;
+  font-size: 0.85rem;
+  color: var(--gray-400);
+  text-align: center;
+  font-style: italic;
+}
+
 /* ── Responsive ── */
 @media (max-width: 768px) {
   .catalog-header {

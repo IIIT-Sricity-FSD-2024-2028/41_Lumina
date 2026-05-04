@@ -1,48 +1,54 @@
 /* ==========================================================================
    COURSE CATALOG LOGIC (course.js)
-   Fetches courses, handles dynamic filtering, and powers pagination (9 per page).
+   Fetches courses from the NestJS backend, handles dynamic filtering, 
+   and powers pagination (9 per page).
    ========================================================================== */
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     
+    const API_BASE = 'http://localhost:3000';
     const courseGrid = document.getElementById('course-grid');
     const filterForm = document.getElementById('course-filter-form');
-    const paginationContainer = document.querySelector('.pagination'); // Target the pagination nav
+    const paginationContainer = document.querySelector('.pagination');
     
-    // Inputs
     const searchInput = document.getElementById('search-input');
     const deptSelect = document.getElementById('dept-select');
     const typeSelect = document.getElementById('type-select');
     const creditSelect = document.getElementById('credit-select');
 
-    // --- State Variables ---
     let allCourses = [];
-    let currentFilteredCourses = []; // The active list after search/filters
+    let currentFilteredCourses = [];
     let currentPage = 1;
-    const itemsPerPage = 9; // 3x3 Grid maximum
+    const itemsPerPage = 9;
 
-    // --- 1. Fetch and Prepare Data ---
-    function loadCourses() {
-        const rawCourses = JSON.parse(localStorage.getItem('Lumina_Course_Catalog')) || [];
-        const rawReqs = JSON.parse(localStorage.getItem('Lumina_Degree_Requirements')) || [];
+    // --- 1. Fetch from Backend ---
+    async function loadCourses() {
+        try {
+            const res = await fetch(`${API_BASE}/courses`, {
+                headers: { 'x-role': 'Student' }
+            });
+            if (res.ok) {
+                const backendCourses = await res.json();
+                allCourses = backendCourses.map(course => ({
+                    Course_ID: course.courseId,
+                    Course_Name: course.courseName,
+                    Credits: course.credits,
+                    Dept_ID: course.deptId,
+                    Status: course.status,
+                    Course_Type: 'Program Core'
+                }));
+            }
+        } catch (e) {
+            console.error('Failed to fetch courses from backend:', e);
+        }
 
-        // Join the Course Catalog with Degree Requirements to get the Course_Type
-        allCourses = rawCourses.map(course => {
-            const requirement = rawReqs.find(req => req.Course_ID === course.Course_ID);
-            return {
-                ...course,
-                Course_Type: requirement ? requirement.Course_Type : "Elective" 
-            };
-        });
-
-        // Initially, the filtered list is just everything
         currentFilteredCourses = allCourses;
         renderCourses();
     }
 
     // --- 2. Render HTML Cards (With Pagination Slice) ---
     function renderCourses() {
-        courseGrid.innerHTML = ''; // Clear the grid
+        courseGrid.innerHTML = '';
 
         if (currentFilteredCourses.length === 0) {
             courseGrid.innerHTML = `
@@ -50,12 +56,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     <h3>No courses found</h3>
                     <p>Try adjusting your search filters.</p>
                 </div>`;
-            paginationContainer.innerHTML = ''; // Hide pagination if no results
+            paginationContainer.innerHTML = '';
             return;
         }
 
-        // --- THE PAGINATION SLICE ---
-        // Calculate which 9 items to grab out of the array
         const startIndex = (currentPage - 1) * itemsPerPage;
         const endIndex = startIndex + itemsPerPage;
         const coursesToDisplay = currentFilteredCourses.slice(startIndex, endIndex);
@@ -88,38 +92,32 @@ document.addEventListener('DOMContentLoaded', () => {
             courseGrid.insertAdjacentHTML('beforeend', cardHTML);
         });
 
-        // Update the page numbers at the bottom
         renderPaginationUI();
     }
 
     // --- 3. Render Pagination Buttons ---
     function renderPaginationUI() {
         const totalPages = Math.ceil(currentFilteredCourses.length / itemsPerPage);
-        paginationContainer.innerHTML = ''; // Wipe the hardcoded HTML
+        paginationContainer.innerHTML = '';
 
-        if (totalPages <= 1) return; // Don't show pagination if there's only 1 page
+        if (totalPages <= 1) return;
 
-        // Generate "Previous" Button
         const prevDisabled = currentPage === 1 ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : '';
         paginationContainer.innerHTML += `<button class="page-btn text-muted" id="prev-btn" ${prevDisabled}>Previous</button>`;
 
-        // Generate Number Buttons
         for (let i = 1; i <= totalPages; i++) {
             const activeClass = i === currentPage ? 'active' : '';
             paginationContainer.innerHTML += `<button class="page-btn page-num ${activeClass}" data-page="${i}">${i}</button>`;
         }
 
-        // Generate "Next" Button
         const nextDisabled = currentPage === totalPages ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : '';
         paginationContainer.innerHTML += `<button class="page-btn text-muted" id="next-btn" ${nextDisabled}>Next</button>`;
 
-        // --- Attach Click Listeners to the New Buttons ---
-        
         if (currentPage > 1) {
             document.getElementById('prev-btn').addEventListener('click', () => {
                 currentPage--;
                 renderCourses();
-                window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll back to top smoothly
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             });
         }
         
@@ -127,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('next-btn').addEventListener('click', () => {
                 currentPage++;
                 renderCourses();
-                window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll back to top smoothly
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             });
         }
 
@@ -135,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.addEventListener('click', (e) => {
                 currentPage = parseInt(e.target.getAttribute('data-page'));
                 renderCourses();
-                window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll back to top smoothly
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             });
         });
     }
@@ -158,7 +156,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return matchesSearch && matchesDept && matchesType && matchesCredit;
         });
 
-        // IMPORTANT: Whenever the user searches or changes a filter, reset them back to Page 1
         currentPage = 1; 
         renderCourses();
     }
@@ -175,5 +172,5 @@ document.addEventListener('DOMContentLoaded', () => {
     searchInput.addEventListener('input', applyFilters); 
 
     // Initialize the page
-    loadCourses();
+    await loadCourses();
 });

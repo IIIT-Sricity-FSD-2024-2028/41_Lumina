@@ -12,17 +12,17 @@ let panelSlot = '';
 let editingAlloc = null;
 
 const TIME_SLOTS = [
-  { key: '08:45-09:45', label: '08:45 AM -\n09:45 AM', type: 'slot' },
-  { key: '09:45-10:45', label: '09:45 AM -\n10:45 AM', type: 'slot' },
+  { key: '08:45-09:45', label: '08:45 AM - 09:45 AM', type: 'slot' },
+  { key: '09:45-10:45', label: '09:45 AM - 10:45 AM', type: 'slot' },
   { key: '10:45-11:00', label: '10:45 - 11:00', type: 'short_break' },
-  { key: '11:00-12:00', label: '11:00 AM -\n12:00 PM', type: 'slot' },
-  { key: '12:00-13:00', label: '12:00 PM -\n01:00 PM', type: 'slot' },
+  { key: '11:00-12:00', label: '11:00 AM - 12:00 PM', type: 'slot' },
+  { key: '12:00-13:00', label: '12:00 PM - 01:00 PM', type: 'slot' },
   { key: '13:00-14:00', label: '01:00 - 02:00', type: 'lunch_break' },
-  { key: '14:15-15:15', label: '02:15 PM -\n03:15 PM', type: 'slot' },
-  { key: '15:15-16:15', label: '03:15 PM -\n04:15 PM', type: 'slot' },
+  { key: '14:15-15:15', label: '02:15 PM - 03:15 PM', type: 'slot' },
+  { key: '15:15-16:15', label: '03:15 PM - 04:15 PM', type: 'slot' },
   { key: '16:15-16:30', label: '04:15 - 04:30', type: 'short_break' },
-  { key: '16:30-17:30', label: '04:30 PM -\n05:30 PM', type: 'slot' },
-  { key: '17:30-18:30', label: '05:30 PM -\n06:30 PM', type: 'slot' }
+  { key: '16:30-17:30', label: '04:30 PM - 05:30 PM', type: 'slot' },
+  { key: '17:30-18:30', label: '05:30 PM - 06:30 PM', type: 'slot' }
 ];
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
@@ -68,8 +68,8 @@ function updateCourseDropdown() {
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  appData = typeof loadData === 'function' ? loadData() : [];
+document.addEventListener('DOMContentLoaded', async () => {
+  appData = typeof loadData === 'function' ? await loadData() : [];
 
   if (typeof renderNavbar === 'function') renderNavbar('timetable');
   if (typeof renderFooter === 'function') renderFooter();
@@ -80,6 +80,9 @@ document.addEventListener('DOMContentLoaded', () => {
   if (editModeBtn) editModeBtn.addEventListener('click', toggleEditMode);
 
   initSidePanel();
+
+  const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+  if (downloadPdfBtn) downloadPdfBtn.addEventListener('click', downloadTimetablePDF);
 
   renderTimetable();
 });
@@ -146,6 +149,7 @@ function initFilters() {
 
   const updateDerivedFilters = () => {
     const type = filterType.value;
+    const prevDept = filterDept.value;
     
     // Department logic
     if (type === 'Institute Core' || type === 'Seed Course') {
@@ -158,8 +162,12 @@ function initFilters() {
         <option value="ECE">ECE</option>
         <option value="AIDS">AIDS</option>
       `;
-      // Ensure current value still exists, otherwise reset to CSE
-      if (!filterDept.value) filterDept.value = 'CSE';
+      // Restore previous selection if it still exists, otherwise default to CSE
+      if (prevDept && prevDept !== 'All Departments' && Array.from(filterDept.options).some(o => o.value === prevDept)) {
+        filterDept.value = prevDept;
+      } else {
+        filterDept.value = 'CSE';
+      }
       filterDept.disabled = false;
     }
 
@@ -489,7 +497,7 @@ function setValidItem(id, status, msg) {
   }
   el.innerHTML = `${iconHTML} <span>${msg}</span>`;
 }
-function handleUpdateSlot() {
+async function handleUpdateSlot() {
   const courseCode = document.getElementById('panelCourse').value;
   const faculty = document.getElementById('panelFaculty').value;
   const room = document.getElementById('panelRoom').value;
@@ -512,9 +520,9 @@ function handleUpdateSlot() {
   };
 
   if (editingAlloc) {
-    updateAllocation(editingAlloc, newAlloc, appData);
+    await updateAllocation(editingAlloc, newAlloc, appData);
   } else {
-    addAllocation(newAlloc, appData);
+    await addAllocation(newAlloc, appData);
   }
 
   closeSidePanel();
@@ -576,3 +584,35 @@ function populatePanelDropdowns() {
   }).join('');
 }
 
+
+function downloadTimetablePDF() {
+  const btn = document.getElementById('downloadPdfBtn');
+  const origText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span>⏳</span> Generating…';
+
+  const grid = document.getElementById('timetableGrid');
+
+  // Build a descriptive filename from current filters
+  const term = document.getElementById('filterTerm').value || 'Timetable';
+  const ug = document.getElementById('filterUG').value || '';
+  const type = document.getElementById('filterCourseType').value || '';
+  const filename = `${term}_${ug}_${type}`.replace(/\s+/g, '_') + '.pdf';
+
+  const opt = {
+    margin:       [8, 8, 8, 8],
+    filename:     filename,
+    image:        { type: 'jpeg', quality: 0.98 },
+    html2canvas:  { scale: 2, useCORS: true, scrollX: 0, scrollY: 0 },
+    jsPDF:        { unit: 'mm', format: 'a3', orientation: 'landscape' }
+  };
+
+  html2pdf().set(opt).from(grid).save().then(() => {
+    btn.disabled = false;
+    btn.innerHTML = origText;
+  }).catch(() => {
+    btn.disabled = false;
+    btn.innerHTML = origText;
+    alert('Failed to generate PDF. Please try again.');
+  });
+}

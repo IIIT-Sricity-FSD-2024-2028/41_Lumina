@@ -49,12 +49,7 @@
         <option value="Elective">Elective</option>
         <option value="Seed Course">Seed Course</option>
       </select>
-      <select class="select-field select-field--filter" id="filterDept">
-        <option value="">Department</option>
-        <option value="CSE">CSE</option>
-        <option value="ECE">ECE</option>
-        <option value="AIDS">AIDS</option>
-      </select>
+      <select class="select-field select-field--filter" id="filterDept" style="display:none;"></select>
       <select class="select-field select-field--filter" id="filterStatus">
         <option value="">Status</option>
         <option value="Active">Active</option>
@@ -107,7 +102,7 @@
           <div class="form-row">
             <div class="form-group" id="addCodeGroup">
               <label class="form-label" for="addCode">Course Code</label>
-              <input class="input-field" id="addCode" placeholder="e.g. CS101">
+              <input class="input-field" id="addCode" placeholder="e.g. CS101" pattern="^[A-Z]{2,4}\d{3}$" title="Must be 2-4 uppercase letters followed by 3 digits (e.g. CS101)">
               <span class="form-error" id="addCodeError">Course code is required</span>
             </div>
             <div class="form-group" id="addNameGroup">
@@ -120,8 +115,8 @@
           <div class="form-row">
             <div class="form-group" id="addCreditsGroup">
               <label class="form-label" for="addCredits">Credits</label>
-              <input class="input-field" id="addCredits" type="number" min="1" max="6" placeholder="e.g. 4">
-              <span class="form-error" id="addCreditsError">Credits (1-6) required</span>
+              <input class="input-field" id="addCredits" type="number" min="1" max="4" placeholder="e.g. 4">
+              <span class="form-error" id="addCreditsError">Credits (1-4) required</span>
             </div>
             <div class="form-group" id="addUGGroup">
               <label class="form-label" for="addUG">UG Year</label>
@@ -178,8 +173,10 @@
 
           <div class="form-group form-group--full" id="addPrereqGroup">
             <label class="form-label">Prerequisites</label>
-            <div class="tag-input-wrapper" id="addPrereqWrapper">
-              <input class="tag-input" id="addPrereqInput" placeholder="Add code...">
+            <div class="prereq-select-wrapper" id="addPrereqWrapper">
+              <div class="prereq-tags-row" id="addPrereqTags"></div>
+              <input class="prereq-search-input" id="addPrereqSearch" placeholder="Type to search and select courses..." autocomplete="off">
+              <div class="prereq-dropdown-list" id="addPrereqList"></div>
             </div>
           </div>
 
@@ -205,7 +202,7 @@
           <div class="form-row">
             <div class="form-group" id="editCodeGroup">
               <label class="form-label" for="editCode">Course Code</label>
-              <input class="input-field" id="editCode" readonly>
+              <input class="input-field" id="editCode" readonly pattern="^[A-Z]{2,4}\d{3}$" title="Must be 2-4 uppercase letters followed by 3 digits (e.g. CS101)">
               <span class="form-error" id="editCodeError">Course code is required</span>
             </div>
             <div class="form-group" id="editNameGroup">
@@ -285,8 +282,10 @@
 
           <div class="form-group form-group--full" id="editPrereqGroup">
             <label class="form-label">Prerequisites</label>
-            <div class="tag-input-wrapper" id="editPrereqWrapper">
-              <input class="tag-input" id="editPrereqInput" placeholder="Add course code...">
+            <div class="prereq-select-wrapper" id="editPrereqWrapper">
+              <div class="prereq-tags-row" id="editPrereqTags"></div>
+              <input class="prereq-search-input" id="editPrereqSearch" placeholder="Type to search and select courses..." autocomplete="off">
+              <div class="prereq-dropdown-list" id="editPrereqList"></div>
             </div>
           </div>
 
@@ -299,7 +298,12 @@
     </div>
   </div>
 
-  <script src="js/mockData.js"></script>
+  <!-- ══════════ TOAST NOTIFICATION ══════════ -->
+  <div class="toast" id="toast">
+    <span class="toast__icon">✓</span>
+    <span class="toast__message" id="toastMessage">Course added successfully!</span>
+  </div>
+
   <script src="js/Dean1_data.js"></script>
   <script src="js/Dean1_layout.js"></script>
   <script src="js/Dean1_course-catalog.js"></script>

@@ -1,6 +1,15 @@
+const API_BASE = 'http://localhost:3000';
+const sessionData = localStorage.getItem('Lumina_Session');
+const currentUser = sessionData ? JSON.parse(sessionData) : null;
+const API_HEADERS = {
+    'Content-Type': 'application/json',
+    'x-role': currentUser ? currentUser.Role : 'Assistant_Dean_2'
+};
+
 // ==========================================
 // HELPERS
 // ==========================================
+
 function computeTermLabel(academicYear, term) {
     if (!academicYear || !term) return '—';
     const parts = academicYear.split('-');
@@ -320,7 +329,7 @@ function initEnrollmentPage() {
             phaseTableBody.insertAdjacentHTML('beforeend', `
                 <tr>
                     <td><strong>${phase.name}</strong></td>
-                    <td>${phase.eligible}</td>
+                    <td>${phase.eligibleGroups || phase.eligible}</td>
                     <td>${phase.timeline}</td>
                     <td><span class="badge ${bc}">${phase.status}</span></td>
                     <td class="action-icons">
@@ -332,9 +341,9 @@ function initEnrollmentPage() {
         });
     }
 
-    function refreshEnrollmentUI() {
+    async function refreshEnrollmentUI() {
         const s = getSettings();
-        const phases = DB.get('Enrollment_Phases') || [];
+        const phases = await fetch(API_BASE + '/enrollment-phases', {headers: API_HEADERS}).then(r=>r.json()).catch(()=>[]);
 
         if (startDateInput) startDateInput.value = s.startDate || '';
         if (endDateInput) endDateInput.value = s.endDate || '';
@@ -352,7 +361,7 @@ function initEnrollmentPage() {
 
         const activePhase = phases.find(p => p.status === 'Active');
         if (activePhaseName) activePhaseName.textContent = activePhase ? activePhase.name : 'No Active Phase';
-        if (activePhaseEligible) activePhaseEligible.textContent = activePhase ? activePhase.eligible + ' Students' : 'N/A';
+        if (activePhaseEligible) activePhaseEligible.textContent = activePhase ? (activePhase.eligibleGroups || activePhase.eligible) + ' Students' : 'N/A';
 
         if (globalEnrollDates) {
             globalEnrollDates.textContent = (s.startDate && s.endDate)
@@ -392,41 +401,38 @@ function initEnrollmentPage() {
         if (!name) { alert('Please enter a phase name.'); return; }
         if (!tm) { alert('Please enter a timeline.'); return; }
 
-        let phases = DB.get('Enrollment_Phases') || [];
-        if (status === 'Active') phases.forEach(p => { if (p.status === 'Active') p.status = 'Upcoming'; });
-
-        if (editingId !== null) {
-            const idx = phases.findIndex(p => p.id === editingId);
-            if (idx > -1) phases[idx] = { ...phases[idx], name, eligible: yr, timeline: tm, status };
-        } else {
-            phases.push({ id: Date.now(), name, eligible: yr, timeline: tm, status });
-        }
-
-        DB.set('Enrollment_Phases', phases);
-        phaseModal.classList.remove('show');
-        refreshEnrollmentUI();
+        let method = editingId !== null ? 'PUT' : 'POST';
+        let url = API_BASE + '/enrollment-phases' + (editingId !== null ? '/' + editingId : '');
+        fetch(url, {
+            method: method,
+            headers: API_HEADERS,
+            body: JSON.stringify({ name, eligibleGroups: yr, timeline: tm, status })
+        }).then(() => {
+            phaseModal.classList.remove('show');
+            refreshEnrollmentUI();
+        });
     });
 
-    phaseTableBody?.addEventListener('click', (e) => {
+    phaseTableBody?.addEventListener('click', async (e) => {
         const editBtn = e.target.closest('[data-edit]');
         const deleteBtn = e.target.closest('[data-delete]');
 
         if (deleteBtn) {
             const id = parseInt(deleteBtn.getAttribute('data-delete'));
             if (confirm('Delete this phase?')) {
-                DB.set('Enrollment_Phases', DB.get('Enrollment_Phases').filter(p => p.id !== id));
-                refreshEnrollmentUI();
+                fetch(API_BASE + '/enrollment-phases/' + id, {method: 'DELETE', headers: API_HEADERS}).then(() => refreshEnrollmentUI());
             }
         }
 
         if (editBtn) {
             const id = parseInt(editBtn.getAttribute('data-edit'));
-            const phase = (DB.get('Enrollment_Phases') || []).find(p => p.id === id);
+            const phases = await fetch(API_BASE + '/enrollment-phases', {headers: API_HEADERS}).then(r=>r.json()).catch(()=>[]);
+            const phase = phases.find(p => p.id === id);
             if (phase) {
                 editingId = id;
                 modalTitle.textContent = 'Edit Enrollment Phase';
                 modalPhaseName.value = phase.name;
-                modalYear.value = phase.eligible;
+                modalYear.value = phase.eligibleGroups || phase.eligible;
                 modalSemester.value = phase.timeline;
                 modalPhaseStatus.value = phase.status;
                 phaseModal.classList.add('show');
@@ -440,12 +446,19 @@ function initEnrollmentPage() {
 // ==========================================
 // DASHBOARD PAGE
 // ==========================================
-function initDashboardPage() {
+async function initDashboardPage() {
     const settings  = (DB.get('Enrollment_Settings') || [])[0] || {};
-    const phases    = DB.get('Enrollment_Phases') || [];
+    const phases = await fetch(API_BASE + '/enrollment-phases', {headers: API_HEADERS}).then(r=>r.json()).catch(()=>[]);
     const ts        = (DB.get('Academic_Term_Settings') || [])[0] || {};
     const ps        = (DB.get('Policy_Settings') || [])[0] || {};
-    const overrides = DB.get('Override_Requests') || [];
+    
+    let overrides = [];
+    try {
+        const res = await fetch(`${API_BASE}/overrides`, { headers: API_HEADERS });
+        if (res.ok) overrides = await res.json();
+    } catch (err) {
+        console.error('Failed to fetch overrides:', err);
+    }
 
     const el = (id) => document.getElementById(id);
 
@@ -490,25 +503,14 @@ function initDashboardPage() {
     }
 
     if (dashPendingOverrides) {
-        dashPendingOverrides.textContent = overrides.filter(r => r.status === 'Pending').length;
+        dashPendingOverrides.textContent = overrides.filter(r => r.approvalStatus === 'Pending').length;
     }
 }
 
 // ==========================================
 // OVERRIDES PAGE
 // ==========================================
-function initOverridesPage() {
-    const defaultRequests = [
-        { id: 'OR-1042', name: 'John Miller',   sid: 'S1023', dept: 'CSE',  year: '3rd Year', course: 'CSE302 (Data Structures)',  reason: 'Course Full (Needs seat override)',  date: 'August 12, 2025', status: 'Pending'  },
-        { id: 'OR-1088', name: 'Alice Smith',   sid: 'S1045', dept: 'ECE',  year: '2nd Year', course: 'ECE201 (Signals & Systems)', reason: 'Missing Prerequisite (Math 101)',    date: 'August 11, 2025', status: 'Approved' },
-        { id: 'OR-1102', name: 'Michael Brown', sid: 'S1089', dept: 'AIDS', year: '3rd Year', course: 'CS301 (Thermodynamics)',      reason: 'Schedule Time Conflict',            date: 'August 10, 2025', status: 'Rejected' },
-        { id: 'OR-1105', name: 'Priya Sharma',  sid: 'S1101', dept: 'CSE',  year: '2nd Year', course: 'CSE201 (Algorithms)',         reason: 'Course Full (Needs seat override)',  date: 'August 13, 2025', status: 'Pending'  },
-        { id: 'OR-1110', name: 'Rahul Verma',   sid: 'S1115', dept: 'ECE',  year: '4th Year', course: 'ECE401 (VLSI Design)',        reason: 'Missing Prerequisite (ECE301)',      date: 'August 13, 2025', status: 'Pending'  }
-    ];
-
-    const existing = DB.get('Override_Requests');
-    if (!existing || existing.length === 0) DB.set('Override_Requests', defaultRequests);
-
+async function initOverridesPage() {
     const tableBody        = document.getElementById('overridesTableBody');
     const searchInput      = document.getElementById('searchInput');
     const deptFilter       = document.getElementById('deptFilter');
@@ -532,10 +534,52 @@ function initOverridesPage() {
     const btnReject        = document.getElementById('btnReject');
     const btnMoreInfo      = document.getElementById('btnMoreInfo');
 
+    let allMappedOverrides = [];
     let activeRequestId = null;
 
+    try {
+        const [ovRes, usrRes, crsRes] = await Promise.all([
+            fetch(`${API_BASE}/overrides`, { headers: API_HEADERS }),
+            fetch(`${API_BASE}/users`, { headers: API_HEADERS }),
+            fetch(`${API_BASE}/courses`, { headers: API_HEADERS })
+        ]);
+        let backendOverrides = [];
+        let usersMap = {};
+        let coursesMap = {};
+
+        if (ovRes.ok) backendOverrides = await ovRes.json();
+        if (usrRes.ok) {
+            const users = await usrRes.json();
+            users.forEach(u => usersMap[u.userId] = u);
+        }
+        if (crsRes.ok) {
+            const courses = await crsRes.json();
+            courses.forEach(c => coursesMap[c.courseId] = c);
+        }
+
+        allMappedOverrides = backendOverrides.map(r => {
+            const student = usersMap[r.studentId] || {};
+            const course = coursesMap[r.courseId] || {};
+            return {
+                id: r.requestId,
+                name: student.fullName || 'Unknown Student',
+                sid: r.studentId,
+                dept: student.deptId || 'Unknown',
+                year: 'N/A',
+                course: `${r.courseId} (${course.courseName || 'Unknown'})`,
+                reason: r.reason,
+                date: formatDateShort(r.createdAt),
+                status: r.approvalStatus
+            };
+        });
+        
+        allMappedOverrides.sort((a, b) => b.id - a.id);
+    } catch (err) {
+        console.error('Failed to fetch data from backend:', err);
+    }
+
     function getFilteredRequests() {
-        let requests = DB.get('Override_Requests') || [];
+        let requests = allMappedOverrides;
         const search = (searchInput?.value || '').toLowerCase().trim();
         const dept   = deptFilter?.value || 'All Departments';
         const status = statusFilter?.value || 'All Status';
@@ -575,14 +619,14 @@ function initOverridesPage() {
     }
 
     function updateMetrics() {
-        const all = DB.get('Override_Requests') || [];
+        const all = allMappedOverrides;
         if (metricPending)  metricPending.textContent  = all.filter(r => r.status === 'Pending').length;
         if (metricApproved) metricApproved.textContent = all.filter(r => r.status === 'Approved').length;
         if (metricRejected) metricRejected.textContent = all.filter(r => r.status === 'Rejected').length;
     }
 
     function updateInsights() {
-        const all = DB.get('Override_Requests') || [];
+        const all = allMappedOverrides;
         const total = all.length;
         const cseCnt = all.filter(r => r.dept === 'CSE').length;
         const cfCnt  = all.filter(r => r.reason.toLowerCase().includes('course full')).length;
@@ -603,7 +647,7 @@ function initOverridesPage() {
         sideEmpty.style.display  = 'none';
         sideDetail.style.display = 'block';
 
-        sideReqId.textContent = req.id;
+        sideReqId.textContent = 'OR-' + req.id;
         sideReqId.className = 'badge ' + (req.status === 'Pending' ? 'badge-pending' : req.status === 'Approved' ? 'badge-active' : 'badge-rejected');
 
         sideName.textContent   = req.name;
@@ -614,7 +658,7 @@ function initOverridesPage() {
 
         if (req.status === 'Pending') {
             sideActions.style.display  = 'flex';
-            sideResolved.style.display = 'block';
+            sideResolved.style.display = 'none';
         } else {
             sideActions.style.display  = 'none';
             sideResolved.style.display = 'block';
@@ -646,43 +690,61 @@ function initOverridesPage() {
     tableBody?.addEventListener('click', (e) => {
         const btn = e.target.closest('.view-btn');
         if (!btn) return;
-        const id  = btn.getAttribute('data-id');
-        const req = (DB.get('Override_Requests') || []).find(r => r.id === id);
+        const id  = parseInt(btn.getAttribute('data-id'), 10);
+        const req = allMappedOverrides.find(r => r.id === id);
         if (req) showSidebar(req);
     });
 
-    btnApprove?.addEventListener('click', () => {
+    btnApprove?.addEventListener('click', async () => {
         if (!activeRequestId) return;
-        let requests = DB.get('Override_Requests') || [];
-        const idx = requests.findIndex(r => r.id === activeRequestId);
-        if (idx > -1) {
-            requests[idx].status = 'Approved';
-            DB.set('Override_Requests', requests);
-            showSidebar(requests[idx]);
-            refreshOverridesUI();
+        try {
+            const res = await fetch(`${API_BASE}/overrides/${activeRequestId}/status`, {
+                method: 'PATCH',
+                headers: API_HEADERS,
+                body: JSON.stringify({ Approval_Status: 'Approved' })
+            });
+            if (res.ok) {
+                const idx = allMappedOverrides.findIndex(r => r.id === activeRequestId);
+                if (idx > -1) allMappedOverrides[idx].status = 'Approved';
+                showSidebar(allMappedOverrides[idx]);
+                refreshOverridesUI();
+            } else {
+                alert('Failed to approve request.');
+            }
+        } catch (err) {
+            console.error('API Error:', err);
         }
     });
 
-    btnReject?.addEventListener('click', () => {
+    btnReject?.addEventListener('click', async () => {
         if (!activeRequestId) return;
-        let requests = DB.get('Override_Requests') || [];
-        const idx = requests.findIndex(r => r.id === activeRequestId);
-        if (idx > -1) {
-            requests[idx].status = 'Rejected';
-            DB.set('Override_Requests', requests);
-            showSidebar(requests[idx]);
-            refreshOverridesUI();
+        try {
+            const res = await fetch(`${API_BASE}/overrides/${activeRequestId}/status`, {
+                method: 'PATCH',
+                headers: API_HEADERS,
+                body: JSON.stringify({ Approval_Status: 'Rejected' })
+            });
+            if (res.ok) {
+                const idx = allMappedOverrides.findIndex(r => r.id === activeRequestId);
+                if (idx > -1) allMappedOverrides[idx].status = 'Rejected';
+                showSidebar(allMappedOverrides[idx]);
+                refreshOverridesUI();
+            } else {
+                alert('Failed to reject request.');
+            }
+        } catch (err) {
+            console.error('API Error:', err);
         }
     });
 
     btnMoreInfo?.addEventListener('click', () => {
         if (!activeRequestId) return;
-        alert(`📧 A request for more information has been sent to the student regarding ${activeRequestId}.`);
+        alert(`📧 A request for more information has been sent to the student regarding OR-${activeRequestId}.`);
     });
 
     const lastSelected = localStorage.getItem('Lumina_LastOverrideSelected');
     if (lastSelected) {
-        const req = (DB.get('Override_Requests') || []).find(r => r.id === lastSelected);
+        const req = allMappedOverrides.find(r => r.id === parseInt(lastSelected, 10));
         if (req) showSidebar(req);
     }
 
@@ -695,8 +757,101 @@ function initOverridesPage() {
 }
 
 // ==========================================
-// ROUTER  ← only this section changed
+// ROUTER
 // ==========================================
+
+async function initGradesheetsPage() {
+    try {
+        const [courseRes, regRes] = await Promise.all([
+            fetch(`${API_BASE}/courses`, { headers: API_HEADERS }),
+            fetch(`${API_BASE}/registrations`, { headers: API_HEADERS })
+        ]);
+        if (!courseRes.ok || !regRes.ok) throw new Error('Failed to fetch data');
+        const courses = await courseRes.json();
+        const registrations = await regRes.json();
+
+        const tbody = document.getElementById('gradesheetsTableBody');
+        if (!tbody) return;
+
+        let html = '';
+        courses.forEach(c => {
+            const courseRegs = registrations.filter(r => r.courseId === c.courseId && r.status === 'Enrolled');
+            if (courseRegs.length === 0) return; // Skip courses with no enrollments
+            
+            const withGrades = courseRegs.filter(r => r.finalGrade !== null).length;
+            let statusBadge = '<span class="badge badge-pending">Pending</span>';
+            if (withGrades > 0) {
+                statusBadge = `<span class="badge badge-active">Grades Submitted (${withGrades}/${courseRegs.length})</span>`;
+            }
+
+            const term = courseRegs[0].termId;
+            
+            html += `
+                <tr>
+                    <td><strong>${c.courseId}</strong></td>
+                    <td>${c.courseName}</td>
+                    <td><span class="badge badge-upcoming">${term}</span></td>
+                    <td>${statusBadge}</td>
+                    <td style="color: var(--text-muted);">Just now</td>
+                    <td><a href="Dean2_gradesheets-detail.html?courseId=${c.courseId}&termId=${term}" class="btn-view-dark">View Grade Sheet →</a></td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = html;
+    } catch (err) {
+        console.error('Failed to load gradesheets:', err);
+    }
+}
+
+async function initGradesheetsDetailPage() {
+    const params = new URLSearchParams(window.location.search);
+    const courseId = params.get('courseId');
+    const termId = params.get('termId');
+    
+    if (!courseId) {
+        document.getElementById('gradesDetailTableBody').innerHTML = '<tr><td colspan="5">No course selected</td></tr>';
+        return;
+    }
+
+    try {
+        const [courseRes, regRes, userRes] = await Promise.all([
+            fetch(`${API_BASE}/courses/${courseId}`, { headers: API_HEADERS }),
+            fetch(`${API_BASE}/registrations`, { headers: API_HEADERS }),
+            fetch(`${API_BASE}/users`, { headers: API_HEADERS })
+        ]);
+        
+        const course = await courseRes.json();
+        const registrations = await regRes.json();
+        const users = await userRes.json();
+        
+        document.getElementById('detailCourseTitle').textContent = `Grade Sheet Details: ${course.courseId} - ${course.courseName}`;
+        document.getElementById('detailCourseMeta').innerHTML = `${termId} &nbsp;•&nbsp; <span class="badge-awaiting">REVIEW</span>`;
+        document.getElementById('detailInnerTitle').textContent = `Grade Sheet Details - ${course.courseId}: ${course.courseName}`;
+        document.getElementById('detailInnerMeta').innerHTML = `📅 Term: ${termId} &nbsp;&nbsp;•&nbsp;&nbsp; 🎓 Department of ${course.deptId}`;
+
+        const courseRegs = registrations.filter(r => r.courseId === courseId && r.termId === termId && r.status === 'Enrolled');
+        const tbody = document.getElementById('gradesDetailTableBody');
+        
+        let html = '';
+        courseRegs.forEach(r => {
+            const student = users.find(u => u.userId === r.studentId) || { fullName: 'Unknown' };
+            const grade = r.finalGrade || '-';
+            html += `
+                <tr>
+                    <td style="color:var(--text-muted);">${r.studentId}</td>
+                    <td><strong>${student.fullName}</strong></td>
+                    <td style="text-align:center; color:var(--text-muted);">${course.credits}</td>
+                    <td style="text-align:center;"><span class="grade-badge grade-${grade.replace('+','-plus')}">${grade}</span></td>
+                    <td style="text-align:center; color:var(--text-muted);">-</td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = html || '<tr><td colspan="5" style="text-align:center;">No enrollments found.</td></tr>';
+    } catch (err) {
+        console.error('Failed to load gradesheet details:', err);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const path = window.location.pathname;
 
@@ -706,10 +861,13 @@ document.addEventListener('DOMContentLoaded', () => {
         initEnrollmentPage();
     } else if (path.includes('Dean2_overrides.html')) {
         initOverridesPage();
+    } else if (path.includes('Dean2_gradesheets-detail.html')) {
+        initGradesheetsDetailPage();
+    } else if (path.includes('Dean2_gradesheets.html')) {
+        initGradesheetsPage();
     } else if (path.includes('Dean2_analytics.html')) {
         // Analytics is static, nothing to init
     } else {
-        // Covers Dean2_index.html, Dean2_gradesheets.html, Dean2_gradesheets-detail.html
         initDashboardPage();
     }
-}); 
+});

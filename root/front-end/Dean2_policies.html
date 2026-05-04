@@ -89,15 +89,15 @@
                         <div class="policy-section-title">💳 Credit Limit Policy</div>
                         <div class="form-group">
                             <label>Minimum Credits Allowed</label>
-                            <input type="number" id="minCredits" value="12" min="0">
+                            <input type="number" id="minCredits" value="12" min="0" max="30" onkeydown="return event.key !== 'e' && event.key !== 'E' && event.key !== '+' && event.key !== '-'">
                         </div>
                         <div class="form-group">
                             <label>Maximum Credits Allowed</label>
-                            <input type="number" id="maxCredits" value="21" min="0">
+                            <input type="number" id="maxCredits" value="21" min="0" max="30" onkeydown="return event.key !== 'e' && event.key !== 'E' && event.key !== '+' && event.key !== '-'">
                         </div>
                         <div class="form-group" style="margin:0;">
                             <label>Maximum Courses Allowed</label>
-                            <input type="number" id="maxCourses" value="6" min="0">
+                            <input type="number" id="maxCourses" value="6" min="0" max="10" onkeydown="return event.key !== 'e' && event.key !== 'E' && event.key !== '+' && event.key !== '-'">
                         </div>
                     </div>
 
@@ -124,7 +124,7 @@
                     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.5rem;align-items:center;">
                         <div class="form-group" style="margin:0;">
                             <label>Min GPA Required</label>
-                            <input type="number" step="0.1" id="minGpa" value="5.0" min="0">
+                            <input type="number" step="0.1" id="minGpa" value="5.0" min="0" max="10.0" onkeydown="return event.key !== 'e' && event.key !== 'E' && event.key !== '+' && event.key !== '-'">
                         </div>
                         <div>
                             <div class="toggle-row" style="margin:0;">
@@ -200,6 +200,5 @@
 </footer> 
 
     <script src="js/Dean2_app.js"></script>
-    <script src="js/Dean2_database.js"></script>
 </body>
 </html>

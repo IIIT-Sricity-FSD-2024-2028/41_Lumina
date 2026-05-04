@@ -211,20 +211,21 @@ select:disabled, select.tt-disabled {
 }
 
 .tt-grid td {
-  border: 1px solid var(--gray-200);
+  border: 1px solid #d0d5dd;
   vertical-align: top;
   height: 72px;
   padding: 4px;
   position: relative;
+  background: #f4f5f7;
   transition: background var(--duration) var(--ease);
 }
 
-.tt-grid__time-cell {
+.tt-grid .tt-grid__time-cell {
   font-size: .73rem;
   font-weight: 600;
   color: var(--gray-600);
   text-align: center;
-  background: var(--gray-50) !important;
+  background: #e8eaed !important;
   vertical-align: middle;
   white-space: nowrap;
   line-height: 1.5;
@@ -232,11 +233,11 @@ select:disabled, select.tt-disabled {
 
 /* Break rows */
 .tt-break-row td {
-  background: #f8f8fa !important;
+  background: #e0e1e6 !important;
   height: 36px !important;
   min-height: 36px;
   padding: 0;
-  border-color: var(--gray-200);
+  border-color: #d0d5dd;
 }
 
 .tt-break-label {

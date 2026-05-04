@@ -1,4 +1,3 @@
-
 /**
  * Lumina shared layout renderers.
  */

@@ -1,5 +1,6 @@
-﻿/* faculty_home.js - Faculty Dashboard logic */
-document.addEventListener("DOMContentLoaded", function(){
+/* faculty_home.js - Faculty Dashboard logic */
+function initFacultyPage() {
+
   var D = LuminaData;
   var faculty = D.facultyProfile || {};
 
@@ -27,7 +28,7 @@ document.addEventListener("DOMContentLoaded", function(){
   document.getElementById("todaysClasses").innerHTML = D.todaysClasses.map(function(c){
     return '<div class="class-card">'
       + '<div class="class-time-box"><span class="time-hour">' + c.time + '</span><span class="time-ampm">' + c.ampm + "</span></div>"
-      + '<div class="class-info"><div class="class-name">' + c.course + '</div><div class="class-meta">' + c.room + " &bull; " + c.end + "</div></div>"
+      + '<div class="class-info"><div class="class-name">' + c.course + '</div><div class="class-meta">' + c.dayOfWeek + " &bull; " + c.room + " &bull; " + c.end + "</div></div>"
       + '<span class="badge badge-' + c.status + '">' + c.status.toUpperCase() + "</span>"
       + "</div>";
   }).join("");
@@ -110,5 +111,9 @@ document.addEventListener("DOMContentLoaded", function(){
       notifOverlay.classList.remove("show");
     }
   });
-});
+}
 
+
+// Wait for data
+if (window.LuminaData) { initFacultyPage(); }
+else { window.addEventListener('LuminaDataReady', initFacultyPage); }

@@ -37,8 +37,16 @@ function loadSharedComponents(activeNavLink) {
 }
 
 function getLuminaTable(name) {
-  try { return JSON.parse(localStorage.getItem('Lumina_' + name)) || []; }
-  catch (e) { return []; }
+  // Now reads from session only - user data comes from Lumina_Session
+  if (name === 'Users' || name === 'Students') {
+    // Use session data instead of localStorage table
+    var session = localStorage.getItem('Lumina_Session');
+    if (!session) return [];
+    var parsed = JSON.parse(session);
+    if (name === 'Users') return [{ User_ID: parsed.User_ID, Full_Name: parsed.Full_Name, Email: parsed.Email, Role: parsed.Role, Dept_ID: parsed.Dept_ID }];
+    if (name === 'Students') return [{ Student_ID: parsed.User_ID, Current_Semester: 4 }];
+  }
+  return [];
 }
 
 function getStudentInitials(fullName) {
@@ -170,8 +178,7 @@ function getCurrentStudentProfile() {
 
 function setCurrentStudentId(studentId) {
   if (!studentId) return;
-  localStorage.setItem('Lumina_Current_Student_ID', studentId);
-  sessionStorage.setItem('Lumina_Current_Student_ID', studentId);
+  // Student ID tracked via Lumina_Session
   populateNavbarIdentity();
 }
 

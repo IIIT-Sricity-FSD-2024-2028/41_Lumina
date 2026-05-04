@@ -27,7 +27,7 @@
       <div class="filter-group">
         <label class="filter-label" for="filterTerm">Academic Term</label>
         <select class="select-field select-field--static" id="filterTerm" disabled>
-          <option value="Monsoon 2026" selected>Monsoon 2026</option>
+          <option value="Spring 2026" selected>Spring 2026</option>
         </select>
       </div>
 
@@ -225,7 +225,7 @@
         </div>
         <div class="form-group" style="margin-bottom: var(--space-lg);">
           <label class="form-label">New Number of Sections (1-6)</label>
-          <input type="number" class="input-field" id="configNewSections" min="1" max="6">
+          <input type="number" class="input-field" id="configNewSections" min="1" max="6" onkeydown="return event.key !== 'e' && event.key !== 'E' && event.key !== '+' && event.key !== '-'">
         </div>
         
         <div id="configWarning" class="msg-alert msg-alert--danger" style="display: none; font-size: 0.85rem; margin-bottom: var(--space-md);">
@@ -258,10 +258,7 @@
 
   <div class="toast-container" id="toastContainer"></div>
 
-  <footer id="footer" class="footer" style="margin-bottom: 80px;"></footer>
-
-  <script src="js/mockData.js"></script>
-  <script src="js/Dean1_data.js"></script>
+  <footer id="footer" class="footer" style="margin-bottom: 80px;"></footer>  <script src="js/Dean1_data.js"></script>
   <script src="js/Dean1_layout.js"></script>
   <script src="js/Dean1_course-section.js"></script>
   

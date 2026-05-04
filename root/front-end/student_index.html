@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
 
@@ -13,9 +14,56 @@
 
   <!-- Google Font (nicer looking text) -->
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Academic Profile card ── */
+    .acad-info-block {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin: 8px 0 0 0;
+    }
+
+    .acad-info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.82rem;
+    }
+
+    .acad-label {
+      color: #64748b;
+      font-weight: 500;
+    }
+
+    .acad-val {
+      color: #1e293b;
+      font-weight: 600;
+    }
+
+    .acad-courses-sub {}
+
+    .acad-sub-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #1e293b;
+      margin-bottom: 4px;
+    }
+
+    #acadCoursePreview .course-item {
+      padding: 5px 0;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    #acadCoursePreview .course-item:last-child {
+      border-bottom: none;
+    }
+  </style>
 </head>
+
 <body>
-  <script src="js/mockData.js"></script>
 
   <div id="navbar-placeholder"></div>
 
@@ -36,29 +84,52 @@
     <div class="top-row">
 
 
-      <!-- CARD 1: My Courses -->
-      <div class="card">
+      <!-- CARD 1: Academic Profile + My Courses -->
+      <div class="card" id="academicCard">
         <div class="card-title">
-          <span>📄</span>
-          <h2>My Courses</h2>
+          <span>🎓</span>
+          <h2>Academic Profile</h2>
         </div>
 
-        <!-- List of 3 courses shown in the card -->
-        <div class="course-item">
-          <div class="course-name">IC241: Computer Communication Networks</div>
-          <div class="course-prof">Dr. Arun P V</div>
-        </div>
-        <div class="course-item">
-          <div class="course-name">PC241: Artificial Intelligence</div>
-          <div class="course-prof">Dr. Megha R</div>
-        </div>
-        <div class="course-item">
-          <div class="course-name">No course enrolled</div>
-          <div class="course-prof">Use Course Registration to add courses</div>
+        <!-- Student info section -->
+        <div class="acad-info-block" id="acadInfoBlock">
+          <div class="acad-info-row">
+            <span class="acad-label">Student ID</span>
+            <span class="acad-val" id="acadStudentId">—</span>
+          </div>
+          <div class="acad-info-row">
+            <span class="acad-label">UG Year</span>
+            <span class="acad-val" id="acadUgYear">—</span>
+          </div>
+          <div class="acad-info-row">
+            <span class="acad-label">Semester</span>
+            <span class="acad-val" id="acadSemester">—</span>
+          </div>
+          <div class="acad-info-row">
+            <span class="acad-label">Section</span>
+            <span class="acad-val" id="acadSection">—</span>
+          </div>
+          <div class="acad-info-row">
+            <span class="acad-label">Department</span>
+            <span class="acad-val" id="acadDept">—</span>
+          </div>
         </div>
 
-        <!-- Button to open the "My Courses" popup -->
-        <button class="text-btn" id="viewAllBtn">View all 2 courses</button>
+        <!-- Divider -->
+        <div style="border-top:1px solid #e2e8f0; margin:12px 0;"></div>
+
+        <!-- My Courses sub-section -->
+        <div class="acad-courses-sub">
+          <div class="acad-sub-title">
+            <span>📚</span>
+            <span>My Courses</span>
+          </div>
+          <!-- Preview: up to 2 enrolled course names -->
+          <div id="acadCoursePreview" style="margin:6px 0 10px 0;">
+            <div class="course-item" id="acadCoursePreviewEmpty" style="display:none;"></div>
+          </div>
+          <button class="text-btn" id="viewAllBtn" onclick="goToMyCourses()">View all enrolled courses ↗</button>
+        </div>
       </div>
 
 
@@ -159,15 +230,8 @@
           <span>📈</span>
           <h2>Gradesheets</h2>
         </div>
-        
-        <div class="sem-badge-inner">
-          <div class="sem-badge-top">
-            <span class="sem-badge-dot"></span>
-            <span class="sem-badge-status">IN PROGRESS</span>
-          </div>
-          <div class="sem-badge-main" id="semBadgeMain">UG–2 · Spring Semester</div>
-          <div class="sem-badge-sub" id="semBadgeSub">Jan 2026 – May 2026 · Semester 4 of 8</div>
-        </div>
+
+
 
         <div class="gradesheet-row">
           <span class="file-icon">📄</span>
@@ -344,20 +408,32 @@
 
             <tr>
               <td class="time-col">08:45 AM<br>09:45 AM</td>
-              <td><div class="slot dark-slot">FFSD1<br><small>Room: G07</small></div></td>
-              <td><div class="slot light-slot">TOC1<br><small>Room: G05</small></div></td>
+              <td>
+                <div class="slot dark-slot">FFSD1<br><small>Room: G07</small></div>
+              </td>
+              <td>
+                <div class="slot light-slot">TOC1<br><small>Room: G05</small></div>
+              </td>
               <td></td>
-              <td><div class="slot dark-slot">AI1<br><small>Room: G04</small></div></td>
+              <td>
+                <div class="slot dark-slot">AI1<br><small>Room: G04</small></div>
+              </td>
               <td></td>
             </tr>
 
             <tr>
               <td class="time-col">09:45 AM<br>10:45 AM</td>
-              <td><div class="slot dark-slot">FFSD1<br><small>Room: G07</small></div></td>
+              <td>
+                <div class="slot dark-slot">FFSD1<br><small>Room: G07</small></div>
+              </td>
               <td></td>
-              <td><div class="slot teal-slot">CCN1<br><small>Room: G07</small></div></td>
+              <td>
+                <div class="slot teal-slot">CCN1<br><small>Room: G07</small></div>
+              </td>
               <td></td>
-              <td><div class="slot light-slot">ACS1<br><small>Room: G05</small></div></td>
+              <td>
+                <div class="slot light-slot">ACS1<br><small>Room: G05</small></div>
+              </td>
             </tr>
 
             <!-- Break row -->
@@ -369,19 +445,27 @@
             <tr>
               <td class="time-col">11:00 AM<br>12:00 PM</td>
               <td></td>
-              <td><div class="slot light-slot">LR1<br><small>Room: G06</small></div></td>
+              <td>
+                <div class="slot light-slot">LR1<br><small>Room: G06</small></div>
+              </td>
               <td></td>
-              <td><div class="slot dark-slot">AI1<br><small>Room: G04</small></div></td>
+              <td>
+                <div class="slot dark-slot">AI1<br><small>Room: G04</small></div>
+              </td>
               <td></td>
             </tr>
 
             <tr>
               <td class="time-col">12:00 PM<br>01:00 PM</td>
-              <td><div class="slot dark-slot">CCN1<br><small>Room: G07</small></div></td>
+              <td>
+                <div class="slot dark-slot">CCN1<br><small>Room: G07</small></div>
+              </td>
               <td></td>
               <td></td>
               <td></td>
-              <td><div class="slot light-slot">TOC1<br><small>Room: G05</small></div></td>
+              <td>
+                <div class="slot light-slot">TOC1<br><small>Room: G05</small></div>
+              </td>
             </tr>
 
             <!-- Gap row -->
@@ -393,17 +477,25 @@
             <tr>
               <td class="time-col">02:15 PM<br>03:15 PM</td>
               <td></td>
-              <td><div class="slot light-slot">AI1<br><small>Room: G05 1</small></div></td>
+              <td>
+                <div class="slot light-slot">AI1<br><small>Room: G05 1</small></div>
+              </td>
               <td></td>
-              <td><div class="slot dark-slot">FFSD1<br><small>Room: G07</small></div></td>
+              <td>
+                <div class="slot dark-slot">FFSD1<br><small>Room: G07</small></div>
+              </td>
               <td></td>
             </tr>
 
             <tr>
               <td class="time-col">03:15 PM<br>04:15 PM</td>
-              <td><div class="slot dark-slot">ACS1<br><small>Room: G06</small></div></td>
+              <td>
+                <div class="slot dark-slot">ACS1<br><small>Room: G06</small></div>
+              </td>
               <td></td>
-              <td><div class="slot teal-slot">CCN1<br><small>Room: G04</small></div></td>
+              <td>
+                <div class="slot teal-slot">CCN1<br><small>Room: G04</small></div>
+              </td>
               <td></td>
               <td></td>
             </tr>
@@ -417,10 +509,14 @@
             <tr>
               <td class="time-col">04:30 PM<br>05:30 PM</td>
               <td></td>
-              <td><div class="slot light-slot">TOC1<br><small>Room: G05</small></div></td>
+              <td>
+                <div class="slot light-slot">TOC1<br><small>Room: G05</small></div>
+              </td>
               <td></td>
               <td></td>
-              <td><div class="slot light-slot">LR1<br><small>Room: G07</small></div></td>
+              <td>
+                <div class="slot light-slot">LR1<br><small>Room: G07</small></div>
+              </td>
             </tr>
 
             <tr>
@@ -428,7 +524,9 @@
               <td></td>
               <td></td>
               <td></td>
-              <td><div class="slot dark-slot">ACS1<br><small>Room: G06</small></div></td>
+              <td>
+                <div class="slot dark-slot">ACS1<br><small>Room: G06</small></div>
+              </td>
               <td></td>
             </tr>
 
@@ -464,4 +562,5 @@
   </script>
 
 </body>
+
 </html>

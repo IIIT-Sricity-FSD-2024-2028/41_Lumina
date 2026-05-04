@@ -4,6 +4,13 @@
  */
 
 /* ══════════ State ══════════ */
+const API_BASE = 'http://localhost:3000';
+const sessionData = localStorage.getItem('Lumina_Session');
+const currentUser = sessionData ? JSON.parse(sessionData) : null;
+const API_HEADERS = {
+    'Content-Type': 'application/json',
+    'x-role': currentUser ? currentUser.Role : 'Assistant_Dean_1'
+};
 let appData;
 let filteredCourses = [];
 let currentPage = 1;
@@ -17,9 +24,9 @@ let editPrereqTags = [];
 let editingCourseCode = null;
 
 /* ══════════ Init ══════════ */
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
 
-  appData = loadData();
+  appData = await loadData();
 
   renderNavbar('catalog');
   renderFooter();
@@ -42,14 +49,14 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('addCancelBtn').addEventListener('click', closeAddModal);
   document.getElementById('addCourseForm').addEventListener('submit', handleAddCourse);
   document.getElementById('addType').addEventListener('change', handleAddTypeChange);
-  initTagInput('addPrereqInput', 'addPrereqWrapper', addPrereqTags, 'add');
+  initPrereqDropdown('add');
 
   // ── Edit modal ──
   document.getElementById('editModalClose').addEventListener('click', closeEditModal);
   document.getElementById('editCancelBtn').addEventListener('click', closeEditModal);
   document.getElementById('editCourseForm').addEventListener('submit', handleEditCourse);
   document.getElementById('editType').addEventListener('change', handleEditTypeChange);
-  initTagInput('editPrereqInput', 'editPrereqWrapper', editPrereqTags, 'edit');
+  initPrereqDropdown('edit');
 
   // Close modals on overlay click
   document.getElementById('addModal').addEventListener('click', (e) => {
@@ -257,54 +264,108 @@ function goToPage(page) {
 }
 
 
-/* ══════════ Tag Input ══════════ */
+/* ══════════ Prerequisite Searchable Dropdown ══════════ */
 
-function initTagInput(inputId, wrapperId, tagsArray, prefix) {
-  const input   = document.getElementById(inputId);
-  const wrapper = document.getElementById(wrapperId);
+/**
+ * refreshPrereqDisplay(prefix)
+ * Re-renders the selected-tags row for 'add' or 'edit' dropdown.
+ * Called externally when openAddModal / openEditModal resets state.
+ */
+function refreshPrereqDisplay(prefix) {
+  const tagsArray    = prefix === 'add' ? addPrereqTags : editPrereqTags;
+  const tagsContainer = document.getElementById(`${prefix}PrereqTags`);
+  if (!tagsContainer) return;
 
-  input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault();
-      const val = input.value.replace(',', '').trim().toUpperCase();
-      if (val && !tagsArray.includes(val)) {
-        tagsArray.push(val);
-        renderTags(wrapperId, tagsArray, prefix);
-      }
-      input.value = '';
-    }
-    if (e.key === 'Backspace' && input.value === '' && tagsArray.length > 0) {
-      tagsArray.pop();
-      renderTags(wrapperId, tagsArray, prefix);
-    }
-  });
+  tagsContainer.innerHTML = tagsArray.map((code, i) => `
+    <span class="prereq-tag">
+      <span class="prereq-tag-code">${code}</span>
+      <button type="button" class="prereq-tag-remove" data-prefix="${prefix}" data-idx="${i}" title="Remove">&times;</button>
+    </span>
+  `).join('');
 
-  wrapper.addEventListener('click', () => input.focus());
-}
-
-function renderTags(wrapperId, tagsArray, prefix) {
-  const wrapper = document.getElementById(wrapperId);
-  const input   = document.getElementById(prefix + 'PrereqInput');
-
-  // Remove existing tags
-  wrapper.querySelectorAll('.tag').forEach(t => t.remove());
-
-  // Insert tags before input
-  tagsArray.forEach((tag, i) => {
-    const el = document.createElement('span');
-    el.className = 'tag';
-    el.innerHTML = `${tag} <button type="button" class="tag__remove" data-idx="${i}">&times;</button>`;
-    wrapper.insertBefore(el, input);
-  });
-
-  // Remove handler
-  wrapper.querySelectorAll('.tag__remove').forEach(btn => {
+  tagsContainer.querySelectorAll('.prereq-tag-remove').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const idx = parseInt(btn.dataset.idx, 10);
-      tagsArray.splice(idx, 1);
-      renderTags(wrapperId, tagsArray, prefix);
+      const arr = btn.dataset.prefix === 'add' ? addPrereqTags : editPrereqTags;
+      arr.splice(parseInt(btn.dataset.idx, 10), 1);
+      refreshPrereqDisplay(btn.dataset.prefix);
     });
+  });
+}
+
+/**
+ * initPrereqDropdown(prefix)
+ * Sets up the searchable dropdown for prerequisite selection.
+ * Must be called after appData is loaded (DOMContentLoaded).
+ */
+function initPrereqDropdown(prefix) {
+  const searchInput   = document.getElementById(`${prefix}PrereqSearch`);
+  const dropdownList  = document.getElementById(`${prefix}PrereqList`);
+  if (!searchInput || !dropdownList) return;
+
+  const getTagsArray  = () => prefix === 'add' ? addPrereqTags : editPrereqTags;
+  const getExcludeCode = () => prefix === 'edit' ? editingCourseCode : null;
+
+  function renderOptions(query) {
+    const arr = getTagsArray();
+    const exclude = getExcludeCode();
+    const q = (query || '').trim().toLowerCase();
+
+    const matches = (appData ? appData.courses : []).filter(c =>
+      c.code !== exclude &&
+      !arr.includes(c.code) &&
+      (q === '' || c.code.toLowerCase().includes(q) || c.name.toLowerCase().includes(q))
+    );
+
+    if (matches.length === 0) {
+      dropdownList.innerHTML = `<div class="prereq-dropdown-empty">No matching courses found</div>`;
+    } else {
+      dropdownList.innerHTML = matches.map(c => `
+        <div class="prereq-dropdown-item" data-code="${c.code}" data-prefix="${prefix}">
+          <span class="prereq-item-code">${c.code}</span>
+          <span class="prereq-item-name">${c.name}</span>
+        </div>
+      `).join('');
+
+      dropdownList.querySelectorAll('.prereq-dropdown-item').forEach(item => {
+        item.addEventListener('mousedown', (e) => {
+          // Use mousedown so it fires before the input blur closes the dropdown
+          e.preventDefault();
+          const code = item.dataset.code;
+          const arr = getTagsArray();
+          if (!arr.includes(code)) {
+            arr.push(code);
+            refreshPrereqDisplay(prefix);
+          }
+          searchInput.value = '';
+          renderOptions('');
+          searchInput.focus();
+        });
+      });
+    }
+  }
+
+  searchInput.addEventListener('focus', () => {
+    renderOptions(searchInput.value);
+    dropdownList.classList.add('prereq-dropdown-list--open');
+  });
+
+  searchInput.addEventListener('input', () => {
+    renderOptions(searchInput.value);
+    dropdownList.classList.add('prereq-dropdown-list--open');
+  });
+
+  searchInput.addEventListener('blur', () => {
+    // Slight delay so mousedown on an item fires first
+    setTimeout(() => dropdownList.classList.remove('prereq-dropdown-list--open'), 150);
+  });
+
+  // Close if click lands completely outside the wrapper
+  document.addEventListener('click', (e) => {
+    const wrapper = document.getElementById(`${prefix}PrereqWrapper`);
+    if (wrapper && !wrapper.contains(e.target)) {
+      dropdownList.classList.remove('prereq-dropdown-list--open');
+    }
   });
 }
 
@@ -315,7 +376,7 @@ function openAddModal() {
   // Reset form
   document.getElementById('addCourseForm').reset();
   addPrereqTags.length = 0;
-  renderTags('addPrereqWrapper', addPrereqTags, 'add');
+  refreshPrereqDisplay('add');
   clearValidation('add');
   document.getElementById('addDept').disabled = false;
   document.getElementById('addCredits').readOnly = false;
@@ -349,7 +410,7 @@ function handleAddTypeChange() {
   }
 }
 
-function handleAddCourse(e) {
+async function handleAddCourse(e) {
   e.preventDefault();
   clearValidation('add');
 
@@ -364,11 +425,17 @@ function handleAddCourse(e) {
   let valid = true;
 
   if (!code)    { setInvalid('addCodeGroup', 'addCodeError', 'Course code is required'); valid = false; }
+  else if (!/[A-Za-z]/.test(code) || !/[0-9]/.test(code)) {
+    setInvalid('addCodeGroup', 'addCodeError', 'Course code must contain both letters and numbers'); valid = false;
+  }
   else if (appData.courses.some(c => c.code === code)) {
     setInvalid('addCodeGroup', 'addCodeError', 'Course code already exists'); valid = false;
   }
   if (!name)    { setInvalid('addNameGroup', 'addNameError', 'Course name is required'); valid = false; }
-  if (!credits || credits < 1 || credits > 6) { setInvalid('addCreditsGroup', 'addCreditsError', 'Credits must be 1-6'); valid = false; }
+  else if (!/^[A-Za-z\s]+$/.test(name)) {
+    setInvalid('addNameGroup', 'addNameError', 'Course name must contain only letters (a-z)'); valid = false;
+  }
+  if (!credits || credits < 1 || credits > 4) { setInvalid('addCreditsGroup', 'addCreditsError', 'Credits must be 1-4'); valid = false; }
   if (!ugYear)  { setInvalid('addUGGroup', 'addUGError', 'UG Year is required'); valid = false; }
   if (!semester){ setInvalid('addSemesterGroup', 'addSemesterError', 'Semester is required'); valid = false; }
   if (!type)    { setInvalid('addTypeGroup', 'addTypeError', 'Type is required'); valid = false; }
@@ -386,13 +453,36 @@ function handleAddCourse(e) {
     type,
     dept: type === 'Institute Core' ? '-' : type === 'Seed Course' ? 'All Departments (CSE, ECE, AIDS)' : dept,
     prerequisites: [...addPrereqTags],
-    status: 'Active'
+    status: 'Active',
+    courseCapacity: 60
   };
 
-  appData.courses.push(newCourse);
-  saveData(appData);
-  closeAddModal();
-  applyFiltersAndRender();
+  try {
+      const res = await fetch(`${API_BASE}/courses`, {
+          method: 'POST',
+          headers: API_HEADERS,
+          body: JSON.stringify({
+              courseId: newCourse.code,
+              courseName: newCourse.name,
+              credits: newCourse.credits,
+              courseCapacity: newCourse.courseCapacity,
+              status: newCourse.status,
+              deptId: newCourse.dept === '-' || newCourse.dept.startsWith('All') ? 'CSE' : newCourse.dept
+          })
+      });
+      if (res.ok) {
+          appData.courses.push(newCourse);
+          closeAddModal();
+          showToast('Course added successfully!');
+          applyFiltersAndRender();
+      } else {
+          const err = await res.json();
+          alert('Failed to add course: ' + (err.message || 'Unknown error'));
+      }
+  } catch (e) {
+      console.error(e);
+      alert('Network error while adding course.');
+  }
 }
 
 
@@ -440,7 +530,7 @@ function openEditModal(code) {
   // Prerequisites tags
   editPrereqTags.length = 0;
   (course.prerequisites || []).forEach(p => editPrereqTags.push(p));
-  renderTags('editPrereqWrapper', editPrereqTags, 'edit');
+  refreshPrereqDisplay('edit');
 
   document.getElementById('editModal').classList.add('modal-overlay--active');
   document.body.style.overflow = 'hidden';
@@ -472,7 +562,7 @@ function handleEditTypeChange() {
   }
 }
 
-function handleEditCourse(e) {
+async function handleEditCourse(e) {
   e.preventDefault();
   clearValidation('edit');
 
@@ -500,7 +590,7 @@ function handleEditCourse(e) {
   const idx = appData.courses.findIndex(c => c.code === editingCourseCode);
   if (idx === -1) return;
 
-  appData.courses[idx] = {
+  const updatedCourse = {
     ...appData.courses[idx],
     name,
     credits: parseInt(credits, 10),
@@ -512,9 +602,29 @@ function handleEditCourse(e) {
     status
   };
 
-  saveData(appData);
-  closeEditModal();
-  applyFiltersAndRender();
+  try {
+      const res = await fetch(`${API_BASE}/courses/${editingCourseCode}`, {
+          method: 'PUT',
+          headers: API_HEADERS,
+          body: JSON.stringify({
+              courseName: updatedCourse.name,
+              credits: updatedCourse.credits,
+              status: updatedCourse.status,
+              deptId: updatedCourse.dept === '-' || updatedCourse.dept.startsWith('All') ? 'CSE' : updatedCourse.dept
+          })
+      });
+      if (res.ok) {
+          appData.courses[idx] = updatedCourse;
+          closeEditModal();
+          applyFiltersAndRender();
+      } else {
+          const err = await res.json();
+          alert('Failed to edit course: ' + (err.message || 'Unknown error'));
+      }
+  } catch (e) {
+      console.error(e);
+      alert('Network error while editing course.');
+  }
 }
 
 
@@ -542,4 +652,14 @@ function debounce(fn, delay) {
     clearTimeout(timer);
     timer = setTimeout(() => fn(...args), delay);
   };
+}
+
+function showToast(message) {
+  const toast = document.getElementById('toast');
+  const msgEl = document.getElementById('toastMessage');
+  msgEl.textContent = message;
+  toast.classList.add('toast--visible');
+  setTimeout(() => {
+    toast.classList.remove('toast--visible');
+  }, 3000);
 }

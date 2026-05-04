@@ -75,31 +75,8 @@
                         <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td><strong>CS201</strong></td>
-                        <td>Data Structures</td>
-                        <td><span class="badge badge-upcoming">Fall 2023</span></td>
-                        <td><span class="badge badge-pending">Pending</span></td>
-                        <td style="color: var(--text-muted);">2023-10-15</td>
-                        <td><a href="Dean2_gradesheets-detail.html" class="btn-view-dark">View Grade Sheet →</a></td>
-                    </tr>
-                    <tr>
-                        <td><strong>CS101</strong></td>
-                        <td>Intro to Programming</td>
-                        <td><span class="badge badge-upcoming">Fall 2023</span></td>
-                        <td><span class="badge badge-active">Published</span></td>
-                        <td style="color: var(--text-muted);">2023-10-10</td>
-                        <td><a href="#" class="btn-view-outline">View Grade Sheet →</a></td>
-                    </tr>
-                    <tr>
-                        <td><strong>MA301</strong></td>
-                        <td>Linear Algebra</td>
-                        <td><span class="badge badge-completed">Spring 2023</span></td>
-                        <td><span class="badge badge-active">Published</span></td>
-                        <td style="color: var(--text-muted);">2023-06-15</td>
-                        <td><a href="#" class="btn-view-outline">View Grade Sheet →</a></td>
-                    </tr>
+                <tbody id="gradesheetsTableBody">
+                    <!-- Loaded via API -->
                 </tbody>
             </table>
         </div>
@@ -139,5 +116,6 @@
             });
         });
     </script>
+    <script src="js/Dean2_app.js"></script>
 </body>
 </html>

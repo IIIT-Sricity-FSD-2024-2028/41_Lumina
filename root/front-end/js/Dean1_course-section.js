@@ -24,8 +24,8 @@ function getSemesterFromTerm(term) {
   return term && term.toLowerCase().includes('spring') ? 'Spring' : 'Monsoon';
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  appData = loadData();
+document.addEventListener('DOMContentLoaded', async () => {
+  appData = await loadData();
 
   renderNavbar('section');
   renderFooter();
@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initModalActions();
   
   const filterTerm = document.getElementById('filterTerm');
-  filterTerm.value = 'Monsoon 2026';
+  filterTerm.value = 'Spring 2026';
 
   updateDashboard();
 });

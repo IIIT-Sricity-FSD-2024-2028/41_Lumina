@@ -9,37 +9,35 @@
 </head>
 <body>
 
-<!-- â•â•â•â•â•â•â•â•â•â• FIXED NAVBAR â•â•â•â•â•â•â•â•â•â• -->
+<div class="notif-overlay" id="notifOverlay">
+  <div class="notif-popup">
+    <div class="notif-header">
+      <span>System Alerts</span>
+      <button id="closeNotif">&times;</button>
+    </div>
+    <ul id="alertsList"></ul>
+  </div>
+</div>
+
 <nav class="navbar">
   <div class="navbar-left">
-
-    <!-- Brand -->
     <a href="faculty_home.html" class="navbar-brand">
-      <img src="assets/" alt="Lumina"/>
+      <img src="assets/icons/logo.svg" alt="Lumina"/>
       Lumina
     </a>
 
-    <!-- Nav Links -->
     <ul class="navbar-links">
-      <li><a href="faculty_home.html"    class="nav-link">Home</a></li>
-      <li><a href="faculty_mycourses.html"      class="nav-link">My Courses</a></li>
-      <li><a href="faculty_announcements.html"  class="nav-link">Announcements</a></li>
+      <li><a href="faculty_home.html" class="nav-link">Home</a></li>
+      <li><a href="faculty_mycourses.html" class="nav-link active">My Courses</a></li>
+      <li><a href="faculty_announcements.html" class="nav-link">Announcements</a></li>
     </ul>
   </div>
 
   <div class="navbar-right">
-    <!-- Search -->
-    <div class="navbar-search">
-      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <input type="text" id="globalSearch" placeholder="Search students or courses"/>
-    </div>
-
-    <!-- Bell -->
     <button class="navbar-bell" id="notifBtn" title="Notifications">
       <svg viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.003 6.003 0 00-5-5.917V4a1 1 0 10-2 0v1.083A6.003 6.003 0 006 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
 
-    <!-- User -->
     <div class="navbar-user">
       <div class="navbar-user-text">
         <span class="navbar-user-name">Prof. Manoj</span>
@@ -48,16 +46,14 @@
       <div class="navbar-avatar">PM</div>
     </div>
 
-    <!-- Sign Out -->
-    <a href="login.html" class="navbar-signout" title="Sign Out"><span>Sign Out</span><img src="assets//icons/logout.svg" alt="Sign Out"/></a>
+    <a href="login.html" class="navbar-signout" title="Sign Out"><span>Sign Out</span><img src="assets/icons/logout.svg" alt="Sign Out"/></a>
   </div>
 </nav>
-<!-- â•â•â•â•â•â•â•â•â•â• END NAVBAR â•â•â•â•â•â•â•â•â•â• -->
 
 <div class="page-body">
   <main class="wrap gr-main">
 
-    <button class="back-btn" onclick="history.back()">
+    <button class="back-btn" onclick="window.location.href='faculty_mycourses.html'">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
         <path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
@@ -75,10 +71,6 @@
         <div class="tb-group">
           <label class="tb-label">Course</label>
           <select class="tb-select" id="grCourseSelect">
-            <option value="CS402">CS402 â€“ C Programming Language</option>
-            <option value="CS305">CS305 â€“ Operating Systems</option>
-            <option value="CS210">CS210 â€“ Data Structures</option>
-            <option value="CS101">CS101 â€“ Intro to Programming</option>
           </select>
         </div>
         <div class="tb-group">
@@ -154,7 +146,7 @@
   <footer class="site-footer">
     <div class="footer-top">
       <div class="logo-group">
-        <img src="assets//icons/logo_white.svg" alt="Lumina"/>
+        <img src="assets/icons/logo_white.svg" alt="Lumina"/>
         <span class="logo-text">Lumina</span>
       </div>
       <nav class="footer-nav">
@@ -176,11 +168,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="js/mockData.js"></script>
 <script src="js/faculty_data.js"></script>
 <script src="js/faculty_grades.js"></script>
 </body>
 </html>
-
-
-

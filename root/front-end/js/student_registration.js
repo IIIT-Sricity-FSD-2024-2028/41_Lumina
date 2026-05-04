@@ -1,212 +1,41 @@
 /* ==========================================
-   registration.js
-   Data from mockData.js via localStorage
+   registration.js — Backend-Driven
+   All data fetched from http://localhost:3000
 ========================================== */
 
-/* ── DB HELPERS ── */
-function getTable(name) {
-  try { return JSON.parse(localStorage.getItem('Lumina_' + name)) || []; }
-  catch(e) { return []; }
-}
+var API_BASE = 'http://localhost:3000';
 
-function setTable(name, value) {
-  localStorage.setItem('Lumina_' + name, JSON.stringify(value));
-}
+/* ── SESSION & HEADERS ── */
+var sessionData = localStorage.getItem('Lumina_Session');
+var currentUser = sessionData ? JSON.parse(sessionData) : null;
+var CURRENT_STUDENT_ID = currentUser ? currentUser.User_ID : 'S2024002';
 
-var CURRENT_STUDENT_ID = 'S2024002';
-var currentStudent = null;
-var currentUser = null;
-var activeTerm = null;
+var headers = {
+  'Content-Type': 'application/json',
+  'x-role': currentUser ? currentUser.Role : 'Student',
+};
+
+/* ── IN-MEMORY DATA (populated from API) ── */
+var courses = [];
+var studentCourseItems = []; // [{course, sections, courseType, studentSemester}] from /courses/for-student/
+var registrations = [];
+var overrides = [];
+var currentSemester = null;
+var activeTermName = '';
+
 var searchQuery = '';
 var typeFilter = 'All';
 var creditFilter = 'All';
 
-function syncCurrentContext() {
-  CURRENT_STUDENT_ID = 'S2024002';
-  var users = getTable('Users');
-  var students = getTable('Students');
-  currentStudent = students.find(function(s) { return s.Student_ID === CURRENT_STUDENT_ID; }) || {};
-  currentUser = users.find(function(u) { return u.User_ID === CURRENT_STUDENT_ID; }) || {};
-  activeTerm = getActiveRegistrationTerm();
-}
-
-function getCurrentSemesterCourseIds() {
-  var degreeReqs = getTable('Degree_Requirements');
-  var semNum = currentStudent.Current_Semester || 4;
-  var deptId = currentUser.Dept_ID || '';
-
-  return degreeReqs
-    .filter(function(req) {
-      return req.Target_Semester === semNum && (!deptId || req.Dept_ID === deptId);
-    })
-    .map(function(req) { return req.Course_ID; });
-}
-
-function getActiveRegistrationTerm() {
-  var terms = getTable('Academic_Term');
-  var sections = getTable('Section');
-  var semesterCourseIds = getCurrentSemesterCourseIds();
-  var matchingTerms = terms.filter(function(term) {
-    return sections.some(function(section) {
-      return section.Term_ID === term.Term_ID && semesterCourseIds.indexOf(section.Course_ID) !== -1;
-    });
-  });
-
-  matchingTerms.sort(function(a, b) {
-    return new Date(a.Start_Timestamp) - new Date(b.Start_Timestamp);
-  });
-
-  return matchingTerms[0] || terms[0] || {};
-}
-
-/* ── Build coursesData from mock DB ── */
-function buildCoursesData() {
-  var catalog     = getTable('Course_Catalog');
-  var prereqs     = getTable('Course_Prerequisite');
-  var sections    = getTable('Section');
-  var slots       = getTable('Course_Slot');
-  var users       = getTable('Users');
-  var registrations = getTable('Registration');
-  var degreeReqs  = getTable('Degree_Requirements');
-  var semesterCourseIds = getCurrentSemesterCourseIds();
-
-  /* Count current enrollments per section for seat display */
-  var enrollCount = {};
-  registrations.forEach(function(r) {
-    if (r.Term_ID === activeTerm.Term_ID) {
-      enrollCount[r.Course_ID] = (enrollCount[r.Course_ID] || 0) + 1;
-    }
-  });
-
-  /* Type tag map */
-  var typeTagMap = {
-    'Institute Core': 'tag-core',
-    'Program Core':   'tag-prog',
-    'Elective':       'tag-elec',
-    'SEED':           'tag-seed',
-  };
-
-  return catalog
-    .filter(function(c) {
-      return c.Status === 'Active' && semesterCourseIds.indexOf(c.Course_ID) !== -1;
-    })
-    .map(function(course) {
-      /* Find section for this course in active term */
-      var section = sections.find(function(s) {
-        return s.Course_ID === course.Course_ID && s.Term_ID === activeTerm.Term_ID;
-      }) || {};
-
-      /* Find slot */
-      var slot = slots.find(function(sl) {
-        return sl.Section_ID === section.Section_ID;
-      }) || {};
-
-      /* Faculty */
-      var faculty = users.find(function(u) {
-        return u.User_ID === slot.Faculty_ID;
-      }) || {};
-
-      /* Prereq */
-      var prereqEntry = prereqs.find(function(p) {
-        return p.Target_Course_ID === course.Course_ID;
-      });
-      var prereqCourse = prereqEntry
-        ? catalog.find(function(c) { return c.Course_ID === prereqEntry.Required_Course_ID; })
-        : null;
-
-      /* Course type from degree requirements */
-      var degReq = degreeReqs.find(function(d) { return d.Course_ID === course.Course_ID; });
-      var courseType = degReq ? degReq.Course_Type : 'Elective';
-
-      /* Seats */
-      var enrolled = enrollCount[course.Course_ID] || 0;
-      var seatsLeft = course.Course_Capacity - enrolled;
-
-      return {
-        id:          course.Course_ID,
-        code:        course.Course_ID,
-        title:       course.Course_Name,
-        type:        courseType,
-        typeTag:     typeTagMap[courseType] || 'tag-elec',
-        prof:        faculty.Full_Name || '—',
-        credits:     course.Credits,
-        sectionId:   section.Section_ID || null,
-        seats:       seatsLeft + ' / ' + course.Course_Capacity + ' seats left',
-        prereq:      prereqCourse ? prereqCourse.Course_Name + ' (' + prereqCourse.Course_ID + ')' : null,
-        prereqError: prereqEntry ? !hasCompletedCourse(prereqEntry.Required_Course_ID) : false,
-        deptId:      course.Dept_ID,
-      };
-    })
-    .filter(function(course) {
-      return !!course.sectionId;
-    });
-}
-
-function hasCompletedCourse(courseId) {
-  var registrations = getTable('Registration');
-  return registrations.some(function(r) {
-    return r.Student_ID === CURRENT_STUDENT_ID && r.Course_ID === courseId;
-  });
-}
-
-/* ── Module data (static — not in mockDB) ── */
-var courseModules = {
-  'CS101': ['Intro to Python',        'Control Flow',           'Functions & Recursion',    'File I/O'],
-  'CS201': ['Sorting & Searching',    'Trees & Graphs',         'Dynamic Programming',      'Advanced Graph Algorithms'],
-  'CS301': ['Process Management',     'Memory Management',      'File Systems',             'Scheduling Algorithms'],
-  'CS302': ['Relational Model',       'SQL & Query Optimization','Normalization',           'Transactions & Concurrency'],
-  'CS401': ['Network Layers',         'TCP/IP',                 'Routing Algorithms',       'Network Security'],
-  'CS405': ['Regular Languages',      'Context-Free Grammars',  'Pushdown Automata',        'Turing Machines'],
-  'EC101': ['Boolean Algebra',        'Combinational Circuits', 'Sequential Circuits',      'Memory & PLDs'],
-  'EC201': ['Continuous Signals',     'Discrete Signals',       'Fourier Transform',        'Z-Transform'],
-  'EC301': ['8085 Architecture',      'Assembly Programming',   'Interfacing Techniques',   'Embedded Applications'],
-  'EC402': ['MOS Transistors',        'CMOS Logic Design',      'Static Timing Analysis',   'Physical Design'],
-  'AD101': ['Data Wrangling',         'Exploratory Analysis',   'Visualization',            'Statistical Inference'],
-  'AD201': ['Supervised Learning',    'Unsupervised Learning',  'Model Evaluation',         'Feature Engineering'],
-  'AD301': ['Neural Networks',        'CNN & RNN',              'Transformers',             'Generative Models'],
-  'AD405': ['Hadoop & Spark',         'NoSQL Databases',        'Stream Processing',        'Data Pipelines'],
-  'SE101': ['Design Thinking',        'Ideation Techniques',    'Prototyping',              'Innovation Frameworks'],
-};
-
-function loadEnrolled() {
-  var registrations = getTable('Registration');
-  var catalog       = getTable('Course_Catalog');
-  var slots         = getTable('Course_Slot');
-  var sections      = getTable('Section');
-  var users         = getTable('Users');
-
-  return registrations
-    .filter(function(r) {
-      return r.Student_ID === CURRENT_STUDENT_ID && r.Term_ID === activeTerm.Term_ID;
-    })
-    .map(function(r) {
-      var course  = catalog.find(function(c) { return c.Course_ID === r.Course_ID; }) || {};
-      var slot    = slots.find(function(sl) { return sl.Section_ID === r.Section_ID; }) || {};
-      var faculty = users.find(function(u) { return u.User_ID === slot.Faculty_ID; }) || {};
-      return {
-        id:      r.Course_ID,
-        title:   course.Course_Name || r.Course_ID,
-        prof:    faculty.Full_Name  || '—',
-        credits: course.Credits     || 0,
-        type:    course.Dept_ID     || '',
-        termId:  r.Term_ID,
-        sectionId: r.Section_ID,
-      };
-    });
-}
-
-/* ── Build coursesData on load ── */
-var coursesData = [];
-
 /* ── NAVIGATION ── */
 function navigate(viewId) {
-  document.querySelectorAll('.reg-view').forEach(function(v) {
+  document.querySelectorAll('.reg-view').forEach(function (v) {
     v.classList.remove('active');
   });
   var target = document.getElementById(viewId);
   if (target) target.classList.add('active');
 
-  document.querySelectorAll('.sub-nav-btn').forEach(function(btn) {
+  document.querySelectorAll('.sub-nav-btn').forEach(function (btn) {
     btn.classList.remove('active');
     if (btn.dataset.target === viewId) btn.classList.add('active');
   });
@@ -215,24 +44,115 @@ function navigate(viewId) {
 }
 
 /* Sub-nav buttons */
-document.querySelectorAll('.sub-nav-btn').forEach(function(btn) {
-  btn.addEventListener('click', function() {
+document.querySelectorAll('.sub-nav-btn').forEach(function (btn) {
+  btn.addEventListener('click', function () {
     navigate(btn.dataset.target);
   });
 });
 
+/* ── BUILD COURSE CARDS FROM API DATA ── */
+/* Uses studentCourseItems fetched from /courses/for-student/:id          */
+/* Only courses for the student's current semester that have sections     */
+function buildCoursesData() {
+  var typeTagMap = {
+    'Institute Core': 'tag-core',
+    'Program Core': 'tag-prog',
+    'Elective': 'tag-elec',
+    'Program Elective': 'tag-elec',
+    'Institute Elective': 'tag-elec',
+    'Open Elective': 'tag-elec',
+    'SEED': 'tag-seed',
+    'Core': 'tag-core',
+  };
+
+  return studentCourseItems.map(function (item) {
+    var course = item.course;
+    var courseType = item.courseType;
+    var sections = item.sections; // [{sectionId, sectionName, courseId, termId}]
+
+    var enrolled = registrations.filter(function (r) {
+      return r.courseId === course.courseId && r.status === 'Enrolled';
+    }).length;
+    var seatsLeft = course.courseCapacity - enrolled;
+
+    var studentReg = registrations.find(function (r) {
+      return r.studentId === CURRENT_STUDENT_ID && r.courseId === course.courseId &&
+        (r.status === 'Enrolled' || r.status === 'Waitlisted' || r.status === 'Pending_Allocation');
+    });
+
+    var sectionLabel = sections.map(function (s) { return s.sectionName; }).join(', ');
+
+    return {
+      id: course.courseId,
+      code: course.courseId,
+      title: course.courseName,
+      type: courseType,
+      typeTag: typeTagMap[courseType] || 'tag-core',
+      prof: '—',
+      credits: course.credits,
+      sectionIds: sections.map(function (s) { return s.sectionId; }),
+      sectionLabel: sectionLabel,
+      seats: seatsLeft + ' / ' + course.courseCapacity + ' seats left',
+      prereq: null,
+      prereqError: false,
+      deptId: course.deptId,
+      isEnrolled: !!studentReg,
+      status: studentReg ? studentReg.status : null,
+    };
+  });
+}
+
+/* ── Module data (static) ── */
+var courseModules = {
+  'CS101': ['Intro to Python', 'Control Flow', 'Functions & Recursion', 'File I/O'],
+  'CS201': ['Sorting & Searching', 'Trees & Graphs', 'Dynamic Programming', 'Advanced Graph Algorithms'],
+  'CS301': ['Process Management', 'Memory Management', 'File Systems', 'Scheduling Algorithms'],
+  'CS302': ['Relational Model', 'SQL & Query Optimization', 'Normalization', 'Transactions & Concurrency'],
+  'CS401': ['Network Layers', 'TCP/IP', 'Routing Algorithms', 'Network Security'],
+  'CS405': ['Regular Languages', 'Context-Free Grammars', 'Pushdown Automata', 'Turing Machines'],
+  'CS440': ['ML Fundamentals', 'Neural Networks', 'Deep Learning', 'Applied AI Projects'],
+  'EC101': ['Boolean Algebra', 'Combinational Circuits', 'Sequential Circuits', 'Memory & PLDs'],
+  'EC201': ['Continuous Signals', 'Discrete Signals', 'Fourier Transform', 'Z-Transform'],
+  'EC301': ['8085 Architecture', 'Assembly Programming', 'Interfacing Techniques', 'Embedded Applications'],
+  'EC402': ['MOS Transistors', 'CMOS Logic Design', 'Static Timing Analysis', 'Physical Design'],
+  'AD101': ['Data Wrangling', 'Exploratory Analysis', 'Visualization', 'Statistical Inference'],
+  'AD201': ['Supervised Learning', 'Unsupervised Learning', 'Model Evaluation', 'Feature Engineering'],
+  'AD301': ['Neural Networks', 'CNN & RNN', 'Transformers', 'Generative Models'],
+  'AD405': ['Hadoop & Spark', 'NoSQL Databases', 'Stream Processing', 'Data Pipelines'],
+  'SE101': ['Design Thinking', 'Ideation Techniques', 'Prototyping', 'Innovation Frameworks'],
+};
+
+/* ── ENROLLED COURSES (from registrations array) ── */
+function loadEnrolled() {
+  return registrations
+    .filter(function (r) {
+      return r.studentId === CURRENT_STUDENT_ID &&
+        (r.status === 'Enrolled' || r.status === 'Waitlisted') &&
+        courses.some(function (c) { return c.courseId === r.courseId; });
+    })
+    .map(function (r) {
+      var course = courses.find(function (c) { return c.courseId === r.courseId; });
+      return {
+        id: r.courseId,
+        title: course ? course.courseName : r.courseId,
+        prof: '—',
+        credits: course ? course.credits : 0,
+        type: course ? course.deptId : '',
+        status: r.status,
+      };
+    });
+}
+
 /* ── FILTER SETUP ── */
 function setupFilters() {
-  /* Search */
-  document.getElementById('searchInput').addEventListener('input', function() {
+  document.getElementById('searchInput').addEventListener('input', function () {
     searchQuery = this.value.toLowerCase();
     renderGrid();
   });
 
-  /* Type pills */
-  document.querySelectorAll('[data-filter="type"]').forEach(function(pill) {
-    pill.addEventListener('click', function() {
-      document.querySelectorAll('[data-filter="type"]').forEach(function(p) {
+  document.querySelectorAll('[data-filter="type"]').forEach(function (pill) {
+    pill.addEventListener('click', function () {
+      document.querySelectorAll('[data-filter="type"]').forEach(function (p) {
         p.classList.remove('active');
       });
       pill.classList.add('active');
@@ -241,14 +161,13 @@ function setupFilters() {
     });
   });
 
-  /* Credit pills (toggle) */
-  document.querySelectorAll('[data-filter="credit"]').forEach(function(pill) {
-    pill.addEventListener('click', function() {
+  document.querySelectorAll('[data-filter="credit"]').forEach(function (pill) {
+    pill.addEventListener('click', function () {
       if (pill.classList.contains('active')) {
         pill.classList.remove('active');
         creditFilter = 'All';
       } else {
-        document.querySelectorAll('[data-filter="credit"]').forEach(function(p) {
+        document.querySelectorAll('[data-filter="credit"]').forEach(function (p) {
           p.classList.remove('active');
         });
         pill.classList.add('active');
@@ -260,15 +179,16 @@ function setupFilters() {
 }
 
 /* ── RENDER COURSE GRID ── */
+var coursesData = [];
+
 function renderGrid() {
-  var enrolled  = loadEnrolled();
   var container = document.getElementById('coursesGrid');
   container.innerHTML = '';
 
-  var filtered = coursesData.filter(function(course) {
+  var filtered = coursesData.filter(function (course) {
     var matchSearch = course.title.toLowerCase().includes(searchQuery) ||
-                      course.id.toLowerCase().includes(searchQuery);
-    var matchType   = typeFilter === 'All' || course.type === typeFilter;
+      course.id.toLowerCase().includes(searchQuery);
+    var matchType = typeFilter === 'All' || course.type === typeFilter;
     var matchCredit = creditFilter === 'All' || course.credits.toString() === creditFilter;
     return matchSearch && matchType && matchCredit;
   });
@@ -278,42 +198,45 @@ function renderGrid() {
     return;
   }
 
-  filtered.forEach(function(course) {
-    var isEnrolled = enrolled.some(function(e) { return e.id === course.id; });
-
+  filtered.forEach(function (course) {
     var card = document.createElement('div');
     card.className = 'course-card';
 
+    var btnLabel = course.isEnrolled ? '✓ ' + (course.status || 'Enrolled') : 'Enroll';
+    var btnDisabled = course.isEnrolled ? 'disabled' : '';
+    var sectionBadge = course.sectionLabel
+      ? '<span style="font-size:0.75rem;color:#64748b;">📚 Section: ' + course.sectionLabel + '</span>'
+      : '';
+
     card.innerHTML =
       '<div class="cc-top-row">' +
-        '<span class="course-code-badge">' + course.code + '</span>' +
-        '<span class="course-type-tag ' + course.typeTag + '">' + course.type + '</span>' +
+      '<span class="course-code-badge">' + course.code + '</span>' +
+      '<span class="course-type-tag ' + course.typeTag + '">' + course.type + '</span>' +
       '</div>' +
       '<h3 class="course-title">' + course.title + '</h3>' +
       '<div class="course-meta">' +
-        '<span>👨‍🏫 ' + course.prof + '</span>' +
-        '<span>⭐ ' + course.credits + ' Credits</span>' +
-        '<span class="seats">👥 ' + course.seats + '</span>' +
+      '<span>👨‍🏫 ' + course.prof + '</span>' +
+      '<span>⭐ ' + course.credits + ' Credits</span>' +
+      '<span class="seats">👥 ' + course.seats + '</span>' +
       '</div>' +
+      (sectionBadge ? '<div style="margin:4px 0;">' + sectionBadge + '</div>' : '') +
       (course.prereq
         ? '<div class="prereq-warn">⚠ Prerequisite: ' + course.prereq + '</div>'
         : '') +
       '<div class="card-btns">' +
-        '<button class="btn-enroll" ' + (isEnrolled ? 'disabled' : '') + '>' +
-          (isEnrolled ? '✓ Enrolled' : 'Enroll') +
-        '</button>' +
-        '<button class="btn-details">Details</button>' +
+      '<button class="btn-enroll" ' + btnDisabled + '>' + btnLabel + '</button>' +
+      '<button class="btn-details">Details</button>' +
       '</div>';
 
-    /* Enroll button */
-    if (!isEnrolled) {
-      card.querySelector('.btn-enroll').addEventListener('click', function() {
+    /* Enroll button — sends POST to backend */
+    if (!course.isEnrolled) {
+      card.querySelector('.btn-enroll').addEventListener('click', function () {
         handleEnroll(course);
       });
     }
 
-    /* Details button — opens course detail popup */
-    card.querySelector('.btn-details').addEventListener('click', function() {
+    /* Details button */
+    card.querySelector('.btn-details').addEventListener('click', function () {
       openCourseDetail(course);
     });
 
@@ -321,137 +244,133 @@ function renderGrid() {
   });
 }
 
-/* ── HANDLE ENROLL ── */
-function handleEnroll(course) {
-  if (course.prereqError) {
-    document.getElementById('errorBadge').textContent =
-      '⚠️ MISSING: ' + course.prereq;
-    document.getElementById('errorMsg').textContent =
-      'You cannot enroll in "' + course.title + '" until you have completed ' + course.prereq + '.';
-    navigate('view-error');
-    return;
-  }
-
-  var registrations = getTable('Registration');
-  var exists = registrations.some(function(r) {
-    return r.Student_ID === CURRENT_STUDENT_ID &&
-           r.Course_ID === course.id &&
-           r.Term_ID === activeTerm.Term_ID;
-  });
-  if (!exists) {
-    var nextEnrollmentId = registrations.reduce(function(max, item) {
-      return Math.max(max, item.Enrollment_ID || 0);
-    }, 0) + 1;
-
-    registrations.push({
-      Enrollment_ID: nextEnrollmentId,
-      Student_ID: CURRENT_STUDENT_ID,
-      Course_ID: course.id,
-      Term_ID: activeTerm.Term_ID,
-      Section_ID: course.sectionId,
-      Status: 'Enrolled',
-      Final_Grade: null,
+/* ── HANDLE ENROLL (POST /registrations → backend) ── */
+async function handleEnroll(course) {
+  try {
+    var res = await fetch(API_BASE + '/registrations', {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify({
+        Student_ID: CURRENT_STUDENT_ID,
+        Course_ID: course.id,
+      }),
     });
-    setTable('Registration', registrations);
-  }
 
-  coursesData = buildCoursesData();
-  renderGrid();
-  renderSidebar();
-  updateStatusCopy(course.title);
-  navigate('view-success');
+    if (!res.ok) {
+      var errData = await res.json();
+      var errMsg = errData.message || 'Enrollment failed.';
+
+      /* Show error view with backend message */
+      document.getElementById('errorBadge').textContent = '⚠️ ENROLLMENT ERROR';
+      document.getElementById('errorMsg').textContent = errMsg;
+
+      /* Pre-fill the override form with the failed course */
+      populateOverrideForm(course.id, errMsg);
+
+      navigate('view-error');
+      return;
+    }
+
+    /* Success — add the new registration to local array */
+    var newReg = await res.json();
+    registrations.push(newReg);
+
+    /* Rebuild and re-render */
+    coursesData = buildCoursesData();
+    renderGrid();
+    renderMyCoursesSection();
+
+    /* Show success view */
+    var successText = document.querySelector('#view-success p');
+    if (successText) {
+      successText.innerHTML =
+        'Your enrollment has been processed. Course: <strong>' + course.title +
+        '</strong> — Status: <strong>' + newReg.status + '</strong>.';
+    }
+    navigate('view-success');
+
+  } catch (err) {
+    console.error('Enrollment network error:', err);
+    alert('Network error. Please check the backend connection.');
+  }
 }
 
-/* ── REMOVE COURSE ── */
+/* ── POPULATE OVERRIDE FORM ── */
+function populateOverrideForm(courseId, reason) {
+  var courseSelect = document.querySelector('#overrideForm select');
+  if (courseSelect) {
+    courseSelect.innerHTML = '';
+    var opt = document.createElement('option');
+    opt.value = courseId;
+    var c = courses.find(function (cc) { return cc.courseId === courseId; });
+    opt.textContent = courseId + (c ? ' — ' + c.courseName : '');
+    courseSelect.appendChild(opt);
+  }
+}
+
+/* ── REMOVE COURSE (local only for now) ── */
 function removeCourse(courseId) {
-  var registrations = getTable('Registration').filter(function(r) {
-    return !(r.Student_ID === CURRENT_STUDENT_ID &&
-             r.Course_ID === courseId &&
-             r.Term_ID === activeTerm.Term_ID);
+  registrations = registrations.filter(function (r) {
+    return !(r.studentId === CURRENT_STUDENT_ID && r.courseId === courseId);
   });
-  setTable('Registration', registrations);
   coursesData = buildCoursesData();
   renderGrid();
-  renderSidebar();
+  renderMyCoursesSection();
 }
 
-function updateStatusCopy(courseTitle) {
-  var successText = document.querySelector('#view-success p');
-  if (!successText) return;
-  successText.innerHTML =
-    'Your enrollment has been processed for <strong>' +
-    (activeTerm.Term_Name || 'this term') +
-    '</strong>: ' + courseTitle + '.';
-}
-
+/* ── UPDATE STATIC PAGE COPY ── */
 function updateStaticPageCopy() {
-  var successText = document.querySelector('#view-success p');
   var studentIdEl = document.querySelector('.override-info .info-card .info-val');
-  var termInfoEls = document.querySelectorAll('.override-info .info-card .info-val');
-
-  if (successText) {
-    successText.innerHTML =
-      'Your enrollment has been processed for <strong>' +
-      (activeTerm.Term_Name || 'this term') +
-      '</strong>.';
-  }
   if (studentIdEl) {
     studentIdEl.textContent = CURRENT_STUDENT_ID;
   }
-  if (termInfoEls[1]) {
-    termInfoEls[1].textContent = activeTerm.Term_Name || 'Current Term';
+}
+
+function updateSemesterBanner() {
+  var semesterLabel = document.getElementById('currentSemesterLabel');
+  var termLabel = document.getElementById('activeTermLabel');
+  if (semesterLabel) {
+    semesterLabel.textContent = currentSemester ? 'Semester ' + currentSemester : '—';
+  }
+  if (termLabel) {
+    termLabel.textContent = activeTermName ? '(' + activeTermName + ')' : '';
   }
 }
 
 /* ── RENDER SIDEBAR ── */
-function renderSidebar() {
-  var enrolled    = loadEnrolled();
-  var list        = document.getElementById('selectedList');
-  var totalCredits = 0;
+
+
+function renderMyCoursesSection() {
+  var enrolled = loadEnrolled();
+  var list = document.getElementById('myCoursesList');
+  if (!list) return;
 
   list.innerHTML = '';
-
   if (enrolled.length === 0) {
-    list.innerHTML = '<p style="font-size:12.5px;color:#94a3b8;padding:8px 0;">No courses selected yet.</p>';
+    list.innerHTML = '<p style="font-size:12.5px;color:#94a3b8;padding:12px 0;">No courses enrolled yet. Click Enroll on a course to add it here.</p>';
+    return;
   }
 
-  enrolled.forEach(function(course) {
-    totalCredits += course.credits;
-
+  enrolled.forEach(function (course) {
     var item = document.createElement('div');
-    item.className = 'selected-item';
+    item.className = 'my-course-item';
     item.innerHTML =
-      '<div>' +
-        '<div class="si-code">' + course.id + '</div>' +
-        '<div class="si-title">' + course.title + '</div>' +
-        '<div class="si-credits">' + course.credits + ' Credits</div>' +
-      '</div>' +
-      '<button class="remove-btn" title="Remove">×</button>';
-
-    item.querySelector('.remove-btn').addEventListener('click', function() {
-      removeCourse(course.id);
-    });
-
+      '<div class="my-course-code">' + course.id + '</div>' +
+      '<div class="my-course-title">' + course.title + '</div>' +
+      '<div class="my-course-status">' + course.credits + ' Credits · ' + course.status + '</div>';
     list.appendChild(item);
   });
-
-  document.getElementById('currentCredits').textContent =
-    totalCredits < 10 ? '0' + totalCredits : totalCredits;
-
-  var pct = Math.min((totalCredits / 22) * 100, 100);
-  document.getElementById('progFill').style.width = pct + '%';
 }
 
 /* ── COURSE DETAIL POPUP ── */
 function openCourseDetail(course) {
   document.getElementById('courseDetailTitle').textContent = course.title;
 
-  var body    = document.getElementById('courseDetailBody');
+  var body = document.getElementById('courseDetailBody');
   var modules = courseModules[course.id] || ['Module – 1', 'Module – 2', 'Module – 3', 'Module – 4'];
 
   body.innerHTML = '';
 
-  /* Syllabus row */
   var syllabusRow = document.createElement('div');
   syllabusRow.className = 'module-row';
   syllabusRow.innerHTML =
@@ -461,8 +380,7 @@ function openCourseDetail(course) {
   syllabusRow.querySelector('button').addEventListener('click', showToast);
   body.appendChild(syllabusRow);
 
-  /* Module rows */
-  modules.forEach(function(moduleName, idx) {
+  modules.forEach(function (moduleName, idx) {
     var row = document.createElement('div');
     row.className = 'module-row';
     row.innerHTML =
@@ -473,7 +391,6 @@ function openCourseDetail(course) {
     body.appendChild(row);
   });
 
-  /* Open popup */
   document.getElementById('courseDetailPopup').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
@@ -483,12 +400,11 @@ function closeCourseDetail() {
   document.body.style.overflow = '';
 }
 
-/* Close popup when clicking background */
-document.getElementById('courseDetailPopup').addEventListener('click', function(e) {
+document.getElementById('courseDetailPopup').addEventListener('click', function (e) {
   if (e.target === this) closeCourseDetail();
 });
 
-document.addEventListener('keydown', function(e) {
+document.addEventListener('keydown', function (e) {
   if (e.key === 'Escape') closeCourseDetail();
 });
 
@@ -498,28 +414,160 @@ function showToast() {
   var toast = document.getElementById('toast');
   if (toastTimer) clearTimeout(toastTimer);
   toast.classList.add('show');
-  toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 2500);
+  toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 2500);
 }
 
-/* ── OVERRIDE FORM ── */
-document.getElementById('overrideForm').addEventListener('submit', function(e) {
+/* ── OVERRIDE FORM (POST /overrides → backend) ── */
+document.getElementById('overrideForm').addEventListener('submit', async function (e) {
   e.preventDefault();
-  alert('Override Request Submitted Successfully!');
-  e.target.reset();
-  navigate('view-selection');
+
+  var courseSelect = this.querySelector('select');
+  var courseId = courseSelect ? courseSelect.value : '';
+  var justification = document.getElementById('justification').value.trim();
+
+  if (!courseId || !justification) {
+    alert('Please fill in all required fields.');
+    return;
+  }
+
+  try {
+    var res = await fetch(API_BASE + '/overrides', {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify({
+        Student_ID: CURRENT_STUDENT_ID,
+        Course_ID: courseId,
+        Reason: justification,
+      }),
+    });
+
+    if (!res.ok) {
+      var errData = await res.json();
+      alert('Override submission failed: ' + (errData.message || 'Unknown error'));
+      return;
+    }
+
+    var newOverride = await res.json();
+    overrides.push(newOverride);
+
+    alert('Override Request Submitted Successfully! Request ID: ' + newOverride.requestId);
+    e.target.reset();
+    document.getElementById('charCount').textContent = '0 / 1500';
+    navigate('view-selection');
+
+  } catch (err) {
+    console.error('Override submission error:', err);
+    alert('Network error. Please check the backend connection.');
+  }
 });
 
 /* Char counter for justification textarea */
-document.getElementById('justification').addEventListener('input', function() {
+document.getElementById('justification').addEventListener('input', function () {
   document.getElementById('charCount').textContent = this.value.length + ' / 1500';
 });
 
-/* ── INIT ── */
-document.addEventListener('DOMContentLoaded', function() {
-  syncCurrentContext();
-  coursesData = buildCoursesData();
+/* ── RENDER VALIDATION STATUS ── */
+function renderValidationStatus() {
+  // Enrollment statuses
+  var enrollList = document.getElementById('enrollmentStatusList');
+  var studentRegs = registrations.filter(function (r) {
+    return r.studentId === CURRENT_STUDENT_ID &&
+      courses.some(function (c) { return c.courseId === r.courseId; });
+  });
+
+  if (studentRegs.length === 0) {
+    enrollList.innerHTML = '<p style="color:#94a3b8;text-align:center;">No enrollment records found.</p>';
+  } else {
+    enrollList.innerHTML = '';
+    studentRegs.forEach(function (reg) {
+      var course = courses.find(function (c) { return c.courseId === reg.courseId; }) || {};
+      var statusColor = reg.status === 'Enrolled' ? '#10b981' :
+        reg.status === 'Waitlisted' ? '#f59e0b' : '#6366f1';
+      var row = document.createElement('div');
+      row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;';
+      row.innerHTML =
+        '<div>' +
+        '<div style="font-weight:600;color:#1e293b;">' + (course.courseName || reg.courseId) + '</div>' +
+        '<div style="font-size:0.8rem;color:#64748b;">' + reg.courseId + ' · ' + (reg.termId || '') + ' · ' + (course.credits || 0) + ' Credits</div>' +
+        '</div>' +
+        '<span style="padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:600;color:white;background:' + statusColor + ';">' + reg.status + '</span>';
+      enrollList.appendChild(row);
+    });
+  }
+
+  // Override statuses
+  var overrideList = document.getElementById('overrideStatusList');
+  if (overrides.length === 0) {
+    overrideList.innerHTML = '<p style="color:#94a3b8;text-align:center;">No override requests submitted.</p>';
+  } else {
+    overrideList.innerHTML = '';
+    overrides.forEach(function (ov) {
+      var course = courses.find(function (c) { return c.courseId === ov.courseId; }) || {};
+      var statusColor = ov.approvalStatus === 'Approved' ? '#10b981' :
+        ov.approvalStatus === 'Rejected' ? '#ef4444' : '#f59e0b';
+      var row = document.createElement('div');
+      row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;';
+      row.innerHTML =
+        '<div>' +
+        '<div style="font-weight:600;color:#1e293b;">' + (course.courseName || ov.courseId) + ' Override</div>' +
+        '<div style="font-size:0.8rem;color:#64748b;">Request #' + ov.requestId + ' · ' + (ov.reason || '').substring(0, 60) + (ov.reason && ov.reason.length > 60 ? '...' : '') + '</div>' +
+        '</div>' +
+        '<span style="padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:600;color:white;background:' + statusColor + ';">' + ov.approvalStatus + '</span>';
+      overrideList.appendChild(row);
+    });
+  }
+}
+
+/* ── INIT: FETCH FROM BACKEND & RENDER ── */
+document.addEventListener('DOMContentLoaded', async function () {
+  try {
+    /* Fetch courses for this student's semester (only those with sections in active term) */
+    var fetchPromises = [
+      fetch(API_BASE + '/courses/for-student/' + CURRENT_STUDENT_ID, { headers: headers }),
+      fetch(API_BASE + '/registrations', { headers: { 'x-role': 'Dean' } }),
+    ];
+
+    if (CURRENT_STUDENT_ID) {
+      fetchPromises.push(
+        fetch(API_BASE + '/overrides/my/' + CURRENT_STUDENT_ID, { headers: headers })
+      );
+    }
+
+    var results = await Promise.all(fetchPromises);
+
+    if (results[0].ok) {
+      var raw = await results[0].json();
+      if (raw && raw.courses && Array.isArray(raw.courses)) {
+        studentCourseItems = raw.courses;
+        courses = raw.courses.map(function (item) { return item.course; });
+        currentSemester = raw.currentSemester || currentSemester;
+        activeTermName = raw.activeTerm || activeTermName;
+      } else if (Array.isArray(raw) && raw.length > 0) {
+        /* Plain course list fallback */
+        courses = raw;
+        studentCourseItems = raw.map(function (c) {
+          return { course: c, sections: [], courseType: c.courseType || 'Program Core' };
+        });
+      }
+    }
+    if (results[1].ok) registrations = await results[1].json();
+    if (results[2] && results[2].ok) overrides = await results[2].json();
+  } catch (err) {
+    console.error('Failed to fetch data from backend:', err);
+  }
+
   updateStaticPageCopy();
   setupFilters();
+  coursesData = buildCoursesData();
   renderGrid();
-  renderSidebar();
+  renderMyCoursesSection();
+  renderValidationStatus();
+  updateSemesterBanner();
+
+  /* ── Auto-navigate if coming from dashboard "My Courses" link ── */
+  var regGoto = sessionStorage.getItem('reg_goto');
+  if (regGoto) {
+    sessionStorage.removeItem('reg_goto');
+    navigate(regGoto);
+  }
 });

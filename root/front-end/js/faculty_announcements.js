@@ -1,5 +1,6 @@
-﻿/* announcements.js - full CRUD + validation */
-document.addEventListener("DOMContentLoaded", function(){
+/* announcements.js - full CRUD + validation */
+function initFacultyPage() {
+
   var D = LuminaData;
   var faculty = D.facultyProfile || {};
   var announcements = D.announcements.slice();
@@ -25,7 +26,7 @@ document.addEventListener("DOMContentLoaded", function(){
       + '</li>';
   }).join("");
 
-  var courseLabels = {};
+  var courseLabels = { "all": "All Courses" };
   courses.forEach(function(course) {
     courseLabels[course.id] = course.id + " - " + String(course.name || "").toUpperCase();
   });
@@ -34,13 +35,13 @@ document.addEventListener("DOMContentLoaded", function(){
     var filterEl = document.getElementById("annCourseFilter");
     var formEl = document.getElementById("annCourse");
 
-    filterEl.innerHTML = '<option value="all">All Courses</option>' + courses.map(function(course) {
+    var options = courses.map(function(course) {
       return '<option value="' + course.id + '">' + course.id + ' - ' + course.name + '</option>';
     }).join("");
 
-    formEl.innerHTML = '<option value="">Select a course</option>' + courses.map(function(course) {
-      return '<option value="' + course.id + '">' + course.id + ' - ' + course.name + '</option>';
-    }).join("");
+    filterEl.innerHTML = '<option value="all">All Courses</option>' + options;
+
+    formEl.innerHTML = '<option value="all">All Courses</option>' + options;
   }
 
   function render(){
@@ -97,6 +98,7 @@ document.addEventListener("DOMContentLoaded", function(){
     document.getElementById("annModalTitle").textContent = "Edit Announcement";
     document.getElementById("editAnnId").value = id;
     document.getElementById("annCourse").value = a.courseId;
+    updateRecipientHelp(a.courseId);
     document.getElementById("annTitle").value = a.title;
     document.getElementById("annMsg").value = a.msg;
     document.getElementById("annModal").classList.add("open");
@@ -112,7 +114,7 @@ document.addEventListener("DOMContentLoaded", function(){
     clearForm();
   }
 
-  document.getElementById("annForm").addEventListener("submit", function(e){
+  document.getElementById("annForm").addEventListener("submit", async function(e){
     e.preventDefault();
     if(!validateForm()) return;
 
@@ -121,30 +123,51 @@ document.addEventListener("DOMContentLoaded", function(){
     var title = document.getElementById("annTitle").value.trim();
     var msg = document.getElementById("annMsg").value.trim();
 
-    if(editId){
-      var idx = announcements.findIndex(function(a){ return a.id === parseInt(editId, 10); });
-      if(idx > -1){
-        announcements[idx].courseId = courseId;
-        announcements[idx].courseLabel = courseLabels[courseId] || courseId;
-        announcements[idx].title = title;
-        announcements[idx].msg = msg;
-        announcements[idx].ago = "Just now";
-      }
-      showToast("Announcement updated successfully!", "success");
-    } else {
-      announcements.unshift({
-        id: nextId++,
-        courseId: courseId,
-        courseLabel: courseLabels[courseId] || courseId,
-        title: title,
-        msg: msg,
-        ago: "Just now"
-      });
-      showToast("Announcement posted successfully!", "success");
-    }
+    var headers = {
+      'Content-Type': 'application/json',
+      'x-role': 'Faculty',
+      'x-user-id': faculty.id || 'F2024001'
+    };
 
-    closeModal();
-    render();
+    try {
+      if(editId){
+        await fetch('http://localhost:3000/announcements/' + editId, {
+          method: 'PUT',
+          headers: headers,
+          body: JSON.stringify({ courseId: courseId, title: title, message: msg })
+        });
+        var idx = announcements.findIndex(function(a){ return a.id === parseInt(editId, 10); });
+        if(idx > -1){
+          announcements[idx].courseId = courseId;
+          announcements[idx].courseLabel = courseLabels[courseId] || courseId;
+          announcements[idx].title = title;
+          announcements[idx].msg = msg;
+          announcements[idx].ago = "Just now";
+        }
+        showToast("Announcement updated successfully!", "success");
+      } else {
+        var res = await fetch('http://localhost:3000/announcements', {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify({ courseId: courseId, title: title, message: msg })
+        });
+        var newAnn = await res.json();
+        announcements.unshift({
+          id: newAnn.announcementId,
+          courseId: courseId,
+          courseLabel: courseLabels[courseId] || courseId,
+          title: title,
+          msg: msg,
+          ago: "Just now"
+        });
+        showToast("Announcement posted successfully!", "success");
+      }
+      closeModal();
+      render();
+    } catch (err) {
+      console.error(err);
+      showToast("Error saving announcement.", "error");
+    }
   });
 
   function validateForm(){
@@ -174,6 +197,7 @@ document.addEventListener("DOMContentLoaded", function(){
     document.getElementById("annForm").reset();
     ["errCourse","errTitle","errMsg"].forEach(function(id){ document.getElementById(id).textContent = ""; });
     document.getElementById("fdSelected").style.display = "none";
+    updateRecipientHelp("all");
   }
 
   window.confirmDelete = function(id){
@@ -186,13 +210,25 @@ document.addEventListener("DOMContentLoaded", function(){
     deleteTargetId = null;
   });
 
-  document.getElementById("confirmDelBtn").addEventListener("click", function(){
+  document.getElementById("confirmDelBtn").addEventListener("click", async function(){
     if(deleteTargetId === null) return;
-    announcements = announcements.filter(function(a){ return a.id !== deleteTargetId; });
-    document.getElementById("deleteModal").classList.remove("open");
-    deleteTargetId = null;
-    showToast("Announcement deleted.", "success");
-    render();
+    try {
+      await fetch('http://localhost:3000/announcements/' + deleteTargetId, {
+        method: 'DELETE',
+        headers: {
+          'x-role': 'Faculty',
+          'x-user-id': faculty.id || 'F2024001'
+        }
+      });
+      announcements = announcements.filter(function(a){ return a.id !== deleteTargetId; });
+      document.getElementById("deleteModal").classList.remove("open");
+      deleteTargetId = null;
+      showToast("Announcement deleted.", "success");
+      render();
+    } catch (err) {
+      console.error(err);
+      showToast("Error deleting announcement.", "error");
+    }
   });
 
   document.getElementById("deleteModal").addEventListener("click", function(e){
@@ -212,6 +248,21 @@ document.addEventListener("DOMContentLoaded", function(){
     var sel = document.getElementById("fdSelected");
     sel.textContent = "Attached: " + f.name;
     sel.style.display = "block";
+  });
+
+  function updateRecipientHelp(val) {
+    var help = document.getElementById("recipientHelp");
+    if(!help) return;
+    if(val === "all" || !val){
+      help.textContent = "All students enrolled in your assigned courses will see this announcement.";
+    } else {
+      var label = courseLabels[val] || val;
+      help.textContent = "Students enrolled in " + label + " will receive this announcement.";
+    }
+  }
+
+  document.getElementById("annCourse").addEventListener("change", function(){
+    updateRecipientHelp(this.value);
   });
 
   document.getElementById("annSearch").addEventListener("input", function(){
@@ -251,4 +302,8 @@ document.addEventListener("DOMContentLoaded", function(){
 
   populateCourseOptions();
   render();
-});
+}
+
+// Wait for data
+if (window.LuminaData) { initFacultyPage(); }
+else { window.addEventListener('LuminaDataReady', initFacultyPage); }

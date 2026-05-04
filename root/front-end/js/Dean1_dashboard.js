@@ -3,46 +3,37 @@
  * Renders stats, progress, room availability, and recent activities.
  */
 
-document.addEventListener('DOMContentLoaded', () => {
+let dashData;
+let currentRoomIndex = 0;
 
-  const data = loadData();
+document.addEventListener('DOMContentLoaded', async () => {
+
+  dashData = await loadData();
 
   renderNavbar('home');
   renderFooter();
-  renderRoomTable(data, 'Monday');
-  renderActivities(data);
+
+  // Populate room dropdown
+  const roomFilter = document.getElementById('roomFilter');
+  dashData.rooms.forEach((room, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = room.name;
+    roomFilter.appendChild(opt);
+  });
+
+  renderRoomCard(dashData, 'Monday');
+  renderActivities(dashData);
 
   // Day filter change
   document.getElementById('dayFilter').addEventListener('change', (e) => {
-    renderRoomTable(data, e.target.value);
+    renderRoomCard(dashData, e.target.value);
   });
 
-  // See History button
-  const historyBtn = document.getElementById('seeHistoryBtn');
-  const historyModal = document.getElementById('historyModal');
-  const closeHistoryModal = document.getElementById('closeHistoryModal');
-
-  historyBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    historyModal.classList.add('modal-overlay--active');
-  });
-  closeHistoryModal.addEventListener('click', () => historyModal.classList.remove('modal-overlay--active'));
-  historyModal.addEventListener('click', (e) => {
-    if (e.target === historyModal) historyModal.classList.remove('modal-overlay--active');
-  });
-
-  // View All Rooms link
-  const viewAllRooms = document.getElementById('viewAllRooms');
-  const allRoomsModal = document.getElementById('allRoomsModal');
-  const closeAllRoomsModal = document.getElementById('closeAllRoomsModal');
-
-  viewAllRooms.addEventListener('click', (e) => {
-    e.preventDefault();
-    allRoomsModal.classList.add('modal-overlay--active');
-  });
-  closeAllRoomsModal.addEventListener('click', () => allRoomsModal.classList.remove('modal-overlay--active'));
-  allRoomsModal.addEventListener('click', (e) => {
-    if (e.target === allRoomsModal) allRoomsModal.classList.remove('modal-overlay--active');
+  // Room dropdown change
+  roomFilter.addEventListener('change', (e) => {
+    currentRoomIndex = parseInt(e.target.value, 10);
+    renderRoomCard(dashData, document.getElementById('dayFilter').value);
   });
 });
 
@@ -70,7 +61,6 @@ function renderStatCards(data) {
   const allocated = courses.filter(c => allocatedCodes.has(c.code)).length;
   const pending = total - allocated;
 
-  // Required slots = sum of course credits for active courses that are not yet allocated
   const requiredSlots = courses
     .filter(c => !allocatedCodes.has(c.code))
     .reduce((sum, c) => sum + c.credits, 0);
@@ -95,11 +85,9 @@ function renderStatCards(data) {
 }
 
 
-/* ════════ Room Availability Table ════════ */
+/* ════════ Room Availability — Single Card with Dropdown ════════ */
 
-function renderRoomTable(data, day) {
-  const tbody = document.getElementById('roomTableBody');
-
+function renderRoomCard(data, day) {
   const ALL_SLOT_KEYS = [
     '08:45-09:45',
     '09:45-10:45',
@@ -111,63 +99,58 @@ function renderRoomTable(data, day) {
     '17:30-18:30'
   ];
 
-  tbody.innerHTML = data.rooms.map((room, roomIndex) => {
-    const booked = new Set(
-      data.timetable
-        .filter(a => a.room === room.name && a.day === day)
-        .map(a => a.timeSlot)
-    );
+  const rooms = data.rooms;
+  if (rooms.length === 0) return;
 
-    const avail = ALL_SLOT_KEYS.filter((slotKey) => !booked.has(slotKey));
+  if (currentRoomIndex >= rooms.length) currentRoomIndex = rooms.length - 1;
+  if (currentRoomIndex < 0) currentRoomIndex = 0;
 
-    const slotsHTML = avail.length > 0
-      ? avail.map(s => `<span class="time-tag">${s}</span>`).join('')
-      : '<span class="time-tag--empty">No slots available</span>';
+  const room = rooms[currentRoomIndex];
 
-    const hasSlots  = avail.length > 0;
-    const statusClass = hasSlots ? 'badge--available' : 'badge--booked';
-    const statusText  = hasSlots ? 'Available' : 'Fully Booked';
-    const dotClass    = hasSlots ? 'badge-dot--green' : 'badge-dot--red';
+  const booked = new Set(
+    data.timetable
+      .filter(a => a.room === room.name && a.day === day)
+      .map(a => a.timeSlot)
+  );
 
-    return `
-      <tr>
-        <td style="font-weight:600">${room.name}</td>
-        <td>${room.capacity}</td>
-        <td>${slotsHTML}</td>
-        <td>
-          <span class="badge ${statusClass}">
-            <span class="badge-dot ${dotClass}"></span>
-            ${statusText}
-          </span>
-        </td>
-      </tr>
-    `;
-  }).join('');
+  const avail = ALL_SLOT_KEYS.filter(slotKey => !booked.has(slotKey));
+  const hasSlots = avail.length > 0;
+
+  // Room name
+  document.getElementById('roomCardName').textContent = room.name;
+
+  // Capacity
+  document.getElementById('roomCardCapacity').textContent = room.capacity;
+
+  // Status badge
+  const statusEl = document.getElementById('roomCardStatus');
+  if (hasSlots) {
+    statusEl.innerHTML = `<span class="badge badge--available"><span class="badge-dot badge-dot--green"></span> Available</span>`;
+  } else {
+    statusEl.innerHTML = `<span class="badge badge--booked"><span class="badge-dot badge-dot--red"></span> Fully Booked</span>`;
+  }
+
+  // Available timeslots
+  const slotsEl = document.getElementById('roomCardSlots');
+  if (hasSlots) {
+    slotsEl.innerHTML =
+      '<div class="room-card__slots-label">Available Timeslots</div>' +
+      avail.map(s => `<span class="time-tag">${s}</span>`).join('');
+  } else {
+    slotsEl.innerHTML = '<span class="time-tag--empty">All slots booked for this day</span>';
+  }
 }
 
 
-
-/* ════════ Recent Activities ════════ */
+/* ════════ Recent Activities — Inline Table ════════ */
 
 function renderActivities(data) {
-  const list = document.getElementById('activityList');
-  const assetBasePath = 'assets/icons';
-  const iconMap = {
-    slot: 'clipboard.svg',
-    course: 'book.svg',
-    success: 'tick.svg'
-  };
-
-  list.innerHTML = data.recentActivities.map(a => `
-    <li class="activity-item">
-      <div class="activity-item__icon">
-        <img src="${assetBasePath}/${iconMap[a.icon] || 'clipboard.svg'}" alt="" class="activity-item__icon-img">
-      </div>
-      <div class="activity-item__content">
-        <div class="activity-item__title">${a.title}</div>
-        <div class="activity-item__detail">${a.detail}</div>
-        <div class="activity-item__time">${a.time}</div>
-      </div>
-    </li>
+  const tbody = document.getElementById('activityTableBody');
+  tbody.innerHTML = data.recentActivities.map(a => `
+    <tr>
+      <td style="font-weight:600">${a.title}</td>
+      <td>${a.detail}</td>
+      <td style="white-space:nowrap; color: var(--accent); font-weight:500">${a.time}</td>
+    </tr>
   `).join('');
 }

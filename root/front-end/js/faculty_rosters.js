@@ -1,27 +1,73 @@
-﻿/* rosters.js */
-document.addEventListener("DOMContentLoaded", function(){
-  var D = LuminaData;
+/* rosters.js */
+const API_BASE = 'http://localhost:3000';
+const sessionData = localStorage.getItem('Lumina_Session');
+const currentUser = sessionData ? JSON.parse(sessionData) : null;
+const API_HEADERS = {
+    'Content-Type': 'application/json',
+    'x-role': currentUser ? currentUser.Role : 'Faculty'
+};
+
+document.addEventListener("DOMContentLoaded", async function(){
   var PAGE_SIZE = 4;
   var currentPage = 1;
-  var currentCourse = sessionStorage.getItem("selectedCourse") || ((D.courses[0] && D.courses[0].id) || "");
+  var currentCourse = sessionStorage.getItem("selectedCourse") || "";
   var searchTerm = "";
-  var faculty = D.facultyProfile || {};
+  var allStudents = {};
 
-  if (faculty.displayName) {
+  if (currentUser) {
     var nameEl = document.querySelector(".navbar-user-name");
     var deptEl = document.querySelector(".navbar-user-dept");
     var avatarEl = document.querySelector(".navbar-avatar");
-    if (nameEl) nameEl.textContent = faculty.displayName;
-    if (deptEl) deptEl.textContent = faculty.deptName;
-    if (avatarEl) avatarEl.textContent = faculty.avatar;
+    if (nameEl) nameEl.textContent = currentUser.Full_Name;
+    if (deptEl) deptEl.textContent = currentUser.Dept_ID;
+    if (avatarEl) avatarEl.textContent = currentUser.Full_Name.charAt(0);
   }
 
-  // Pre-select course from session
+  // Load Data
+  try {
+      const [regRes, userRes] = await Promise.all([
+          fetch(`${API_BASE}/registrations`, { headers: API_HEADERS }),
+          fetch(`${API_BASE}/users`, { headers: API_HEADERS })
+      ]);
+      
+      let registrations = [];
+      let usersMap = {};
+
+      if (regRes.ok) registrations = await regRes.json();
+      if (userRes.ok) {
+          const users = await userRes.json();
+          users.forEach(u => usersMap[u.userId] = u);
+      }
+
+      // Group by course
+      registrations.forEach(r => {
+          if (r.status !== 'Enrolled') return;
+          if (!allStudents[r.courseId]) allStudents[r.courseId] = [];
+          const u = usersMap[r.studentId] || {};
+          allStudents[r.courseId].push({
+              enrollmentId: r.enrollmentId,
+              roll: r.studentId,
+              name: u.fullName || r.studentId,
+              email: u.email || 'N/A',
+              prog: u.deptId || 'N/A',
+              color: '#3b82f6',
+              init: (u.fullName || r.studentId).charAt(0)
+          });
+      });
+  } catch (err) {
+      console.error(err);
+      showToast('Failed to load roster data.', 'error');
+  }
+
   var sel = document.getElementById("courseSelector");
-  sel.value = currentCourse;
+  if (!currentCourse && sel.options.length > 0) {
+      currentCourse = sel.options[0].value;
+  } else {
+      sel.value = currentCourse;
+  }
 
   function getFiltered(){
-    var all = D.students[currentCourse] || [];
+    var all = allStudents[currentCourse] || [];
     if(!searchTerm) return all;
     return all.filter(function(s){
       return s.name.toLowerCase().includes(searchTerm)
@@ -89,7 +135,6 @@ document.addEventListener("DOMContentLoaded", function(){
     }
   }
 
-  // Course selector change
   sel.addEventListener("change", function(){
     currentCourse = this.value;
     currentPage = 1;
@@ -97,16 +142,14 @@ document.addEventListener("DOMContentLoaded", function(){
     render();
   });
 
-  // Student search
   document.getElementById("studentSearch").addEventListener("input", function(){
     searchTerm = this.value.trim().toLowerCase();
     currentPage = 1;
     render();
   });
 
-  // Export
   document.getElementById("exportBtn").addEventListener("click", function(){
-    var students = D.students[currentCourse] || [];
+    var students = allStudents[currentCourse] || [];
     var csv = "Roll Number,Name,Email,Program\n"
       + students.map(function(s){ return s.roll + "," + s.name + "," + s.email + "," + s.prog; }).join("\n");
     var blob = new Blob([csv], {type:"text/csv"});

@@ -25,8 +25,8 @@
 
       <!-- Room Availability Overview -->
       <div class="card room-panel" id="roomPanel">
-        <div class="room-panel__header">
-          <h2 class="room-panel__title">Room Availability Overview</h2>
+        <h2 class="room-panel__title">Room Availability Overview</h2>
+        <div class="room-panel__filters">
           <div class="room-panel__filter">
             <label for="dayFilter" class="room-panel__filter-label">Day</label>
             <select id="dayFilter" class="select-field select-field--sm">
@@ -37,107 +37,58 @@
               <option value="Friday">Friday</option>
             </select>
           </div>
+          <div class="room-panel__filter">
+            <label for="roomFilter" class="room-panel__filter-label">Room</label>
+            <select id="roomFilter" class="select-field select-field--sm">
+              <!-- JS populates -->
+            </select>
+          </div>
         </div>
-        <table class="data-table" id="roomTable">
-          <thead>
-            <tr>
-              <th>Room Name</th>
-              <th>Capacity</th>
-              <th>Available Time Slots</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="roomTableBody">
-            <!-- JS will populate -->
-          </tbody>
-        </table>
-        <a href="#" class="room-panel__view-all" id="viewAllRooms">View All Rooms</a>
+        <!-- Single room card with pagination -->
+        <div class="room-card" id="roomCard">
+          <div class="room-card__name" id="roomCardName">—</div>
+          <div class="room-card__meta">
+            <div class="room-card__meta-item">
+              <span class="room-card__meta-label">Capacity</span>
+              <span class="room-card__meta-value" id="roomCardCapacity">—</span>
+            </div>
+            <div class="room-card__meta-item">
+              <span class="room-card__meta-label">Status</span>
+              <span id="roomCardStatus">—</span>
+            </div>
+          </div>
+          <div class="room-card__slots" id="roomCardSlots">
+            <!-- available time slot tags rendered here -->
+          </div>
+        </div>
+
       </div>
 
       <!-- Recent Activities -->
       <div class="card activity-panel" id="activityPanel">
         <h2 class="activity-panel__title">Recent Activities</h2>
-        <ul class="activity-list" id="activityList">
-          <!-- JS will populate -->
-        </ul>
-        <button class="btn btn--primary activity-panel__btn" id="seeHistoryBtn">See History</button>
+        <div class="activity-table-wrapper">
+          <table class="data-table" id="activityTable">
+            <thead>
+              <tr>
+                <th>Activity</th>
+                <th>Details</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody id="activityTableBody">
+              <!-- JS will populate -->
+            </tbody>
+          </table>
+        </div>
       </div>
 
     </section>
   </main>
-  <!-- ── Modals ── -->
-  <!-- Activity History Modal -->
-  <div class="modal-overlay" id="historyModal">
-    <div class="modal" style="max-width: 600px;">
-      <div class="modal__header">
-        <h3 class="modal__title">Activity History</h3>
-        <button class="modal__close" id="closeHistoryModal">&times;</button>
-      </div>
-      <div class="modal__body" style="padding: var(--space-md); overflow-y: auto; max-height: 60vh;">
-        <table class="data-table" style="margin: 0; box-shadow: none;">
-          <thead>
-            <tr>
-              <th>Activity</th>
-              <th>Details</th>
-              <th>Time</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td>CS101 Slot Allocated</td><td>Room 204, Mon 10:00 AM</td><td>2 mins ago</td></tr>
-            <tr><td>New Course Added</td><td>Advanced AI Ethics (ETH402)</td><td>45 mins ago</td></tr>
-            <tr><td>EC202 Slot Updated</td><td>Moved to Wed 08:45 AM</td><td>1 hour ago</td></tr>
-            <tr><td>Section Assignment Saved</td><td>CS301 - 4 sections</td><td>3 hours ago</td></tr>
-            <tr><td>AD401 Slot Allocated</td><td>G01, Wed 02:15 PM</td><td>5 hours ago</td></tr>
-            <tr><td>CS102 Course Updated</td><td>Credits changed to 3</td><td>1 day ago</td></tr>
-            <tr><td>CS201 Slot Allocated</td><td>G07, Tue 02:15 PM</td><td>1 day ago</td></tr>
-            <tr><td>New Course Added</td><td>Signals & Systems (EC301)</td><td>2 days ago</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- All Rooms Modal -->
-  <div class="modal-overlay" id="allRoomsModal">
-    <div class="modal" style="max-width: 600px;">
-      <div class="modal__header">
-        <h3 class="modal__title">All Rooms</h3>
-        <button class="modal__close" id="closeAllRoomsModal">&times;</button>
-      </div>
-      <div class="modal__body" style="padding: var(--space-md); overflow-y: auto; max-height: 60vh;">
-        <table class="data-table" style="margin: 0; box-shadow: none;">
-          <thead>
-            <tr>
-              <th>Room Name</th>
-              <th>Capacity</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td>G01</td><td>100</td><td><span class="badge-status badge-status--fully-booked" style="background:var(--red-100); color:var(--red-700)">Fully Booked</span></td></tr>
-            <tr><td>G02</td><td>100</td><td><span class="badge-status badge-status--available">Available</span></td></tr>
-            <tr><td>G03</td><td>100</td><td><span class="badge-status badge-status--available">Available</span></td></tr>
-            <tr><td>G04</td><td>100</td><td><span class="badge-status badge-status--available">Available</span></td></tr>
-            <tr><td>G05</td><td>100</td><td><span class="badge-status badge-status--available">Available</span></td></tr>
-            <tr><td>G06</td><td>100</td><td><span class="badge-status badge-status--available">Available</span></td></tr>
-            <tr><td>G07</td><td>100</td><td><span class="badge-status badge-status--available">Available</span></td></tr>
-            <tr><td>G08</td><td>100</td><td><span class="badge-status badge-status--available">Available</span></td></tr>
-            <tr><td>G09</td><td>100</td><td><span class="badge-status badge-status--available">Available</span></td></tr>
-            <tr><td>G10</td><td>100</td><td><span class="badge-status badge-status--available">Available</span></td></tr>
-            <tr><td>B01</td><td>100</td><td><span class="badge-status badge-status--available">Available</span></td></tr>
-            <tr><td>B02</td><td>100</td><td><span class="badge-status badge-status--available">Available</span></td></tr>
-            <tr><td>B03</td><td>100</td><td><span class="badge-status badge-status--available">Available</span></td></tr>
-            <tr><td>B04</td><td>100</td><td><span class="badge-status badge-status--available">Available</span></td></tr>
-            <tr><td>B05</td><td>100</td><td><span class="badge-status badge-status--available">Available</span></td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
+  <!-- Modals removed — content is now inline -->
 
   <footer id="footer" class="footer"></footer>
 
-  <script src="js/mockData.js"></script>
   <script src="js/Dean1_data.js"></script>
   <script src="js/Dean1_layout.js"></script>
   <script src="js/Dean1_dashboard.js"></script>

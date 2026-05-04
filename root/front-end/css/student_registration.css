@@ -47,10 +47,22 @@
 
 /* ── LAYOUT ── */
 .reg-layout {
-  display: grid;
-  grid-template-columns: 1fr 310px;
-  gap: 18px;
-  align-items: start;
+  display: block;
+}
+
+.page-title {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.semester-banner {
+  font-size: 0.94rem;
+  color: #475569;
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 
 .reg-main-col { display: flex; flex-direction: column; gap: 16px; }
@@ -115,7 +127,7 @@
 /* ── COURSES GRID ── */
 .courses-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 14px;
 }
 
@@ -257,6 +269,47 @@
 }
 
 .sidebar-body { padding: 16px 18px; }
+
+.my-courses-card {
+  margin-top: 24px;
+  padding: 24px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: white;
+}
+
+.my-courses-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.my-course-item {
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.my-course-code {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 0.04em;
+}
+
+.my-course-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a2744;
+  margin: 6px 0 4px;
+}
+
+.my-course-status {
+  font-size: 11.5px;
+  color: #64748b;
+}
 
 .selected-item {
   display: flex;

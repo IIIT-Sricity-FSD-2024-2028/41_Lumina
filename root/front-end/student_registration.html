@@ -9,7 +9,6 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
 </head>
 <body>
-  <script src="js/mockData.js"></script>
 
   <div id="navbar-placeholder"></div>
 
@@ -30,6 +29,11 @@
       <div class="page-title">
         <h1>Course Registration</h1>
         <p>Select courses for the upcoming semester. Monitor your credit load from the sidebar.</p>
+        <div class="semester-banner">
+          <strong>Current Semester:</strong>
+          <span id="currentSemesterLabel">—</span>
+          <span id="activeTermLabel" style="color:#64748b; margin-left:10px;"></span>
+        </div>
       </div>
 
       <div class="reg-layout">
@@ -57,25 +61,14 @@
           <div class="courses-grid" id="coursesGrid"></div>
 
         </div>
+      </div>
 
-        <!-- RIGHT: sidebar -->
-        <aside class="reg-sidebar">
-          <div class="sidebar-head">
-            <h2>My Selected Courses</h2>
-          </div>
-          <div class="sidebar-body">
-            <div id="selectedList"></div>
-            <div class="credit-box">
-              <div class="credit-top">
-                <span class="credit-lbl">CREDIT LOAD</span>
-                <strong><span id="currentCredits">0</span> / 20 <span class="light">credits</span></strong>
-              </div>
-              <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
-              <p class="min-note">* Minimum 16 credits required for full-time status.</p>
-            </div>
-          </div>
-        </aside>
-
+      <div class="card my-courses-card">
+        <div class="card-title">
+          <span>📚</span>
+          <h2>My Courses</h2>
+        </div>
+        <div id="myCoursesList" class="my-courses-list"></div>
       </div>
     </section>
 
@@ -83,11 +76,21 @@
     <section id="view-status" class="reg-view">
       <div class="page-title">
         <h1>Validation Status</h1>
-        <p>Review the status of your current enrollment requests.</p>
+        <p>Review the status of your current enrollment requests and override submissions.</p>
       </div>
-      <div class="card" style="padding:32px;text-align:center;color:#64748b;">
-        <div style="font-size:36px;margin-bottom:12px;">📋</div>
-        <p>No pending validation requests.</p>
+
+      <div class="card" style="padding:24px;">
+        <h3 style="margin:0 0 16px 0; font-size:1rem; color:#1e293b;">📚 Current Enrollments</h3>
+        <div id="enrollmentStatusList" style="display:flex;flex-direction:column;gap:12px;">
+          <p style="color:#94a3b8;text-align:center;">Loading...</p>
+        </div>
+      </div>
+
+      <div class="card" style="padding:24px; margin-top:16px;">
+        <h3 style="margin:0 0 16px 0; font-size:1rem; color:#1e293b;">📝 Override Requests</h3>
+        <div id="overrideStatusList" style="display:flex;flex-direction:column;gap:12px;">
+          <p style="color:#94a3b8;text-align:center;">Loading...</p>
+        </div>
       </div>
     </section>
 

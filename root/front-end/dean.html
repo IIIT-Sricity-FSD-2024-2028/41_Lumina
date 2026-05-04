@@ -169,7 +169,7 @@
         <form id="crud-form" class="modal-form">
           <div class="form-group">
             <label>User ID (Primary Key)</label>
-            <input type="text" id="modal-id" class="form-input" placeholder="e.g., S2024099" required />
+            <input type="text" id="modal-id" class="form-input" placeholder="e.g., S2024099" required pattern="^[A-Z]\d{7}$" title="Must be 1 uppercase letter followed by 7 digits" />
           </div>
           
           <div class="form-group">
@@ -179,7 +179,7 @@
           
           <div class="form-group">
             <label>Email Address</label>
-            <input type="email" id="modal-email" class="form-input" required />
+            <input type="email" id="modal-email" class="form-input" required pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$" title="Must be a valid email format" />
           </div>
 
           <div class="form-row" style="display: flex; gap: 16px;">
@@ -254,7 +254,6 @@
       </div>
     </footer>
 
-    <script src="js/data/mockData.js"></script>
     <script src="js/dean.js"></script>
   </body>
 </html>

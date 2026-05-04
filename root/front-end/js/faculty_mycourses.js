@@ -1,9 +1,10 @@
-﻿/* mycourses.js - My Courses page with Roster, Materials, Grades overlays */
-document.addEventListener("DOMContentLoaded", function () {
+/* mycourses.js - My Courses page with Roster, Materials, Grades overlays */
+function initFacultyMyCoursesPage() {
   var D = LuminaData;
   var faculty = D.facultyProfile || {};
   var currentFilter = "all";
   var currentSearch = "";
+  var currentTerm = "all";
   var currentCourseId = "";
   var roCurrentCourse = "";
   var roSearchTerm = "";
@@ -42,12 +43,47 @@ document.addEventListener("DOMContentLoaded", function () {
     return localMaterials[courseId];
   }
 
+  function populateTermFilter() {
+    var semFilter = document.getElementById("semFilter");
+    var seen = {};
+    var terms = [];
+
+    function addTerm(id, label) {
+      if (!id || seen[id]) return;
+      seen[id] = true;
+      terms.push({ id: id, label: label || id });
+    }
+
+    D.courses.forEach(function (course) {
+      var termId = course.termId || "";
+      addTerm(termId, course.termLabel || termId);
+
+      var yearMatch = termId.match(/(\d{4})/);
+      if (yearMatch && termId.toUpperCase().indexOf("SPRING") !== -1) {
+        addTerm("FALL" + yearMatch[1], "Monsoon " + yearMatch[1]);
+      } else if (yearMatch && termId.toUpperCase().indexOf("FALL") !== -1) {
+        addTerm("SPRING" + yearMatch[1], "Spring " + yearMatch[1]);
+      }
+    });
+
+    semFilter.innerHTML = '<option value="all">All Semesters</option>'
+      + terms.map(function (term) {
+        return '<option value="' + term.id + '">' + term.label + '</option>';
+      }).join("");
+
+    if (D.courses[0] && D.courses[0].termId) {
+      semFilter.value = D.courses[0].termId;
+      currentTerm = D.courses[0].termId;
+    }
+  }
+
   function renderCourses() {
     var list = D.courses.filter(function (c) {
       var matchStatus = currentFilter === "all" || c.status === currentFilter;
+      var matchTerm = currentTerm === "all" || c.termId === currentTerm;
       var q = currentSearch.toLowerCase();
       var matchSearch = !q || c.id.toLowerCase().includes(q) || c.name.toLowerCase().includes(q);
-      return matchStatus && matchSearch;
+      return matchStatus && matchTerm && matchSearch;
     });
 
     var grid = document.getElementById("coursesGrid");
@@ -116,7 +152,10 @@ document.addEventListener("DOMContentLoaded", function () {
       return '<li class="mat-item">'
         + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="18" height="18"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>'
         + '<span class="mat-item-name">' + m.name + '</span>'
-        + '<button class="mat-item-view" type="button" onclick="viewMaterial(' + index + ')">View</button>'
+        + '<div style="display:flex;gap:12px;">'
+        + '  <button class="mat-item-view" type="button" onclick="viewMaterial(' + index + ')">View</button>'
+        + '  <button class="mat-item-view" style="color: #dc2626;" type="button" onclick="deleteMaterial(' + index + ')">Delete</button>'
+        + '</div>'
         + '</li>';
     }).join("");
   }
@@ -150,6 +189,16 @@ document.addEventListener("DOMContentLoaded", function () {
         + "</body></html>"
       );
       previewWindow.document.close();
+    }
+  };
+
+  window.deleteMaterial = function (index) {
+    var mats = getMaterials(currentCourseId);
+    if (!mats[index]) return;
+    if (confirm("Are you sure you want to delete '" + mats[index].name + "'?")) {
+      mats.splice(index, 1);
+      renderMaterialsList();
+      showToast("Material deleted successfully.", "success");
     }
   };
 
@@ -310,7 +359,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function calcTotal(mid, fin) {
-    return Math.round(mid * 0.4 + fin * 0.6);
+    return Math.round(mid + fin);
   }
 
   window.openGrades = function (courseId) {
@@ -345,10 +394,10 @@ document.addEventListener("DOMContentLoaded", function () {
         + '<td><span class="td-text">' + r.roll + '</span></td>'
         + '<td><span class="td-text">' + r.name + '</span></td>'
         + '<td class="xl-td-score-cell" id="mid-cell-' + r.roll + '">'
-        + '  <input class="xl-score-inp" type="number" min="0" max="100" value="' + r.mid + '" data-roll="' + r.roll + '" data-type="mid"/>'
+        + '  <input class="xl-score-inp" type="number" min="0" max="30" value="' + r.mid + '" data-roll="' + r.roll + '" data-type="mid"/>'
         + '</td>'
         + '<td class="xl-td-score-cell" id="fin-cell-' + r.roll + '">'
-        + '  <input class="xl-score-inp" type="number" min="0" max="100" value="' + r.fin + '" data-roll="' + r.roll + '" data-type="fin"/>'
+        + '  <input class="xl-score-inp" type="number" min="0" max="70" value="' + r.fin + '" data-roll="' + r.roll + '" data-type="fin"/>'
         + '</td>'
         + '<td class="td-total" id="total-' + r.roll + '">' + total + '</td>'
         + '<td class="td-grade">'
@@ -379,8 +428,9 @@ document.addEventListener("DOMContentLoaded", function () {
         var roll = this.dataset.roll;
         var type = this.dataset.type;
         var val = parseInt(this.value, 10);
-
-        if (isNaN(val) || val < 0 || val > 100) {
+        
+        var maxVal = type === 'mid' ? 30 : 70;
+        if (isNaN(val) || val < 0 || val > maxVal) {
           this.classList.add("inp-error");
           return;
         }
@@ -465,6 +515,11 @@ document.addEventListener("DOMContentLoaded", function () {
     renderCourses();
   });
 
+  document.getElementById("semFilter").addEventListener("change", function () {
+    currentTerm = this.value;
+    renderCourses();
+  });
+
   function showToast(msg, type) {
     var t = document.getElementById("mcToast");
     t.textContent = msg;
@@ -490,5 +545,12 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
+  populateTermFilter();
   renderCourses();
-});
+}
+
+if (window.LuminaData) {
+  initFacultyMyCoursesPage();
+} else {
+  window.addEventListener("LuminaDataReady", initFacultyMyCoursesPage, { once: true });
+}

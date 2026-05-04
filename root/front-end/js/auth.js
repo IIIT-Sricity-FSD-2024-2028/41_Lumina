@@ -1,5 +1,7 @@
 
 document.addEventListener('DOMContentLoaded', () => {
+
+    const API_BASE = 'http://localhost:3000';
     
     // --- 1. PASSWORD VISIBILITY TOGGLE ---
     const passwordInput = document.getElementById('password');
@@ -17,57 +19,59 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 2. LOGIN FORM VALIDATION & ROUTING ---
+    // --- 2. LOGIN FORM — BACKEND-DRIVEN ---
     const loginForm = document.getElementById('loginForm');
-    const loginError = document.getElementById('loginError'); // Grab the error box
+    const loginError = document.getElementById('loginError');
 
     if (loginForm) {
         document.getElementById('username').addEventListener('input', () => loginError.classList.add('hidden'));
         passwordInput.addEventListener('input', () => loginError.classList.add('hidden'));
 
-        loginForm.addEventListener('submit', function (e) {
+        loginForm.addEventListener('submit', async function (e) {
             e.preventDefault(); 
 
-            // Always hide the error when they hit submit, just in case
             loginError.classList.add('hidden');
 
             const username = document.getElementById('username').value.trim();
             const password = passwordInput.value;
-            const usersData = localStorage.getItem('Lumina_Users');
 
-            if (!usersData) {
-                console.error("Database not initialized.");
-                return;
-            }
+            try {
+                const res = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        User_ID: username,
+                        Password: password,
+                    }),
+                });
 
-            const users = JSON.parse(usersData);
-            const validUser = users.find(u => u.User_ID === username && u.Password === password);
+                if (!res.ok) {
+                    // 401 or other error — show the error box
+                    loginError.classList.remove('hidden');
+                    passwordInput.value = '';
+                    passwordInput.focus();
+                    return;
+                }
 
-            if (validUser) {
-                // SUCCESS
-                const sessionData = {
-                    User_ID: validUser.User_ID,
-                    Full_Name: validUser.Full_Name,
-                    Role: validUser.Role,
-                    Dept_ID: validUser.Dept_ID
-                };
+                // SUCCESS — backend returns { User_ID, Full_Name, Role, Dept_ID, Email }
+                const sessionData = await res.json();
                 localStorage.setItem('Lumina_Session', JSON.stringify(sessionData));
 
-                // Route to dashboard
-                switch (validUser.Role) {
+                // Route to dashboard based on role
+                switch (sessionData.Role) {
                     case 'Student': window.location.href = 'student_index.html'; break;
                     case 'Faculty': window.location.href = 'faculty_home.html'; break;
                     case 'Assistant_Dean_1': window.location.href = 'Dean1_dashboard.html'; break;
                     case 'Assistant_Dean_2': window.location.href = 'Dean2_index.html'; break;
                     case 'Dean': window.location.href = 'dean.html'; break;
-                    default: console.error("Unknown role.");
+                    default: console.error("Unknown role:", sessionData.Role);
                 }
-            } else {
-                // FAILURE - INDUSTRY STANDARD UX
-                // Remove the 'hidden' class to show the red box
+
+            } catch (err) {
+                console.error('Login network error:', err);
                 loginError.classList.remove('hidden');
-                
-                // Clear the password field and put the cursor back in it
+                const errorText = loginError.querySelector('.error-text');
+                if (errorText) errorText.textContent = 'Cannot connect to server. Please try again.';
                 passwordInput.value = '';
                 passwordInput.focus();
             }
