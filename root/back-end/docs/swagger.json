@@ -1,0 +1,1340 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "User_ID": {
+                    "type": "string",
+                    "example": "S2024001"
+                  },
+                  "Password": {
+                    "type": "string",
+                    "example": "password123"
+                  }
+                },
+                "required": [
+                  "User_ID",
+                  "Password"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Login successful. Returns session object."
+          },
+          "401": {
+            "description": "Invalid credentials."
+          }
+        },
+        "summary": "Authenticate a user",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/users": {
+      "get": {
+        "operationId": "UsersController_findAll",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Role of the requesting user",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of all users."
+          },
+          "403": {
+            "description": "Forbidden."
+          }
+        },
+        "summary": "Get all users",
+        "tags": [
+          "Users"
+        ]
+      },
+      "post": {
+        "operationId": "UsersController_create",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Role of the requesting user",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created."
+          },
+          "400": {
+            "description": "Validation or duplicate error."
+          },
+          "403": {
+            "description": "Forbidden."
+          }
+        },
+        "summary": "Create a new user",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/{id}": {
+      "put": {
+        "operationId": "UsersController_update",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Role of the requesting user",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "User ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User updated."
+          },
+          "403": {
+            "description": "Forbidden."
+          },
+          "404": {
+            "description": "User not found."
+          }
+        },
+        "summary": "Update a user by ID",
+        "tags": [
+          "Users"
+        ]
+      },
+      "delete": {
+        "operationId": "UsersController_remove",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Role of the requesting user",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "User ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User deleted."
+          },
+          "403": {
+            "description": "Forbidden."
+          },
+          "404": {
+            "description": "User not found."
+          }
+        },
+        "summary": "Delete a user by ID",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/courses": {
+      "get": {
+        "description": "Returns the full course catalog. Accessible to all authenticated roles.",
+        "operationId": "CoursesController_findAll",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Role of the requesting user",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Course catalog returned successfully."
+          },
+          "403": {
+            "description": "Forbidden — missing or unauthorized x-role header."
+          }
+        },
+        "summary": "Get course catalog",
+        "tags": [
+          "Courses"
+        ]
+      },
+      "post": {
+        "description": "Adds a new course to the catalog. Restricted to AD1 and Dean.",
+        "operationId": "CoursesController_create",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Role of the requesting user",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCourseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Course created successfully."
+          },
+          "400": {
+            "description": "Bad request."
+          },
+          "403": {
+            "description": "Forbidden."
+          }
+        },
+        "summary": "Create a new course",
+        "tags": [
+          "Courses"
+        ]
+      }
+    },
+    "/courses/for-student/{studentId}": {
+      "get": {
+        "description": "Returns courses for the student's current semester that have sections in the active term. Read-only.",
+        "operationId": "CoursesController_getCoursesForStudent",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Role of the requesting user",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "studentId",
+            "required": true,
+            "in": "path",
+            "description": "Student ID",
+            "schema": {
+              "example": "S2024001",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Courses with sections returned."
+          }
+        },
+        "summary": "Get enrollable courses for a student",
+        "tags": [
+          "Courses"
+        ]
+      }
+    },
+    "/courses/{id}": {
+      "put": {
+        "description": "Updates an existing course. Restricted to AD1 and Dean.",
+        "operationId": "CoursesController_update",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Role of the requesting user",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Course ID",
+            "schema": {
+              "example": "CS101",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCourseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Course updated successfully."
+          },
+          "403": {
+            "description": "Forbidden."
+          },
+          "404": {
+            "description": "Course not found."
+          }
+        },
+        "summary": "Update a course",
+        "tags": [
+          "Courses"
+        ]
+      }
+    },
+    "/registrations": {
+      "get": {
+        "operationId": "RegistrationsController_findAll",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Role of the requesting user",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of all registration records."
+          },
+          "403": {
+            "description": "Forbidden."
+          }
+        },
+        "summary": "Get all registrations",
+        "tags": [
+          "Registrations"
+        ]
+      },
+      "post": {
+        "description": "Full constraint validation: duplicate, window, prerequisites, credit limit, capacity.",
+        "operationId": "RegistrationsController_enroll",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Role of the requesting user",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnrollCourseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registration created (Enrolled or Waitlisted)."
+          },
+          "400": {
+            "description": "Domain constraint violation."
+          },
+          "404": {
+            "description": "Course not found."
+          }
+        },
+        "summary": "Enroll in a course",
+        "tags": [
+          "Registrations"
+        ]
+      }
+    },
+    "/registrations/{id}/grade": {
+      "patch": {
+        "operationId": "RegistrationsController_updateGrade",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Role of the requesting user",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Enrollment ID",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateGradeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Grade updated successfully."
+          },
+          "404": {
+            "description": "Registration not found."
+          }
+        },
+        "summary": "Submit final grade",
+        "tags": [
+          "Registrations"
+        ]
+      }
+    },
+    "/overrides": {
+      "get": {
+        "description": "Returns all administrative override requests. Requires: Assistant_Dean_1, Assistant_Dean_2, or Dean.",
+        "operationId": "OverridesController_findAll",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Role of the requesting user",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of override requests returned."
+          },
+          "403": {
+            "description": "Forbidden — missing or unauthorized x-role header."
+          }
+        },
+        "summary": "Get all override requests",
+        "tags": [
+          "Overrides"
+        ]
+      },
+      "post": {
+        "description": "Students submit an exception request for a course. Auto-sets status to Pending. Requires: Student.",
+        "operationId": "OverridesController_create",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Role of the requesting user",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOverrideDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Override request created with Pending status."
+          },
+          "400": {
+            "description": "Validation error — invalid or missing fields."
+          },
+          "403": {
+            "description": "Forbidden — missing or unauthorized x-role header."
+          }
+        },
+        "summary": "Submit an override request",
+        "tags": [
+          "Overrides"
+        ]
+      }
+    },
+    "/overrides/my/{studentId}": {
+      "get": {
+        "operationId": "OverridesController_findByStudent",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Role of the requesting user",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "studentId",
+            "required": true,
+            "in": "path",
+            "description": "Student ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Student override requests returned."
+          }
+        },
+        "summary": "Get override requests for a student",
+        "tags": [
+          "Overrides"
+        ]
+      }
+    },
+    "/overrides/{id}/status": {
+      "patch": {
+        "description": "Updates the approval status. Only Approved or Rejected are valid. Requires: Assistant_Dean_1 or Assistant_Dean_2.",
+        "operationId": "OverridesController_updateStatus",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Role of the requesting user",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Override request ID",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOverrideStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Override status updated."
+          },
+          "400": {
+            "description": "Validation error — invalid status value."
+          },
+          "403": {
+            "description": "Forbidden — missing or unauthorized x-role header."
+          },
+          "404": {
+            "description": "Override request not found."
+          }
+        },
+        "summary": "Approve or reject an override",
+        "tags": [
+          "Overrides"
+        ]
+      }
+    },
+    "/announcements": {
+      "get": {
+        "description": "Returns all announcements. Accessible to all roles.",
+        "operationId": "AnnouncementsController_findAll",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of announcements."
+          }
+        },
+        "summary": "Get all announcements",
+        "tags": [
+          "Announcements"
+        ]
+      },
+      "post": {
+        "description": "Creates a new announcement. Faculty and Dean only.",
+        "operationId": "AnnouncementsController_create",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-user-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Announcement created."
+          }
+        },
+        "summary": "Create an announcement",
+        "tags": [
+          "Announcements"
+        ]
+      }
+    },
+    "/announcements/{id}": {
+      "put": {
+        "description": "Updates an existing announcement. Faculty and Dean only.",
+        "operationId": "AnnouncementsController_update",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Announcement updated."
+          }
+        },
+        "summary": "Update an announcement",
+        "tags": [
+          "Announcements"
+        ]
+      },
+      "delete": {
+        "description": "Deletes an announcement. Faculty and Dean only.",
+        "operationId": "AnnouncementsController_delete",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Announcement deleted."
+          }
+        },
+        "summary": "Delete an announcement",
+        "tags": [
+          "Announcements"
+        ]
+      }
+    },
+    "/sections": {
+      "get": {
+        "operationId": "SectionsController_findAll",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Sections"
+        ]
+      },
+      "post": {
+        "operationId": "SectionsController_create",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Sections"
+        ]
+      }
+    },
+    "/sections/{id}": {
+      "put": {
+        "operationId": "SectionsController_update",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Sections"
+        ]
+      },
+      "delete": {
+        "operationId": "SectionsController_remove",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Sections"
+        ]
+      }
+    },
+    "/course-slots": {
+      "get": {
+        "operationId": "CourseSlotsController_findAll",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CourseSlots"
+        ]
+      },
+      "post": {
+        "operationId": "CourseSlotsController_create",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CourseSlots"
+        ]
+      }
+    },
+    "/course-slots/{id}": {
+      "put": {
+        "operationId": "CourseSlotsController_update",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CourseSlots"
+        ]
+      },
+      "delete": {
+        "operationId": "CourseSlotsController_remove",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CourseSlots"
+        ]
+      }
+    },
+    "/enrollment-phases": {
+      "get": {
+        "operationId": "EnrollmentPhasesController_findAll",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "EnrollmentPhases"
+        ]
+      },
+      "post": {
+        "operationId": "EnrollmentPhasesController_create",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "EnrollmentPhases"
+        ]
+      }
+    },
+    "/enrollment-phases/{id}": {
+      "put": {
+        "operationId": "EnrollmentPhasesController_update",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "EnrollmentPhases"
+        ]
+      },
+      "delete": {
+        "operationId": "EnrollmentPhasesController_remove",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "EnrollmentPhases"
+        ]
+      }
+    },
+    "/degree-requirements": {
+      "get": {
+        "operationId": "DegreeRequirementsController_findAll",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Degree Requirements"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Lumina Academic Planning System",
+    "description": "REST API for the Lumina Course Enrollment & Academic Planning platform. All protected endpoints require the `x-role` header with a valid role value.",
+    "version": "1.0.0",
+    "contact": {}
+  },
+  "tags": [
+    {
+      "name": "Auth",
+      "description": "Authentication endpoints"
+    },
+    {
+      "name": "Users",
+      "description": "User management endpoints"
+    },
+    {
+      "name": "Courses",
+      "description": "Course catalog endpoints"
+    },
+    {
+      "name": "Registrations",
+      "description": "Student enrollment endpoints"
+    },
+    {
+      "name": "Overrides",
+      "description": "Administrative override request endpoints"
+    },
+    {
+      "name": "Announcements",
+      "description": "Faculty announcements endpoints"
+    },
+    {
+      "name": "Sections",
+      "description": "Course section management endpoints"
+    },
+    {
+      "name": "CourseSlots",
+      "description": "Timetable slot endpoints"
+    },
+    {
+      "name": "EnrollmentPhases",
+      "description": "Enrollment window phase management"
+    }
+  ],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "x-role": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-role",
+        "description": "RBAC role header"
+      }
+    },
+    "schemas": {
+      "CreateUserDto": {
+        "type": "object",
+        "properties": {
+          "User_ID": {
+            "type": "string",
+            "example": "S2025001",
+            "description": "Unique institutional ID"
+          },
+          "Full_Name": {
+            "type": "string",
+            "example": "Jane Doe",
+            "description": "Full legal name"
+          },
+          "Email": {
+            "type": "string",
+            "example": "jane@lumina.iiits.in",
+            "description": "Institutional email"
+          },
+          "Password": {
+            "type": "string",
+            "example": "password123",
+            "description": "Account password"
+          },
+          "Role": {
+            "type": "string",
+            "example": "Student",
+            "enum": [
+              "Student",
+              "Faculty",
+              "Assistant_Dean_1",
+              "Assistant_Dean_2",
+              "Dean"
+            ]
+          },
+          "Dept_ID": {
+            "type": "string",
+            "example": "CSE",
+            "description": "Department code"
+          }
+        },
+        "required": [
+          "User_ID",
+          "Full_Name",
+          "Email",
+          "Password",
+          "Role",
+          "Dept_ID"
+        ]
+      },
+      "CreateCourseDto": {
+        "type": "object",
+        "properties": {
+          "courseId": {
+            "type": "string",
+            "example": "CS101",
+            "description": "Course ID"
+          },
+          "courseName": {
+            "type": "string",
+            "example": "Introduction to Programming",
+            "description": "Course Name"
+          },
+          "credits": {
+            "type": "number",
+            "example": 4,
+            "description": "Credits"
+          },
+          "courseCapacity": {
+            "type": "number",
+            "example": 60,
+            "description": "Course Capacity"
+          },
+          "status": {
+            "type": "string",
+            "example": "Active",
+            "enum": [
+              "Active",
+              "Inactive"
+            ]
+          },
+          "deptId": {
+            "type": "string",
+            "example": "CSE",
+            "description": "Department ID"
+          }
+        },
+        "required": [
+          "courseId",
+          "courseName",
+          "credits",
+          "courseCapacity",
+          "status",
+          "deptId"
+        ]
+      },
+      "UpdateCourseDto": {
+        "type": "object",
+        "properties": {
+          "courseId": {
+            "type": "string",
+            "example": "CS101",
+            "description": "Course ID"
+          },
+          "courseName": {
+            "type": "string",
+            "example": "Introduction to Programming",
+            "description": "Course Name"
+          },
+          "credits": {
+            "type": "number",
+            "example": 4,
+            "description": "Credits"
+          },
+          "courseCapacity": {
+            "type": "number",
+            "example": 60,
+            "description": "Course Capacity"
+          },
+          "status": {
+            "type": "string",
+            "example": "Active",
+            "enum": [
+              "Active",
+              "Inactive"
+            ]
+          },
+          "deptId": {
+            "type": "string",
+            "example": "CSE",
+            "description": "Department ID"
+          }
+        }
+      },
+      "EnrollCourseDto": {
+        "type": "object",
+        "properties": {
+          "Student_ID": {
+            "type": "string",
+            "example": "S2024001",
+            "description": "Student institutional ID"
+          },
+          "Course_ID": {
+            "type": "string",
+            "example": "CS301",
+            "description": "Course code to enroll in"
+          }
+        },
+        "required": [
+          "Student_ID",
+          "Course_ID"
+        ]
+      },
+      "UpdateGradeDto": {
+        "type": "object",
+        "properties": {
+          "finalGrade": {
+            "type": "string",
+            "example": "A",
+            "description": "Final Grade"
+          }
+        },
+        "required": [
+          "finalGrade"
+        ]
+      },
+      "CreateOverrideDto": {
+        "type": "object",
+        "properties": {
+          "Student_ID": {
+            "type": "string",
+            "example": "S2024001",
+            "description": "Student institutional ID"
+          },
+          "Course_ID": {
+            "type": "string",
+            "example": "CS440",
+            "description": "Target course code"
+          },
+          "Reason": {
+            "type": "string",
+            "example": "Capacity Override needed to graduate.",
+            "description": "Justification for the override"
+          }
+        },
+        "required": [
+          "Student_ID",
+          "Course_ID",
+          "Reason"
+        ]
+      },
+      "UpdateOverrideStatusDto": {
+        "type": "object",
+        "properties": {
+          "Approval_Status": {
+            "type": "string",
+            "example": "Approved",
+            "enum": [
+              "Approved",
+              "Rejected"
+            ],
+            "description": "New approval status"
+          }
+        },
+        "required": [
+          "Approval_Status"
+        ]
+      }
+    }
+  }
+}
