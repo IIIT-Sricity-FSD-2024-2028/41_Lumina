@@ -1002,41 +1002,8 @@ input:disabled + .slider { opacity: 0.5; cursor: not-allowed; }
 /* =========================================
    18. FOOTER
    ========================================= */
-.site-footer {
-    background-color: #0f172a;
-    color: #94a3b8;
-    padding: 2rem 3rem 1.5rem;
-    font-size: 0.85rem;
-    margin-top: 3rem;
-}
+/* Footer styles are now centrally managed in css/footer.css */
 
-.footer-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
-    margin-bottom: 1.5rem;
-}
-
-.logo-group { display: flex; align-items: center; gap: 10px; }
-.logo-text { color: #ffffff; font-weight: 700; font-size: 1.1rem; }
-
-.footer-nav, .social-links { display: flex; gap: 2rem; }
-
-.footer-nav a, .social-links a {
-    color: #cbd5e1;
-    text-decoration: none;
-    transition: color 0.2s;
-}
-
-.footer-nav a:hover, .social-links a:hover { color: #ffffff; }
-
-.footer-bottom {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
 
 /* =========================================
    19. RESPONSIVE

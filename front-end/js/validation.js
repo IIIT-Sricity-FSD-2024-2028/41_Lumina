@@ -3,8 +3,12 @@ const Validator = {
     // --- Validation Rules ---
     isNotEmpty: (value) => value.trim().length > 0,
     
-    // Checks if it looks like S2024001, F2024001, or A1_2024001
-    isInstituteId: (id) => /^[a-zA-Z0-9_]{5,12}$/.test(id.trim()), 
+    // Matches actual Lumina DB user-ID formats:
+    //   Students:  S2024001   (S + 7 digits)
+    //   Faculty:   F2024001   (F + 7 digits)
+    //   Dean:      D2024001   (D + 7 digits)
+    //   Asst Dean: A1_2024001 or A2_2024001
+    isInstituteId: (id) => /^(S|F|D)\d{7}$|^A[12]_\d{7}$/.test(id.trim()), 
     
     isEmail: (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()),
 
@@ -13,15 +17,11 @@ const Validator = {
         // Prevent adding multiple error messages
         Validator.clearError(inputElement); 
 
-        inputElement.classList.add('input-error'); // Adds red border
+        inputElement.classList.add('input-error'); // Adds red border + background
         
-        // Create the red text below the input
+        // Create the error text below the input
         const errorText = document.createElement('span');
-        errorText.className = 'error-message text-sm text-red mt-1';
-        errorText.style.color = '#b91c1c';
-        errorText.style.fontSize = '0.75rem';
-        errorText.style.display = 'block';
-        errorText.style.marginTop = '4px';
+        errorText.className = 'error-message';
         errorText.innerText = errorMessage;
 
         // Insert it right after the input field
@@ -46,11 +46,11 @@ const Validator = {
 
 document.addEventListener('DOMContentLoaded', () => {
     
-    // 1. Validate the Contact Form (on index.html)
-    const contactForm = document.querySelector('.contact-form');
+    // === Contact Form Validation (index.html) ===
+    const contactForm = document.getElementById('main-contact-form');
     
     if (contactForm) {
-        // Clear errors as the user types to be user-friendly
+        // Clear errors as the user types for a friendly UX
         const inputs = contactForm.querySelectorAll('input, textarea');
         inputs.forEach(input => {
             input.addEventListener('input', () => Validator.clearError(input));
@@ -61,18 +61,18 @@ document.addEventListener('DOMContentLoaded', () => {
             Validator.clearAllErrors(contactForm);
             let isValid = true;
 
-            // Grab the fields based on their placeholder or type (since we didn't add IDs earlier)
-            const nameInput = contactForm.querySelector('input[placeholder="John Doe"]');
-            const idInput = contactForm.querySelector('input[placeholder="S20230010xxx"]');
-            const messageInput = contactForm.querySelector('textarea');
+            // Grab the fields by ID
+            const nameInput = document.getElementById('contact-name');
+            const idInput = document.getElementById('contact-id');
+            const messageInput = document.getElementById('contact-message');
 
-            // Validate Name
+            // Validate Name — must not be empty
             if (!Validator.isNotEmpty(nameInput.value)) {
                 Validator.showError(nameInput, "Full name is required.");
                 isValid = false;
             }
 
-            // Validate Institute ID
+            // Validate Institute ID — must not be empty AND match format
             if (!Validator.isNotEmpty(idInput.value)) {
                 Validator.showError(idInput, "Institute ID is required.");
                 isValid = false;
@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 isValid = false;
             }
 
-            // Validate Message
+            // Validate Message — must not be empty AND at least 10 chars
             if (!Validator.isNotEmpty(messageInput.value)) {
                 Validator.showError(messageInput, "Please enter a message.");
                 isValid = false;
@@ -90,10 +90,34 @@ document.addEventListener('DOMContentLoaded', () => {
                 isValid = false;
             }
 
-            /*if (isValid) {
-                alert("Message sent successfully to Lumina Support!");
+            // --- Only show toast + reset form if everything is valid ---
+            if (isValid) {
+                const toast = document.getElementById('contact-toast');
+                const closeBtn = document.getElementById('close-contact-toast');
+
+                if (toast) {
+                    toast.classList.add('show');
+
+                    // Auto-hide after 4 seconds
+                    const toastTimeout = setTimeout(() => {
+                        toast.classList.remove('show');
+                    }, 4000);
+
+                    // Allow manual close
+                    if (closeBtn) {
+                        closeBtn.onclick = () => {
+                            toast.classList.remove('show');
+                            clearTimeout(toastTimeout);
+                        };
+                    }
+                }
+
                 contactForm.reset();
-            }*/
+            } else {
+                // Add a subtle shake to the form on invalid submit
+                contactForm.classList.add('form-shake');
+                setTimeout(() => contactForm.classList.remove('form-shake'), 500);
+            }
         });
     }
 });

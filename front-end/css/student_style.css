@@ -506,60 +506,8 @@ a {
 /* ==========================================
    4. FOOTER
 ========================================== */
+/* Footer styles are centrally managed in css/footer.css */
 
-.footer {
-  background-color: #1a2744;
-  color: #94a3b8;
-  padding: 24px 40px 18px;
-}
-
-.footer-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.footer-logo {
-  color: white;
-}
-
-.footer-links {
-  display: flex;
-  gap: 20px;
-}
-
-.footer-links a {
-  color: #94a3b8;
-  font-size: 12.5px;
-}
-
-.footer-links a:hover {
-  color: white;
-}
-
-.footer-bottom {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding-top: 14px;
-  font-size: 11.5px;
-}
-
-.social-links {
-  display: flex;
-  gap: 16px;
-}
-
-.social-links a {
-  color: #94a3b8;
-  font-size: 11.5px;
-}
-
-.social-links a:hover {
-  color: white;
-}
 
 
 /* ==========================================

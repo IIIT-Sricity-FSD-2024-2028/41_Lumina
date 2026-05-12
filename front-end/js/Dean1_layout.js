@@ -45,27 +45,13 @@ function renderNavbar(activePage, basePath = '') {
 function renderFooter(basePath = '') {
   const container = document.getElementById('footer');
   if (!container) return;
-  const assetPath = `${basePath}assets/icons`;
 
-  container.innerHTML = `
-    <div class="footer__inner">
-      <div class="footer__brand">
-        <img src="${assetPath}/logo_white.svg" alt="Lumina logo" class="footer__brand-logo">
-        Lumina
-      </div>
-      <div class="footer__links">
-        <a href="#" class="footer__link">Help Desk</a>
-        <a href="#" class="footer__link">Privacy Policy</a>
-        <a href="#" class="footer__link">Terms of Service</a>
-      </div>
-    </div>
-    <div class="footer__bottom">
-      <span>&copy; 2026 Lumina Academic Systems. All rights reserved.</span>
-      <div class="footer__socials">
-        <a href="#" class="footer__social">Twitter</a>
-        <a href="#" class="footer__social">LinkedIn</a>
-        <a href="#" class="footer__social">GitHub</a>
-      </div>
-    </div>
-  `;
+  fetch(basePath + 'footer.html')
+    .then(function (res) { return res.text(); })
+    .then(function (html) {
+      container.outerHTML = html;
+    })
+    .catch(function (err) {
+      console.warn('Dean1 footer loader: could not fetch footer.html', err);
+    });
 }

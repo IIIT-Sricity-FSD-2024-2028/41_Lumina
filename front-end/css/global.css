@@ -113,39 +113,7 @@ textarea:focus-visible {
 }
 
 /* --- Universal Footer --- */
-.site-footer .logo-group {
-    color: var(--surface-white);
-}
-
-.site-footer {
-  background-color: var(--primary-dark);
-  color: var(--surface-white);
-  padding: 40px 5% 20px;
-  margin-top: auto;
-}
-.footer-top,
-.footer-bottom {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.footer-top {
-  border-bottom: 1px solid #1e293b;
-  padding-bottom: 24px;
-  margin-bottom: 24px;
-}
-.footer-nav a {
-  margin-left: 24px;
-  color: #cbd5e1;
-}
-.footer-bottom {
-  color: #64748b;
-  font-size: 0.875rem;
-}
-.social-links a {
-  margin-left: 16px;
-  color: #cbd5e1;
-}
+/* Footer styles are now centrally managed in css/footer.css */
 
 /* --- Global Badges (Core / Elective) --- */
 .badge {
@@ -166,9 +134,30 @@ textarea:focus-visible {
 
 /* --- Validation States --- */
 .input-error {
-    border-color: #ef4444 !important; /* Tailwind Red 500 */
+    border-color: #ef4444 !important;
     background-color: #fef2f2 !important;
+    transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
 }
 .input-error:focus {
     box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2) !important;
+}
+
+.error-message {
+    color: #dc2626;
+    font-size: 0.75rem;
+    font-weight: 500;
+    display: block;
+    margin-top: 6px;
+    animation: errorSlideIn 0.25s ease-out;
+}
+
+@keyframes errorSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

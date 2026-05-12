@@ -7,6 +7,7 @@
     <title>Lumina - Academic Planning System</title>
     <link rel="stylesheet" href="css/global.css" />
     <link rel="stylesheet" href="css/index.css" />
+    <link rel="stylesheet" href="css/footer.css" />
   </head>
   <body>
     <header class="site-header">
@@ -182,6 +183,7 @@
               <label>FULL NAME</label>
               <input
                 type="text"
+                id="contact-name"
                 placeholder="John Doe"
                 class="form-input"
                 required
@@ -191,6 +193,7 @@
               <label>INSTITUTIONAL ID</label>
               <input
                 type="text"
+                id="contact-id"
                 placeholder="S20230010xxx"
                 class="form-input"
                 required
@@ -200,6 +203,7 @@
           <div class="form-group">
             <label>MESSAGE</label>
             <textarea
+              id="contact-message"
               placeholder="How can we help you?"
               class="form-input"
               rows="4"
@@ -217,31 +221,7 @@
       </section>
     </main>
 
-    <footer class="site-footer">
-      <div class="footer-top">
-        <div class="logo-group">
-          <img
-            src="assets/icons/logo_white.svg"
-            alt="Lumina logo"
-            class="logo-icon"
-          />
-          <span class="logo-text">Lumina</span>
-        </div>
-        <nav class="footer-nav">
-          <a href="#">Help Desk</a>
-          <a href="#">Privacy Policy</a>
-          <a href="#">Terms of Service</a>
-        </nav>
-      </div>
-      <div class="footer-bottom">
-        <p>© 2026 Lumina Academic Systems. All rights reserved.</p>
-        <div class="social-links">
-          <a href="#">Twitter</a>
-          <a href="#">LinkedIn</a>
-          <a href="#">GitHub</a>
-        </div>
-      </div>
-    </footer>
+    <div id="footer-placeholder"></div>
 
     <div id="contact-toast" class="contact-toast-container">
       <div class="toast-icon-circle">
@@ -252,39 +232,6 @@
       <span class="toast-message-text">Message Sent</span>
       <button type="button" id="close-contact-toast" class="toast-close-btn">&times;</button>
     </div>    <script src="js/validation.js"></script>
-    
-    <script>
-      document.addEventListener('DOMContentLoaded', () => {
-        const contactForm = document.getElementById('main-contact-form');
-        const toast = document.getElementById('contact-toast');
-        const closeBtn = document.getElementById('close-contact-toast');
-        let toastTimeout;
-
-        if (contactForm) {
-          contactForm.addEventListener('submit', (e) => {
-            e.preventDefault(); // Stop page reload
-            
-            // Show toast
-            toast.classList.add('show');
-            
-            // Clear form fields
-            contactForm.reset();
-
-            // Auto-hide after 4 seconds
-            clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => {
-              toast.classList.remove('show');
-            }, 4000);
-          });
-        }
-
-        if (closeBtn) {
-          closeBtn.addEventListener('click', () => {
-            toast.classList.remove('show');
-            clearTimeout(toastTimeout);
-          });
-        }
-      });
-    </script>
+    <script src="js/footer-loader.js"></script>
   </body>
 </html>

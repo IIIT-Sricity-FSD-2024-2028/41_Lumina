@@ -192,35 +192,20 @@
   font-family: inherit;
 }
 
-/* --- Footer --- */
-.site-footer {
-  background-color: var(--primary-dark);
-  color: var(--surface-white);
-  padding: 40px 5% 20px;
+/* --- Form Shake Animation (invalid submit) --- */
+@keyframes formShake {
+  0%, 100% { transform: translateX(0); }
+  15%      { transform: translateX(-6px); }
+  30%      { transform: translateX(5px); }
+  45%      { transform: translateX(-4px); }
+  60%      { transform: translateX(3px); }
+  75%      { transform: translateX(-2px); }
 }
-.footer-top,
-.footer-bottom {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.form-shake {
+  animation: formShake 0.45s ease-in-out;
 }
-.footer-top {
-  border-bottom: 1px solid #1e293b;
-  padding-bottom: 24px;
-  margin-bottom: 24px;
-}
-.footer-nav a {
-  margin-left: 24px;
-  color: #cbd5e1;
-}
-.footer-bottom {
-  color: #64748b;
-  font-size: 0.875rem;
-}
-.social-links a {
-  margin-left: 16px;
-  color: #cbd5e1;
-}
+
+/* Footer styles removed — now in global.css */
 
 /* ==========================================================================
    CUSTOM CONTACT TOAST (Bottom Center) - Figma Match

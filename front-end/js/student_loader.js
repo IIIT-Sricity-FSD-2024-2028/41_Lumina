@@ -7,11 +7,16 @@
      loadSharedComponents('student_registration.html');
 ========================================== */
 
-function loadComponent(placeholderId, filePath, afterLoadCallback) {
+function loadComponent(placeholderId, filePath, afterLoadCallback, replacePlaceholder) {
   fetch(filePath)
     .then(function(response) { return response.text(); })
     .then(function(html) {
-      document.getElementById(placeholderId).innerHTML = html;
+      var target = document.getElementById(placeholderId);
+      if (replacePlaceholder && target) {
+        target.outerHTML = html;
+      } else if (target) {
+        target.innerHTML = html;
+      }
       if (afterLoadCallback) afterLoadCallback();
     });
 }
@@ -33,7 +38,7 @@ function loadSharedComponents(activeNavLink) {
     initNavbar();
   });
 
-  loadComponent('footer-placeholder', 'student_footer.html');
+  loadComponent('footer-placeholder', 'footer.html', null, true);
 }
 
 function getLuminaTable(name) {

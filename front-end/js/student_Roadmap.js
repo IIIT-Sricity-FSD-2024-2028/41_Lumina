@@ -679,7 +679,7 @@ function generateRoadmap() {
 
   var fp2 = document.getElementById('footer-placeholder-2');
   if (fp2 && fp2.innerHTML.trim() === '') {
-    fetch('student_footer.html')
+    fetch('footer.html')
       .then(function(r) { return r.text(); })
       .then(function(html) { fp2.innerHTML = html; });
   }

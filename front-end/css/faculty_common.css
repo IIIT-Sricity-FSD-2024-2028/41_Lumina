@@ -1,4 +1,4 @@
-﻿/* =============================================
+/* =============================================
    common.css  â€“  Lumina Academic System
    Shared styles: reset, navbar, footer, utils
 ============================================= */
@@ -223,63 +223,7 @@ input, select, textarea { font-family: inherit; }
 /* ==============================================
    FOOTER
 ============================================== */
-.site-footer {
-  background-color : var(--primary-dark);
-  color            : var(--surface-white);
-  padding          : 40px 5% 20px;
-  margin-top       : auto;
-}
-
-.site-footer .logo-group {
-  display     : flex;
-  align-items : center;
-  gap         : 10px;
-  color       : var(--surface-white);
-}
-.site-footer .logo-group img {
-  width      : 26px;
-  height     : 26px;
-  object-fit : contain;
-}
-.site-footer .logo-text {
-  font-size   : 16px;
-  font-weight : 700;
-  color       : #ffffff;
-}
-
-.footer-top,
-.footer-bottom {
-  display         : flex;
-  justify-content : space-between;
-  align-items     : center;
-}
-
-.footer-top {
-  border-bottom  : 1px solid #1e293b;
-  padding-bottom : 24px;
-  margin-bottom  : 24px;
-}
-
-.footer-nav a {
-  margin-left : 24px;
-  color       : #cbd5e1;
-  font-size   : 13.5px;
-  transition  : color 0.15s;
-}
-.footer-nav a:hover { color: #ffffff; }
-
-.footer-bottom {
-  color     : #64748b;
-  font-size : 0.875rem;
-}
-
-.social-links a {
-  margin-left : 16px;
-  color       : #cbd5e1;
-  font-size   : 13.5px;
-  transition  : color 0.15s;
-}
-.social-links a:hover { color: #ffffff; }
+/* Footer styles are now centrally managed in css/footer.css */
 
 /* ==============================================
    UTILITIES

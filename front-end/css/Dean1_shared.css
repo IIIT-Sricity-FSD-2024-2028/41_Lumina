@@ -317,73 +317,7 @@ input, select, textarea { font-family: var(--font); }
 }
 
 /* ---------- Footer ---------- */
-.footer {
-  background: var(--navy);
-  color: rgba(255,255,255,.7);
-  padding: var(--space-xl) var(--space-xl) var(--space-md);
-  margin-top: auto;
-}
-
-.footer__inner {
-  max-width: 1320px;
-  margin: 0 auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.footer__brand {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  color: var(--white);
-  font-size: 1.1rem;
-  font-weight: 700;
-}
-
-.footer__brand svg,
-.footer__brand-logo {
-  width: 24px;
-  height: 24px;
-  object-fit: contain;
-}
-
-.footer__links {
-  display: flex;
-  gap: var(--space-lg);
-}
-
-.footer__link {
-  color: rgba(255,255,255,.6);
-  font-size: .85rem;
-  transition: color var(--duration) var(--ease);
-}
-
-.footer__link:hover { color: var(--white); }
-
-.footer__bottom {
-  max-width: 1320px;
-  margin: var(--space-md) auto 0;
-  padding-top: var(--space-md);
-  border-top: 1px solid rgba(255,255,255,.1);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: .78rem;
-}
-
-.footer__socials {
-  display: flex;
-  gap: var(--space-md);
-}
-
-.footer__social {
-  color: rgba(255,255,255,.5);
-  transition: color var(--duration) var(--ease);
-  font-size: .78rem;
-}
-
-.footer__social:hover { color: var(--white); }
+/* Footer styles removed — now centralised in css/footer.css + footer.html */
 
 /* ---------- Stat Cards Row ---------- */
 .stat-cards {

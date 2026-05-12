@@ -1,0 +1,90 @@
+/* ==========================================================================
+   FOOTER.CSS — Canonical Lumina Footer Styles
+   Include this on ALL pages to ensure consistent footer presentation.
+   ========================================================================== */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+.site-footer {
+  background-color: #0d1b2a; /* Primary dark color */
+  color: #ffffff;
+  padding: 40px 5% 20px;
+  margin-top: auto;
+  font-family: 'Inter', system-ui, sans-serif;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.site-footer .logo-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.site-footer .logo-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  display: block;
+}
+
+.site-footer .footer-top,
+.site-footer .footer-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.site-footer .footer-top {
+  border-bottom: 1px solid #1e293b;
+  padding-bottom: 24px;
+  margin-bottom: 24px;
+}
+
+.site-footer .footer-nav {
+  display: flex;
+  align-items: center;
+}
+
+.site-footer .footer-nav a {
+  margin-left: 24px;
+  color: #cbd5e1;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.15s;
+}
+
+.site-footer .footer-nav a:hover {
+  color: #ffffff;
+}
+
+.site-footer .footer-bottom {
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.site-footer .social-links {
+  display: flex;
+  align-items: center;
+}
+
+.site-footer .social-links a {
+  margin-left: 16px;
+  color: #cbd5e1;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.15s;
+}
+
+.site-footer .social-links a:hover {
+  color: #ffffff;
+}
