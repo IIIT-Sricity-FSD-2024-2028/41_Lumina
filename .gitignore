@@ -1,0 +1,6 @@
+# Windows / WSL identifier files
+*:Zone.Identifier
+*:Zone.Identifier*
+# Dependency folders (if using Node.js / NestJS / Frontend)
+node_modules/
+dist/
