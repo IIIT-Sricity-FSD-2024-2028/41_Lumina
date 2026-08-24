@@ -1,10 +1,11 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Headers } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Headers, ParseIntPipe } from '@nestjs/common';
+import { ApiTags, ApiHeader, ApiOperation, ApiResponse, ApiBody, ApiParam } from '@nestjs/swagger';
 import { AnnouncementsService } from './announcements.service';
 import { Roles } from '../common/decorators/roles.decorator';
-import { ApiTags, ApiHeader, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { CreateAnnouncementDto, UpdateAnnouncementDto } from '../common/dto';
 
 @ApiTags('Announcements')
-@ApiHeader({ name: 'x-role', required: true })
+@ApiHeader({ name: 'x-role', required: true, description: 'Role of the requesting user' })
 @Controller('announcements')
 export class AnnouncementsController {
   constructor(private readonly announcementsService: AnnouncementsService) {}
@@ -20,26 +21,39 @@ export class AnnouncementsController {
   @Post()
   @Roles('Faculty', 'Dean')
   @ApiOperation({ summary: 'Create an announcement', description: 'Creates a new announcement. Faculty and Dean only.' })
+  @ApiBody({ type: CreateAnnouncementDto })
   @ApiResponse({ status: 201, description: 'Announcement created.' })
-  create(@Headers('x-user-id') userId: string, @Body() data: any) {
-    // Note: since auth isn't fully implemented with JWT, we use a mock facultyId if header isn't passed
+  @ApiResponse({ status: 400, description: 'Validation error.' })
+  create(
+    @Headers('x-user-id') userId: string,
+    @Body() dto: CreateAnnouncementDto,
+  ) {
+    // Note: fallback to mock facultyId if header isn't passed
     const facultyId = userId || 'F2024001'; 
-    return this.announcementsService.create(facultyId, data);
+    return this.announcementsService.create(facultyId, dto);
   }
 
   @Put(':id')
   @Roles('Faculty', 'Dean')
   @ApiOperation({ summary: 'Update an announcement', description: 'Updates an existing announcement. Faculty and Dean only.' })
+  @ApiParam({ name: 'id', description: 'Announcement ID', type: Number })
+  @ApiBody({ type: UpdateAnnouncementDto })
   @ApiResponse({ status: 200, description: 'Announcement updated.' })
-  update(@Param('id') id: string, @Body() data: any) {
-    return this.announcementsService.update(parseInt(id, 10), data);
+  @ApiResponse({ status: 404, description: 'Announcement not found.' })
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateAnnouncementDto,
+  ) {
+    return this.announcementsService.update(id, dto);
   }
 
   @Delete(':id')
   @Roles('Faculty', 'Dean')
   @ApiOperation({ summary: 'Delete an announcement', description: 'Deletes an announcement. Faculty and Dean only.' })
+  @ApiParam({ name: 'id', description: 'Announcement ID', type: Number })
   @ApiResponse({ status: 200, description: 'Announcement deleted.' })
-  delete(@Param('id') id: string) {
-    return this.announcementsService.delete(parseInt(id, 10));
+  @ApiResponse({ status: 404, description: 'Announcement not found.' })
+  delete(@Param('id', ParseIntPipe) id: number) {
+    return this.announcementsService.delete(id);
   }
 }

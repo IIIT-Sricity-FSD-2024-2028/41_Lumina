@@ -188,33 +188,49 @@ document.addEventListener("DOMContentLoaded", async function(){
   document.getElementById("submitGradesBtn").addEventListener("click", async function(){
     if(!validateAll()) return;
     
-    // Submit to backend
-    let successCount = 0;
     const students = localGrades[currentCourse] || [];
-    
-    for (let r of students) {
-        var tot = calcTotal(r.mid, r.fin);
-        var gl = getGradeLetter(tot).l;
-        try {
-            const res = await fetch(`${API_BASE}/registrations/${r.enrollmentId}/grade`, {
-                method: 'PATCH',
-                headers: API_HEADERS,
-                body: JSON.stringify({ finalGrade: gl })
-            });
-            if (res.ok) {
-                successCount++;
-                r.finalGrade = gl;
-            }
-        } catch (e) {
-            console.error(e);
-        }
+    if (students.length === 0) {
+      showToast("No students to submit grades for.", "error");
+      return;
     }
-    
-    if (successCount === students.length) {
-        showToast("All grades submitted successfully!", "success");
-        document.getElementById("xlSavedTag").style.display = "inline";
-    } else {
-        showToast(`Submitted ${successCount}/${students.length} grades. Some failed.`, "error");
+
+    const payload = students.map(function(r) {
+      var tot = calcTotal(r.mid, r.fin);
+      var gl = getGradeLetter(tot).l;
+      return {
+        enrollmentId: r.enrollmentId,
+        finalGrade: gl
+      };
+    });
+
+    try {
+      const res = await fetch(`${API_BASE}/registrations/batch-grades`, {
+        method: 'PATCH',
+        headers: API_HEADERS,
+        body: JSON.stringify({ grades: payload })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const updatedCount = data.updated ? data.updated.length : 0;
+        const errorCount = data.errors ? data.errors.length : 0;
+
+        if (errorCount === 0) {
+          students.forEach(function(r) {
+            var tot = calcTotal(r.mid, r.fin);
+            r.finalGrade = getGradeLetter(tot).l;
+          });
+          showToast(`All ${updatedCount} grades submitted successfully!`, "success");
+          document.getElementById("xlSavedTag").style.display = "inline";
+        } else {
+          showToast(`Submitted ${updatedCount}/${students.length} grades. ${errorCount} failed.`, "error");
+        }
+      } else {
+        showToast("Failed to submit grades to server.", "error");
+      }
+    } catch (e) {
+      console.error(e);
+      showToast("Network error submitting grades.", "error");
     }
   });
 

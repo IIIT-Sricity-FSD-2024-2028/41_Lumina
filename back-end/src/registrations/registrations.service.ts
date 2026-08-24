@@ -278,4 +278,33 @@ export class RegistrationsService {
 
     return { updated, errors };
   }
+
+  /**
+   * Batch update grades for multiple registrations in one atomic operation.
+   * Returns list of updated registrations and any individual errors encountered.
+   */
+  batchUpdateGrades(
+    gradeSubmissions: { enrollmentId: number; finalGrade: string }[],
+  ): { updated: Registration[]; errors: { enrollmentId: number; error: string }[] } {
+    const updated: Registration[] = [];
+    const errors: { enrollmentId: number; error: string }[] = [];
+
+    for (const item of gradeSubmissions) {
+      const registration = this.db.registrations.find(
+        r => r.enrollmentId === item.enrollmentId,
+      );
+      if (!registration) {
+        errors.push({
+          enrollmentId: item.enrollmentId,
+          error: `Registration with ID ${item.enrollmentId} not found.`,
+        });
+        continue;
+      }
+
+      registration.finalGrade = item.finalGrade;
+      updated.push(registration);
+    }
+
+    return { updated, errors };
+  }
 }

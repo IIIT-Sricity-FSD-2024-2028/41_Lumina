@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { Announcement } from '../database/interfaces';
+import { CreateAnnouncementDto, UpdateAnnouncementDto } from '../common/dto';
 
 @Injectable()
 export class AnnouncementsService {
@@ -10,7 +11,7 @@ export class AnnouncementsService {
     return this.db.announcements;
   }
 
-  create(facultyId: string, data: { courseId: string; title: string; message: string }): Announcement {
+  create(facultyId: string, data: CreateAnnouncementDto): Announcement {
     const maxId = this.db.announcements.reduce((max, a) => Math.max(max, a.announcementId), 0);
     const newAnnouncement: Announcement = {
       announcementId: maxId + 1,
@@ -24,16 +25,16 @@ export class AnnouncementsService {
     return newAnnouncement;
   }
 
-  update(id: number, data: { courseId: string; title: string; message: string }): Announcement {
+  update(id: number, data: UpdateAnnouncementDto): Announcement {
     const idx = this.db.announcements.findIndex(a => a.announcementId === id);
     if (idx === -1) {
       throw new NotFoundException(`Announcement ${id} not found`);
     }
     this.db.announcements[idx] = {
       ...this.db.announcements[idx],
-      courseId: data.courseId,
-      title: data.title,
-      message: data.message
+      ...(data.courseId ? { courseId: data.courseId } : {}),
+      ...(data.title ? { title: data.title } : {}),
+      ...(data.message ? { message: data.message } : {}),
     };
     return this.db.announcements[idx];
   }

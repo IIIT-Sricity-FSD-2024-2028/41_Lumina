@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { EnrollmentPhase } from '../database/interfaces';
+import { CreateEnrollmentPhaseDto, UpdateEnrollmentPhaseDto } from '../common/dto';
 
 @Injectable()
 export class EnrollmentPhasesService {
@@ -10,9 +11,9 @@ export class EnrollmentPhasesService {
     return this.db.enrollmentPhases;
   }
 
-  create(data: Omit<EnrollmentPhase, 'id'>): EnrollmentPhase {
+  create(data: CreateEnrollmentPhaseDto): EnrollmentPhase {
     const maxId = this.db.enrollmentPhases.reduce((max, p) => Math.max(max, p.id), 0);
-    const newPhase = { id: maxId + 1, ...data };
+    const newPhase: EnrollmentPhase = { id: maxId + 1, ...data };
     
     // If setting active, deactivate others
     if (data.status === 'Active') {
@@ -23,7 +24,7 @@ export class EnrollmentPhasesService {
     return newPhase;
   }
 
-  update(id: number, data: Partial<EnrollmentPhase>): EnrollmentPhase {
+  update(id: number, data: UpdateEnrollmentPhaseDto): EnrollmentPhase {
     const phase = this.db.enrollmentPhases.find(p => p.id === Number(id));
     if (!phase) throw new NotFoundException(`Phase ${id} not found`);
     

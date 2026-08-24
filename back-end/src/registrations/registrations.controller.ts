@@ -5,6 +5,7 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { EnrollCourseDto } from '../common/dto/enroll-course.dto';
 import { UpdateGradeDto } from '../common/dto/update-grade.dto';
 import { AssignSectionDto, BatchAssignSectionsDto } from '../common/dto/assign-section.dto';
+import { BatchSubmitGradesDto } from '../common/dto/batch-grades.dto';
 
 @ApiTags('Registrations')
 @ApiHeader({ name: 'x-role', required: true, description: 'Role of the requesting user' })
@@ -32,9 +33,18 @@ export class RegistrationsController {
     return this.registrationsService.enroll(dto.Student_ID, dto.Course_ID);
   }
 
+  @Patch('batch-grades')
+  @Roles('Faculty', 'Dean')
+  @ApiOperation({ summary: 'Batch-submit final grades for multiple students' })
+  @ApiBody({ type: BatchSubmitGradesDto })
+  @ApiResponse({ status: 200, description: 'Batch grade submission results.' })
+  batchUpdateGrades(@Body() dto: BatchSubmitGradesDto) {
+    return this.registrationsService.batchUpdateGrades(dto.grades);
+  }
+
   @Patch(':id/grade')
   @Roles('Faculty', 'Dean')
-  @ApiOperation({ summary: 'Submit final grade' })
+  @ApiOperation({ summary: 'Submit final grade for a single registration' })
   @ApiParam({ name: 'id', description: 'Enrollment ID', type: Number })
   @ApiBody({ type: UpdateGradeDto })
   @ApiResponse({ status: 200, description: 'Grade updated successfully.' })
