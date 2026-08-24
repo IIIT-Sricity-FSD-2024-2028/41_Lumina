@@ -55,7 +55,8 @@ function formatDateOnly(dtStr) {
 }
 
 // ==========================================
-// POLICIES PAGE
+// ==========================================
+// POLICIES PAGE — BACKEND-DRIVEN
 // ==========================================
 function initPoliciesPage() {
     const academicYearInput = document.getElementById('academicYearInput');
@@ -84,26 +85,57 @@ function initPoliciesPage() {
     const policyStatusDesc   = document.getElementById('policyStatusDesc');
     const policyChangeLog    = document.getElementById('policyChangeLog');
 
-    function getPolicySettings() {
-        const arr = DB.get('Policy_Settings');
-        return (arr && arr[0]) ? arr[0] : {
-            status: 'Validated', isLocked: false,
-            minCredits: 12, maxCredits: 21, maxCourses: 6,
-            enforcePrereq: true, allowConditional: false, allowAdvisorOverride: true,
-            minGpa: 5.0, financialClearance: true, advisorApproval: true
-        };
+    let currentSettings = {
+        status: 'Validated', isLocked: false,
+        minCredits: 12, maxCredits: 22, maxCourses: 6,
+        enforcePrereq: true, allowConditional: false, allowAdvisorOverride: true,
+        minGpa: 5.0, financialClearance: true, advisorApproval: true,
+        academicYear: '2025-2026', term: 'Spring', termLocked: true
+    };
+    let currentLogs = [];
+
+    async function fetchPoliciesFromAPI() {
+        try {
+            const res = await fetch(`${API_BASE}/policies`, { headers: API_HEADERS });
+            if (res.ok) {
+                const data = await res.json();
+                currentSettings = data.settings || currentSettings;
+                currentLogs = data.logs || [];
+            }
+        } catch (e) {
+            console.error('Failed to fetch policies from API:', e);
+        }
     }
 
-    function savePolicySettings(settings) { DB.set('Policy_Settings', [settings]); }
-
-    function getTermSettings() {
-        const arr = DB.get('Academic_Term_Settings');
-        return (arr && arr[0]) ? arr[0] : { academicYear: '', term: 'Spring', isLocked: false };
+    async function sendPolicyUpdate(payload) {
+        try {
+            const res = await fetch(`${API_BASE}/policies`, {
+                method: 'PUT',
+                headers: API_HEADERS,
+                body: JSON.stringify(payload)
+            });
+            if (res.ok) {
+                const data = await res.json();
+                currentSettings = data.settings || currentSettings;
+                currentLogs = data.logs || [];
+                renderFormFields(currentSettings);
+                renderPolicyBanner(currentSettings);
+                renderChangeLog();
+                return true;
+            } else {
+                const err = await res.json();
+                alert(err.message || 'Failed to update policy.');
+                return false;
+            }
+        } catch (e) {
+            console.error('Failed to update policy:', e);
+            alert('Network error when updating policy.');
+            return false;
+        }
     }
-
-    function saveTermSettings(settings) { DB.set('Academic_Term_Settings', [settings]); }
 
     function renderPolicyBanner(ps) {
+        if (!policyStatusBanner) return;
         if (ps.isLocked) {
             policyStatusBanner.style.background = '#EFF6FF';
             policyStatusBanner.style.borderColor = '#BFDBFE';
@@ -138,14 +170,15 @@ function initPoliciesPage() {
     }
 
     function renderChangeLog() {
-        const logs = DB.get('Policy_Change_Log') || [];
+        if (!policyChangeLog) return;
         policyChangeLog.innerHTML = '';
-        logs.slice(0, 6).forEach((log, i) => {
+        currentLogs.slice(0, 6).forEach((log, i) => {
+            const timeStr = log.createdAt ? new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now';
             policyChangeLog.insertAdjacentHTML('beforeend', `
                 <div class="log-entry">
                     <div class="log-dot ${i === 0 ? 'latest' : ''}"></div>
                     <div class="log-msg">${log.message}</div>
-                    <div class="log-meta">By ${log.by} &bull; ${log.time}</div>
+                    <div class="log-meta">By ${log.by} &bull; ${timeStr}</div>
                 </div>
             `);
         });
@@ -159,142 +192,142 @@ function initPoliciesPage() {
         });
     }
 
-    function refreshPoliciesUI() {
-        const ps = getPolicySettings();
-        const ts = getTermSettings();
+    function renderFormFields(ps) {
+        if (academicYearInput) academicYearInput.value = ps.academicYear || '';
+        if (termSelect) termSelect.value = ps.term || 'Spring';
 
-        if (academicYearInput) academicYearInput.value = ts.academicYear || '';
-        if (termSelect) termSelect.value = ts.term || 'Spring';
-
-        if (ts.isLocked) {
-            lockTermBtn.style.display = 'none';
-            unlockTermBtn.style.display = '';
-            termLockedBanner.classList.add('show');
-            academicYearInput.disabled = true;
-            termSelect.disabled = true;
+        if (ps.termLocked) {
+            if (lockTermBtn) lockTermBtn.style.display = 'none';
+            if (unlockTermBtn) unlockTermBtn.style.display = '';
+            if (termLockedBanner) termLockedBanner.classList.add('show');
+            if (academicYearInput) academicYearInput.disabled = true;
+            if (termSelect) termSelect.disabled = true;
         } else {
-            lockTermBtn.style.display = '';
-            unlockTermBtn.style.display = 'none';
-            termLockedBanner.classList.remove('show');
+            if (lockTermBtn) lockTermBtn.style.display = '';
+            if (unlockTermBtn) unlockTermBtn.style.display = 'none';
+            if (termLockedBanner) termLockedBanner.classList.remove('show');
             if (!ps.isLocked) {
-                academicYearInput.disabled = false;
-                termSelect.disabled = false;
+                if (academicYearInput) academicYearInput.disabled = false;
+                if (termSelect) termSelect.disabled = false;
             }
         }
 
-        if (minCreditsInput)  minCreditsInput.value    = ps.minCredits;
-        if (maxCreditsInput)  maxCreditsInput.value    = ps.maxCredits;
-        if (maxCoursesInput)  maxCoursesInput.value    = ps.maxCourses;
-        if (togglePrereq)     togglePrereq.checked     = ps.enforcePrereq;
-        if (toggleCond)       toggleCond.checked       = ps.allowConditional;
-        if (toggleAdvOver)    toggleAdvOver.checked    = ps.allowAdvisorOverride;
-        if (minGpaInput)      minGpaInput.value        = ps.minGpa;
-        if (toggleFinance)    toggleFinance.checked    = ps.financialClearance;
-        if (toggleAdvApprove) toggleAdvApprove.checked = ps.advisorApproval;
+        if (minCreditsInput)  minCreditsInput.value    = ps.minCredits ?? 12;
+        if (maxCreditsInput)  maxCreditsInput.value    = ps.maxCredits ?? 22;
+        if (maxCoursesInput)  maxCoursesInput.value    = ps.maxCourses ?? 6;
+        if (togglePrereq)     togglePrereq.checked     = !!ps.enforcePrereq;
+        if (toggleCond)       toggleCond.checked       = !!ps.allowConditional;
+        if (toggleAdvOver)    toggleAdvOver.checked    = !!ps.allowAdvisorOverride;
+        if (minGpaInput)      minGpaInput.value        = ps.minGpa ?? 5.0;
+        if (toggleFinance)    toggleFinance.checked    = !!ps.financialClearance;
+        if (toggleAdvApprove) toggleAdvApprove.checked = !!ps.advisorApproval;
 
         setPolicyFieldsDisabled(ps.isLocked);
-        if (!ps.isLocked && ts.isLocked) {
-            academicYearInput.disabled = true;
-            termSelect.disabled = true;
+        if (!ps.isLocked && ps.termLocked) {
+            if (academicYearInput) academicYearInput.disabled = true;
+            if (termSelect) termSelect.disabled = true;
         }
-
-        renderPolicyBanner(ps);
-        renderChangeLog();
     }
 
+    function markPendingLocally() {
+        if (!currentSettings.isLocked) {
+            currentSettings.status = 'Pending';
+            renderPolicyBanner(currentSettings);
+        }
+    }
+
+    // Local change listeners — update UI state to Pending without firing network spam
+    academicYearInput?.addEventListener('change', markPendingLocally);
+    termSelect?.addEventListener('change', markPendingLocally);
+    minCreditsInput?.addEventListener('input', markPendingLocally);
+    maxCreditsInput?.addEventListener('input', markPendingLocally);
+    maxCoursesInput?.addEventListener('input', markPendingLocally);
+    togglePrereq?.addEventListener('change', markPendingLocally);
+    toggleCond?.addEventListener('change', markPendingLocally);
+    toggleAdvOver?.addEventListener('change', markPendingLocally);
+    minGpaInput?.addEventListener('input', markPendingLocally);
+    toggleFinance?.addEventListener('change', markPendingLocally);
+    toggleAdvApprove?.addEventListener('change', markPendingLocally);
+
+    // ── Button Actions ──
+
     lockTermBtn?.addEventListener('click', () => {
-        const ts = getTermSettings();
         const year = academicYearInput.value;
         if (!year) { alert('Please select an Academic Year before locking the term.'); return; }
-        ts.academicYear = year;
-        ts.term = termSelect.value;
-        ts.isLocked = true;
-        saveTermSettings(ts);
-        addPolicyLog(`Term Locked: ${computeTermLabel(year, ts.term)}`, 'Dr. Jenkins');
-        refreshPoliciesUI();
+        sendPolicyUpdate({ academicYear: year, term: termSelect.value, termLocked: true, logMessage: `Term Locked: ${computeTermLabel(year, termSelect.value)}` });
     });
 
     unlockTermBtn?.addEventListener('click', () => {
-        const ts = getTermSettings();
-        ts.isLocked = false;
-        saveTermSettings(ts);
-        addPolicyLog('Term Unlocked', 'Dr. Jenkins');
-        refreshPoliciesUI();
+        sendPolicyUpdate({ termLocked: false, logMessage: 'Term Unlocked' });
     });
-
-    academicYearInput?.addEventListener('change', () => {
-        const ts = getTermSettings();
-        ts.academicYear = academicYearInput.value;
-        saveTermSettings(ts);
-        const ps = getPolicySettings();
-        if (!ps.isLocked) {
-            ps.status = 'Pending';
-            savePolicySettings(ps);
-            addPolicyLog(`Academic Year changed to ${ts.academicYear}`, 'Dr. Jenkins');
-            refreshPoliciesUI();
-        }
-    });
-
-    termSelect?.addEventListener('change', () => {
-        const ts = getTermSettings();
-        ts.term = termSelect.value;
-        saveTermSettings(ts);
-        const ps = getPolicySettings();
-        if (!ps.isLocked) {
-            ps.status = 'Pending';
-            savePolicySettings(ps);
-            addPolicyLog(`Term changed to ${ts.term}`, 'Dr. Jenkins');
-            refreshPoliciesUI();
-        }
-    });
-
-    function markPolicyPending(logMsg) {
-        const ps = getPolicySettings();
-        if (!ps.isLocked) {
-            ps.status = 'Pending';
-            savePolicySettings(ps);
-            addPolicyLog(logMsg, 'Dr. Jenkins');
-            renderPolicyBanner(ps);
-            renderChangeLog();
-        }
-    }
-
-    minCreditsInput?.addEventListener('change', () => { const ps = getPolicySettings(); ps.minCredits = parseInt(minCreditsInput.value) || 0; savePolicySettings(ps); markPolicyPending(`Min credits changed to ${minCreditsInput.value}`); });
-    maxCreditsInput?.addEventListener('change', () => { const ps = getPolicySettings(); ps.maxCredits = parseInt(maxCreditsInput.value) || 0; savePolicySettings(ps); markPolicyPending(`Max credits changed to ${maxCreditsInput.value}`); });
-    maxCoursesInput?.addEventListener('change', () => { const ps = getPolicySettings(); ps.maxCourses = parseInt(maxCoursesInput.value) || 0; savePolicySettings(ps); markPolicyPending(`Max courses changed to ${maxCoursesInput.value}`); });
-    togglePrereq?.addEventListener('change', () => { const ps = getPolicySettings(); ps.enforcePrereq = togglePrereq.checked; savePolicySettings(ps); markPolicyPending(`Enforce Prerequisites ${togglePrereq.checked ? 'Enabled' : 'Disabled'}`); });
-    toggleCond?.addEventListener('change', () => { const ps = getPolicySettings(); ps.allowConditional = toggleCond.checked; savePolicySettings(ps); markPolicyPending(`Allow Conditional Enrollment ${toggleCond.checked ? 'Enabled' : 'Disabled'}`); });
-    toggleAdvOver?.addEventListener('change', () => { const ps = getPolicySettings(); ps.allowAdvisorOverride = toggleAdvOver.checked; savePolicySettings(ps); markPolicyPending(`Allow Advisor Override ${toggleAdvOver.checked ? 'Enabled' : 'Disabled'}`); });
-    minGpaInput?.addEventListener('change', () => { const ps = getPolicySettings(); ps.minGpa = parseFloat(minGpaInput.value) || 0; savePolicySettings(ps); markPolicyPending(`Min GPA changed to ${minGpaInput.value}`); });
-    toggleFinance?.addEventListener('change', () => { const ps = getPolicySettings(); ps.financialClearance = toggleFinance.checked; savePolicySettings(ps); markPolicyPending(`Financial Clearance ${toggleFinance.checked ? 'Enabled' : 'Disabled'}`); });
-    toggleAdvApprove?.addEventListener('change', () => { const ps = getPolicySettings(); ps.advisorApproval = toggleAdvApprove.checked; savePolicySettings(ps); markPolicyPending(`Advisor Approval ${toggleAdvApprove.checked ? 'Enabled' : 'Disabled'}`); });
 
     validateBtn?.addEventListener('click', () => {
-        const ps = getPolicySettings();
-        if (ps.isLocked) { alert('Policies are locked. Unlock before validating.'); return; }
-        ps.status = 'Validated';
-        savePolicySettings(ps);
-        addPolicyLog('Policies Validated', 'Dr. Jenkins');
-        refreshPoliciesUI();
+        if (currentSettings.isLocked) { alert('Policies are locked. Unlock before validating.'); return; }
+
+        const minCr = parseInt(minCreditsInput.value, 10);
+        const maxCr = parseInt(maxCreditsInput.value, 10);
+        const maxCrs = parseInt(maxCoursesInput.value, 10);
+        const gpa = parseFloat(minGpaInput.value);
+
+        // Validation Checks
+        if (isNaN(minCr) || minCr < 1 || minCr > 30) {
+            alert('Please enter a valid Minimum Credit Limit (between 1 and 30).');
+            minCreditsInput.focus();
+            return;
+        }
+        if (isNaN(maxCr) || maxCr < 1 || maxCr > 30) {
+            alert('Please enter a valid Maximum Credit Limit (between 1 and 30).');
+            maxCreditsInput.focus();
+            return;
+        }
+        if (minCr > maxCr) {
+            alert(`Validation Error: Minimum credits (${minCr}) cannot be greater than Maximum credits (${maxCr}).`);
+            minCreditsInput.focus();
+            return;
+        }
+        if (isNaN(maxCrs) || maxCrs < 1 || maxCrs > 15) {
+            alert('Please enter a valid Maximum Courses Limit (between 1 and 15).');
+            maxCoursesInput.focus();
+            return;
+        }
+        if (isNaN(gpa) || gpa < 0 || gpa > 10) {
+            alert('Please enter a valid Minimum GPA (between 0.0 and 10.0).');
+            minGpaInput.focus();
+            return;
+        }
+
+        const payload = {
+            minCredits: minCr,
+            maxCredits: maxCr,
+            maxCourses: maxCrs,
+            minGpa: gpa,
+            enforcePrereq: togglePrereq.checked,
+            allowConditional: toggleCond.checked,
+            allowAdvisorOverride: toggleAdvOver.checked,
+            financialClearance: toggleFinance.checked,
+            advisorApproval: toggleAdvApprove.checked,
+            academicYear: academicYearInput.value || currentSettings.academicYear,
+            term: termSelect.value || currentSettings.term,
+            status: 'Validated',
+            logMessage: 'Policies Validated'
+        };
+
+        sendPolicyUpdate(payload);
     });
 
     lockPoliciesBtn?.addEventListener('click', () => {
-        const ps = getPolicySettings();
-        ps.isLocked = true;
-        savePolicySettings(ps);
-        addPolicyLog('Policies Locked', 'Dr. Jenkins');
-        refreshPoliciesUI();
+        sendPolicyUpdate({ isLocked: true, logMessage: 'Policies Locked' });
     });
 
     unlockPoliciesBtn?.addEventListener('click', () => {
-        const ps = getPolicySettings();
-        ps.isLocked = false;
-        savePolicySettings(ps);
-        addPolicyLog('Policies Unlocked', 'Dr. Jenkins');
-        refreshPoliciesUI();
+        sendPolicyUpdate({ isLocked: false, logMessage: 'Policies Unlocked' });
     });
 
-    refreshPoliciesUI();
+    fetchPoliciesFromAPI().then(() => {
+        renderFormFields(currentSettings);
+        renderPolicyBanner(currentSettings);
+        renderChangeLog();
+    });
 }
 
 // ==========================================
@@ -464,8 +497,19 @@ function initEnrollmentPage() {
 async function initDashboardPage() {
     const settings  = (DB.get('Enrollment_Settings') || [])[0] || {};
     const phases = await fetch(API_BASE + '/enrollment-phases', {headers: API_HEADERS}).then(r=>r.json()).catch(()=>[]);
-    const ts        = (DB.get('Academic_Term_Settings') || [])[0] || {};
-    const ps        = (DB.get('Policy_Settings') || [])[0] || {};
+    
+    let ps = {};
+    let ts = {};
+    try {
+        const polRes = await fetch(`${API_BASE}/policies`, { headers: API_HEADERS });
+        if (polRes.ok) {
+            const data = await polRes.json();
+            ps = data.settings || {};
+            ts = { academicYear: ps.academicYear, term: ps.term, isLocked: ps.termLocked };
+        }
+    } catch (e) {
+        console.error('Failed to fetch policies for dashboard:', e);
+    }
     
     let overrides = [];
     try {

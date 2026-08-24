@@ -12,6 +12,7 @@ import { SectionsModule } from './sections/sections.module';
 import { CourseSlotsModule } from './course-slots/course-slots.module';
 import { EnrollmentPhasesModule } from './enrollment-phases/enrollment-phases.module';
 import { DegreeRequirementsModule } from './degree-requirements/degree-requirements.module';
+import { PoliciesModule } from './policies/policies.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { DegreeRequirementsModule } from './degree-requirements/degree-requireme
     CourseSlotsModule,
     EnrollmentPhasesModule,
     DegreeRequirementsModule,
+    PoliciesModule,
   ],
   controllers: [],
   providers: [

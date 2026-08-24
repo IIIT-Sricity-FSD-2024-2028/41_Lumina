@@ -3,6 +3,7 @@ import {
   User, Student, Department, CourseCatalog, DegreeRequirement,
   CoursePrerequisite, AcademicTerm, Section, CourseSlot, Registration,
   OverrideRequest, AcademicRoadmap, Announcement, EnrollmentPhase,
+  PolicySettings, PolicyChangeLog,
 } from './interfaces';
 
 @Injectable()
@@ -22,6 +23,23 @@ export class DatabaseService implements OnModuleInit {
   academicRoadmaps: AcademicRoadmap[] = [];
   announcements: Announcement[] = [];
   enrollmentPhases: EnrollmentPhase[] = [];
+  policySettings: PolicySettings = {
+    status: 'Validated',
+    isLocked: false,
+    minCredits: 12,
+    maxCredits: 22,
+    maxCourses: 6,
+    enforcePrereq: true,
+    allowConditional: false,
+    allowAdvisorOverride: true,
+    minGpa: 5.0,
+    financialClearance: true,
+    advisorApproval: true,
+    academicYear: '2025-2026',
+    term: 'Spring',
+    termLocked: true,
+  };
+  policyChangeLogs: PolicyChangeLog[] = [];
 
   onModuleInit(): void {
     this.seed();
@@ -373,6 +391,10 @@ export class DatabaseService implements OnModuleInit {
       { id: 1, name: 'Final Year Registration', eligibleGroups: 'Final Year', timeline: 'Apr 25 - Apr 27', status: 'Completed' },
       { id: 2, name: '3rd Year Registration', eligibleGroups: '3rd Year', timeline: 'Apr 28 - Apr 30', status: 'Completed' },
       { id: 3, name: 'Open Enrollment', eligibleGroups: 'All Students', timeline: 'May 1 - May 10', status: 'Active' },
+    ];
+    this.policyChangeLogs = [
+      { id: 1, message: 'Spring 2026 Academic Term Policies Validated and Locked', by: 'Assistant Dean 2', createdAt: new Date().toISOString() },
+      { id: 2, message: 'Prerequisite Enforcement enabled for all undergraduate batches', by: 'Assistant Dean 2', createdAt: new Date().toISOString() },
     ];
   }
 }

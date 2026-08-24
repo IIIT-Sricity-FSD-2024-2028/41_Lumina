@@ -141,3 +141,27 @@ export interface EnrollmentPhase {
   timeline: string;
   status: 'Upcoming' | 'Active' | 'Completed';
 }
+
+export interface PolicySettings {
+  status: 'Validated' | 'Pending';
+  isLocked: boolean;
+  minCredits: number;
+  maxCredits: number;
+  maxCourses: number;
+  enforcePrereq: boolean;
+  allowConditional: boolean;
+  allowAdvisorOverride: boolean;
+  minGpa: number;
+  financialClearance: boolean;
+  advisorApproval: boolean;
+  academicYear: string;
+  term: string;
+  termLocked: boolean;
+}
+
+export interface PolicyChangeLog {
+  id: number;
+  message: string;
+  by: string;
+  createdAt: string;
+}

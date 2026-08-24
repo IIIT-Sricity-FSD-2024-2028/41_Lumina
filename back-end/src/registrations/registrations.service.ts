@@ -92,59 +92,60 @@ export class RegistrationsService {
     }
 
     const term = this.db.academicTerms.find(t => t.termId === termId);
+    const policy = this.db.policySettings;
 
     // ── 4. Prerequisite validation ───────────────────────────
-    // A prerequisite is only satisfied if the student has a PASSING grade
-    // (any grade that is not null and not 'F')
-    const prereqs = this.db.coursePrerequisites.filter(
-      p => p.targetCourseId === courseId,
-    );
-    if (prereqs.length > 0) {
-      const passedCourses = this.db.registrations
-        .filter(
-          r =>
-            r.studentId === studentId &&
-            r.finalGrade !== null &&
-            r.finalGrade !== 'F',
-        )
-        .map(r => r.courseId);
-
-      const missingPrereqs = prereqs.filter(
-        p => !passedCourses.includes(p.requiredCourseId),
+    // Only enforced if policy.enforcePrereq is true
+    if (policy.enforcePrereq) {
+      const prereqs = this.db.coursePrerequisites.filter(
+        p => p.targetCourseId === courseId,
       );
+      if (prereqs.length > 0) {
+        const passedCourses = this.db.registrations
+          .filter(
+            r =>
+              r.studentId === studentId &&
+              r.finalGrade !== null &&
+              r.finalGrade !== 'F',
+          )
+          .map(r => r.courseId);
 
-      if (missingPrereqs.length > 0) {
-        const missing = missingPrereqs
-          .map(p => {
-            const c = this.db.courseCatalog.find(cc => cc.courseId === p.requiredCourseId);
-            return c ? `${c.courseName} (${p.requiredCourseId})` : p.requiredCourseId;
-          })
-          .join(', ');
-        throw new BadRequestException(
-          `Prerequisite(s) not met for '${courseId}'. Missing: [${missing}]. You must pass these courses first.`,
+        const missingPrereqs = prereqs.filter(
+          p => !passedCourses.includes(p.requiredCourseId),
         );
+
+        if (missingPrereqs.length > 0) {
+          const missing = missingPrereqs
+            .map(p => {
+              const c = this.db.courseCatalog.find(cc => cc.courseId === p.requiredCourseId);
+              return c ? `${c.courseName} (${p.requiredCourseId})` : p.requiredCourseId;
+            })
+            .join(', ');
+          throw new BadRequestException(
+            `Prerequisite(s) not met for '${courseId}'. Missing: [${missing}]. You must pass these courses first.`,
+          );
+        }
       }
     }
 
     // ── 5. Credit limit check ────────────────────────────────
-    if (term) {
-      const currentCredits = this.db.registrations
-        .filter(
-          r =>
-            r.studentId === studentId &&
-            r.termId === termId &&
-            (r.status === 'Enrolled' || r.status === 'Waitlisted' || r.status === 'Pending_Allocation'),
-        )
-        .reduce((sum, r) => {
-          const c = this.db.courseCatalog.find(cc => cc.courseId === r.courseId);
-          return sum + (c ? c.credits : 0);
-        }, 0);
+    const maxCreditLimit = policy.maxCredits || (term ? term.maxCreditLimit : 22);
+    const currentCredits = this.db.registrations
+      .filter(
+        r =>
+          r.studentId === studentId &&
+          r.termId === termId &&
+          (r.status === 'Enrolled' || r.status === 'Waitlisted' || r.status === 'Pending_Allocation'),
+      )
+      .reduce((sum, r) => {
+        const c = this.db.courseCatalog.find(cc => cc.courseId === r.courseId);
+        return sum + (c ? c.credits : 0);
+      }, 0);
 
-      if (currentCredits + course.credits > term.maxCreditLimit) {
-        throw new BadRequestException(
-          `Adding '${courseId}' (${course.credits} cr) would exceed the max credit limit of ${term.maxCreditLimit} for '${term.termName}'. Current: ${currentCredits} credits.`,
-        );
-      }
+    if (currentCredits + course.credits > maxCreditLimit) {
+      throw new BadRequestException(
+        `Adding '${courseId}' (${course.credits} cr) would exceed the max credit limit of ${maxCreditLimit} for '${term ? term.termName : termId}'. Current: ${currentCredits} credits.`,
+      );
     }
 
     // ── 6. Capacity check → Enrolled or Waitlisted ──────────

@@ -1097,6 +1097,79 @@
           "Degree Requirements"
         ]
       }
+    },
+    "/policies": {
+      "get": {
+        "operationId": "PoliciesController_getPolicies",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Role of the requesting user",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current policy settings and audit logs returned."
+          }
+        },
+        "summary": "Get current academic policies and logs",
+        "tags": [
+          "Policies"
+        ]
+      },
+      "put": {
+        "description": "Restricted to Assistant Dean 2 and Dean.",
+        "operationId": "PoliciesController_updatePolicies",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Role of the requesting user",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-role",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePolicyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Policies updated successfully."
+          },
+          "400": {
+            "description": "Policy modification rejected (e.g., policies are locked)."
+          },
+          "403": {
+            "description": "Forbidden."
+          }
+        },
+        "summary": "Update academic policy settings",
+        "tags": [
+          "Policies"
+        ]
+      }
     }
   },
   "info": {
@@ -1141,6 +1214,10 @@
     {
       "name": "EnrollmentPhases",
       "description": "Enrollment window phase management"
+    },
+    {
+      "name": "Policies",
+      "description": "Academic policy management endpoints"
     }
   ],
   "servers": [],
@@ -1410,6 +1487,76 @@
         "required": [
           "Approval_Status"
         ]
+      },
+      "UpdatePolicyDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "Validated",
+            "enum": [
+              "Validated",
+              "Pending"
+            ]
+          },
+          "isLocked": {
+            "type": "boolean",
+            "example": false
+          },
+          "minCredits": {
+            "type": "number",
+            "example": 12
+          },
+          "maxCredits": {
+            "type": "number",
+            "example": 22
+          },
+          "maxCourses": {
+            "type": "number",
+            "example": 6
+          },
+          "enforcePrereq": {
+            "type": "boolean",
+            "example": true
+          },
+          "allowConditional": {
+            "type": "boolean",
+            "example": false
+          },
+          "allowAdvisorOverride": {
+            "type": "boolean",
+            "example": true
+          },
+          "minGpa": {
+            "type": "number",
+            "example": 5
+          },
+          "financialClearance": {
+            "type": "boolean",
+            "example": true
+          },
+          "advisorApproval": {
+            "type": "boolean",
+            "example": true
+          },
+          "academicYear": {
+            "type": "string",
+            "example": "2025-2026"
+          },
+          "term": {
+            "type": "string",
+            "example": "Spring"
+          },
+          "termLocked": {
+            "type": "boolean",
+            "example": true
+          },
+          "logMessage": {
+            "type": "string",
+            "example": "Updated min credits to 12",
+            "description": "Log message describing this policy change"
+          }
+        }
       }
     }
   }
