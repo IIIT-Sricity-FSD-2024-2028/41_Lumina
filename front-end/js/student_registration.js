@@ -102,24 +102,20 @@ function buildCoursesData() {
   });
 }
 
-/* ── Module data (static) ── */
+/* ── Module data (for detail modal syllabus preview) ── */
 var courseModules = {
-  'CS101': ['Intro to Python', 'Control Flow', 'Functions & Recursion', 'File I/O'],
-  'CS201': ['Sorting & Searching', 'Trees & Graphs', 'Dynamic Programming', 'Advanced Graph Algorithms'],
-  'CS301': ['Process Management', 'Memory Management', 'File Systems', 'Scheduling Algorithms'],
-  'CS302': ['Relational Model', 'SQL & Query Optimization', 'Normalization', 'Transactions & Concurrency'],
-  'CS401': ['Network Layers', 'TCP/IP', 'Routing Algorithms', 'Network Security'],
-  'CS405': ['Regular Languages', 'Context-Free Grammars', 'Pushdown Automata', 'Turing Machines'],
-  'CS440': ['ML Fundamentals', 'Neural Networks', 'Deep Learning', 'Applied AI Projects'],
-  'EC101': ['Boolean Algebra', 'Combinational Circuits', 'Sequential Circuits', 'Memory & PLDs'],
-  'EC201': ['Continuous Signals', 'Discrete Signals', 'Fourier Transform', 'Z-Transform'],
-  'EC301': ['8085 Architecture', 'Assembly Programming', 'Interfacing Techniques', 'Embedded Applications'],
-  'EC402': ['MOS Transistors', 'CMOS Logic Design', 'Static Timing Analysis', 'Physical Design'],
-  'AD101': ['Data Wrangling', 'Exploratory Analysis', 'Visualization', 'Statistical Inference'],
-  'AD201': ['Supervised Learning', 'Unsupervised Learning', 'Model Evaluation', 'Feature Engineering'],
-  'AD301': ['Neural Networks', 'CNN & RNN', 'Transformers', 'Generative Models'],
-  'AD405': ['Hadoop & Spark', 'NoSQL Databases', 'Stream Processing', 'Data Pipelines'],
-  'SE101': ['Design Thinking', 'Ideation Techniques', 'Prototyping', 'Innovation Frameworks'],
+  'PC402': ['Frontend Architecture & Component Design', 'Backend APIs & Database Integration', 'State Management & Performance', 'Full Stack Deployment & Testing'],
+  'PC401': ['Operating System Principles', 'Process Management & Threads', 'Memory & Virtual Memory', 'File Systems & Storage'],
+  'IC401': ['Network Fundamentals & Physical Layer', 'Data Link & Network Layers', 'Transport Protocols TCP/UDP', 'Application Layer & Network Security'],
+  'PC403': ['Database Management Systems', 'Relational Model & Normalization', 'Transactions & Concurrency', 'Indexing & Query Optimization'],
+  'SEED05': ['Advanced Problem Solving', 'Algorithmic Optimization', 'System Modeling', 'Capstone Project Design'],
+  'IC201': ['Signals Representation', 'Fourier Analysis', 'Laplace & Z-Transforms', 'Filter Design & Applications'],
+  'PC201': ['Linear Data Structures', 'Trees and Binary Search Trees', 'Graph Algorithms & Traversal', 'Dynamic Programming Fundamentals'],
+  'IC202': ['Analog Electronics', 'Semiconductor Devices', 'Amplifiers & Feedback', 'Operational Amplifier Applications'],
+  'IC203': ['Digital Logic Design', 'Combinational Circuits', 'Sequential Circuits & Flip-Flops', 'Finite State Machines'],
+  'SEED03': ['Design Thinking & Prototyping', 'User-Centric Research', 'Interaction Design', 'Usability Testing'],
+  'PC501': ['Compiler Design Principles', 'Lexical Analysis & Parsing', 'Semantic Analysis', 'Code Generation & Optimization'],
+  'PC601': ['Software Engineering Methodologies', 'Agile & DevOps Workflows', 'Software Architecture Patterns', 'Quality Assurance & Testing'],
 };
 
 /* ── ENROLLED COURSES (from registrations array) ── */

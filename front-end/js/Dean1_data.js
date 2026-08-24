@@ -202,57 +202,15 @@ function getCourseDeptDisplay(courseRow, courseType) {
   return courseRow.Dept_ID || '-';
 }
 
-// Static degree requirements derived from backend seed data
-// Used as fallback when the API does not expose a /degree-requirements endpoint.
-const STATIC_DEGREE_REQUIREMENTS = [
-  { Course_ID: 'IC101',  Course_Type: 'Institute Core', Target_Semester: 1 },
-  { Course_ID: 'IC102',  Course_Type: 'Institute Core', Target_Semester: 1 },
-  { Course_ID: 'IC103',  Course_Type: 'Institute Core', Target_Semester: 1 },
-  { Course_ID: 'IC104',  Course_Type: 'Institute Core', Target_Semester: 1 },
-  { Course_ID: 'SEED01', Course_Type: 'Seed Course',    Target_Semester: 1 },
-  { Course_ID: 'SEED02', Course_Type: 'Seed Course',    Target_Semester: 1 },
-  { Course_ID: 'IC201',  Course_Type: 'Institute Core', Target_Semester: 2 },
-  { Course_ID: 'PC201',  Course_Type: 'Program Core',   Target_Semester: 2 },
-  { Course_ID: 'IC202',  Course_Type: 'Institute Core', Target_Semester: 2 },
-  { Course_ID: 'IC203',  Course_Type: 'Institute Core', Target_Semester: 2 },
-  { Course_ID: 'SEED03', Course_Type: 'Seed Course',    Target_Semester: 2 },
-  { Course_ID: 'IC301',  Course_Type: 'Institute Core', Target_Semester: 3 },
-  { Course_ID: 'PC301',  Course_Type: 'Program Core',   Target_Semester: 3 },
-  { Course_ID: 'PC302',  Course_Type: 'Program Core',   Target_Semester: 3 },
-  { Course_ID: 'PC303',  Course_Type: 'Program Core',   Target_Semester: 3 },
-  { Course_ID: 'PC304',  Course_Type: 'Program Core',   Target_Semester: 3 },
-  { Course_ID: 'SEED04', Course_Type: 'Seed Course',    Target_Semester: 3 },
-  { Course_ID: 'PC401',  Course_Type: 'Program Core',   Target_Semester: 4 },
-  { Course_ID: 'PC402',  Course_Type: 'Program Core',   Target_Semester: 4 },
-  { Course_ID: 'IC401',  Course_Type: 'Institute Core', Target_Semester: 4 },
-  { Course_ID: 'PC403',  Course_Type: 'Program Core',   Target_Semester: 4 },
-  { Course_ID: 'SEED05', Course_Type: 'Seed Course',    Target_Semester: 4 },
-  { Course_ID: 'PC501',  Course_Type: 'Program Core',   Target_Semester: 5 },
-  { Course_ID: 'PC601',  Course_Type: 'Program Core',   Target_Semester: 6 },
-  { Course_ID: 'PE501',  Course_Type: 'Elective',       Target_Semester: 5 },
-  { Course_ID: 'PE502',  Course_Type: 'Elective',       Target_Semester: 5 },
-  { Course_ID: 'PE503',  Course_Type: 'Elective',       Target_Semester: 5 },
-  { Course_ID: 'PE504',  Course_Type: 'Elective',       Target_Semester: 6 },
-  { Course_ID: 'PE505',  Course_Type: 'Elective',       Target_Semester: 6 },
-  { Course_ID: 'IE501',  Course_Type: 'Elective',       Target_Semester: 5 },
-  { Course_ID: 'IE502',  Course_Type: 'Elective',       Target_Semester: 6 },
-];
-
 function buildCourseRequirementMap(requirements) {
-  // Merge API requirements with static fallback; API values take precedence
-  const merged = [...STATIC_DEGREE_REQUIREMENTS];
-  requirements.forEach((req) => {
-    const idx = merged.findIndex((r) => r.Course_ID === req.Course_ID);
-    if (idx !== -1) merged[idx] = req;
-    else merged.push(req);
-  });
-
   const map = new Map();
-  merged.forEach((requirement) => {
-    if (!map.has(requirement.Course_ID)) {
-      map.set(requirement.Course_ID, requirement);
-    }
-  });
+  if (Array.isArray(requirements)) {
+    requirements.forEach((requirement) => {
+      if (requirement && requirement.Course_ID && !map.has(requirement.Course_ID)) {
+        map.set(requirement.Course_ID, requirement);
+      }
+    });
+  }
   return map;
 }
 
