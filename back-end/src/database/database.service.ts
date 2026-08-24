@@ -38,6 +38,10 @@ export class DatabaseService implements OnModuleInit {
     academicYear: '2025-2026',
     term: 'Spring',
     termLocked: true,
+    systemStatus: 'Active',
+    windowStatus: 'Open',
+    startDate: '2026-08-01T09:00',
+    endDate: '2026-08-30T17:00',
   };
   policyChangeLogs: PolicyChangeLog[] = [];
 

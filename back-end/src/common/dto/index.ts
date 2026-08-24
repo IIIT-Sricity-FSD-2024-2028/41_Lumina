@@ -5,3 +5,4 @@ export * from './update-override-status.dto';
 export * from './create-course.dto';
 export * from './update-course.dto';
 export * from './update-grade.dto';
+export * from './assign-section.dto';

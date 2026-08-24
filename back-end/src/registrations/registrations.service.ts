@@ -62,7 +62,19 @@ export class RegistrationsService {
       );
     }
 
-    // ── 3. Phase-Driven Enrollment check ─────────────────────
+    // ── 3. System & Window Status check ─────────────────────
+    const policy = this.db.policySettings;
+    if (policy.systemStatus === 'Deactivated') {
+      throw new BadRequestException('Enrollment system is currently deactivated.');
+    }
+    if (policy.windowStatus === 'Closed') {
+      throw new BadRequestException('Enrollment window is currently closed.');
+    }
+    if (policy.windowStatus === 'Paused') {
+      throw new BadRequestException('Enrollment is currently paused.');
+    }
+
+    // ── 3b. Phase-Driven Enrollment check ─────────────────────
     const activePhase = this.db.enrollmentPhases.find(p => p.status === 'Active');
     if (!activePhase) {
       throw new BadRequestException('Enrollment is currently closed. No active phase.');
@@ -92,7 +104,6 @@ export class RegistrationsService {
     }
 
     const term = this.db.academicTerms.find(t => t.termId === termId);
-    const policy = this.db.policySettings;
 
     // ── 4. Prerequisite validation ───────────────────────────
     // Only enforced if policy.enforcePrereq is true
@@ -186,5 +197,85 @@ export class RegistrationsService {
     }
     registration.finalGrade = finalGrade;
     return registration;
+  }
+
+  /**
+   * Assign a section to a single registration.
+   * Validates that both the registration and the section exist,
+   * and that the section belongs to the same course as the registration.
+   */
+  assignSection(enrollmentId: number, sectionId: string): Registration {
+    const registration = this.db.registrations.find(r => r.enrollmentId === enrollmentId);
+    if (!registration) {
+      throw new NotFoundException(`Registration with ID ${enrollmentId} not found.`);
+    }
+
+    const section = this.db.sections.find(s => s.sectionId === sectionId);
+    if (!section) {
+      throw new NotFoundException(`Section '${sectionId}' not found.`);
+    }
+
+    if (section.courseId !== registration.courseId) {
+      throw new BadRequestException(
+        `Section '${sectionId}' belongs to course '${section.courseId}', but registration ${enrollmentId} is for course '${registration.courseId}'.`,
+      );
+    }
+
+    registration.sectionId = sectionId;
+    return registration;
+  }
+
+  /**
+   * Batch-assign sections to multiple registrations in one call.
+   * Each assignment is validated independently. A sectionId of null unassigns the student.
+   * Returns a summary with successes and failures so Dean 1 can see what happened.
+   */
+  batchAssignSections(
+    assignments: { enrollmentId: number; sectionId: string | null }[],
+  ): { updated: Registration[]; errors: { enrollmentId: number; error: string }[] } {
+    const updated: Registration[] = [];
+    const errors: { enrollmentId: number; error: string }[] = [];
+
+    for (const assignment of assignments) {
+      const registration = this.db.registrations.find(
+        r => r.enrollmentId === assignment.enrollmentId,
+      );
+      if (!registration) {
+        errors.push({
+          enrollmentId: assignment.enrollmentId,
+          error: `Registration with ID ${assignment.enrollmentId} not found.`,
+        });
+        continue;
+      }
+
+      // Allow null to unassign
+      if (assignment.sectionId === null) {
+        registration.sectionId = null;
+        updated.push(registration);
+        continue;
+      }
+
+      const section = this.db.sections.find(s => s.sectionId === assignment.sectionId);
+      if (!section) {
+        errors.push({
+          enrollmentId: assignment.enrollmentId,
+          error: `Section '${assignment.sectionId}' not found.`,
+        });
+        continue;
+      }
+
+      if (section.courseId !== registration.courseId) {
+        errors.push({
+          enrollmentId: assignment.enrollmentId,
+          error: `Section '${assignment.sectionId}' belongs to course '${section.courseId}', not '${registration.courseId}'.`,
+        });
+        continue;
+      }
+
+      registration.sectionId = assignment.sectionId;
+      updated.push(registration);
+    }
+
+    return { updated, errors };
   }
 }

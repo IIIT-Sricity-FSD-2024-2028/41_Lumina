@@ -320,6 +320,7 @@ function buildStudentRecords(tableData, appCourses) {
       const currentSemester = Number(student?.Current_Semester || 1);
 
       return {
+        enrollmentId: registration.Enrollment_ID,
         id: registration.Student_ID,
         name: user?.Full_Name || registration.Student_ID,
         program: user?.Dept_ID || course?.dept || 'CSE',
@@ -506,9 +507,53 @@ function syncCourseSlots(appData) {
   writeTable('Course_Slot', slotRows);
 }
 
-function saveData(appData) {
-  // No-op: data is now managed by the NestJS backend
-  console.log('saveData: Backend manages persistence via API calls.');
+async function saveData(appData) {
+  // Sync section assignments to the backend via batch-sections API
+  var tableData = loadSeedTables();
+  var sections = tableData.sections;
+  var assignments = [];
+
+  appData.students.forEach(function(student) {
+    if (!student.enrollmentId) return;
+    var sectionValue = student.section;
+    var sectionId = null;
+
+    if (sectionValue && sectionValue !== 'Unassigned' && sectionValue !== '') {
+      // Convert "Section 1" → "S1" and look up the section ID
+      var sectionName = sectionValue.replace('Section ', 'S');
+      var matchedSection = sections.find(function(s) {
+        return s.Course_ID === student.course && s.Section_Name === sectionName;
+      });
+      sectionId = matchedSection ? matchedSection.Section_ID : null;
+    }
+
+    assignments.push({
+      enrollmentId: student.enrollmentId,
+      sectionId: sectionId
+    });
+  });
+
+  if (assignments.length === 0) return;
+
+  try {
+    var sessionData = JSON.parse(localStorage.getItem('Lumina_Session') || '{}');
+    var role = sessionData.Role || 'Assistant_Dean_1';
+    var response = await fetch('http://localhost:3000/registrations/batch-sections', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-role': role
+      },
+      body: JSON.stringify({ assignments: assignments })
+    });
+    var result = await response.json();
+    console.log('Section sync result:', result.updated?.length || 0, 'updated,', result.errors?.length || 0, 'errors');
+    if (result.errors && result.errors.length > 0) {
+      console.warn('Section sync errors:', result.errors);
+    }
+  } catch (e) {
+    console.error('Failed to sync sections to backend:', e);
+  }
 }
 
 function resetData() {

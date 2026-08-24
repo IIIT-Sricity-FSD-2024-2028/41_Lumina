@@ -4,6 +4,7 @@ import { RegistrationsService } from './registrations.service';
 import { Roles } from '../common/decorators/roles.decorator';
 import { EnrollCourseDto } from '../common/dto/enroll-course.dto';
 import { UpdateGradeDto } from '../common/dto/update-grade.dto';
+import { AssignSectionDto, BatchAssignSectionsDto } from '../common/dto/assign-section.dto';
 
 @ApiTags('Registrations')
 @ApiHeader({ name: 'x-role', required: true, description: 'Role of the requesting user' })
@@ -43,5 +44,29 @@ export class RegistrationsController {
     @Body() dto: UpdateGradeDto,
   ) {
     return this.registrationsService.updateGrade(id, dto.finalGrade);
+  }
+
+  @Patch('batch-sections')
+  @Roles('Assistant_Dean_1', 'Dean')
+  @ApiOperation({ summary: 'Batch-assign sections to multiple registrations' })
+  @ApiBody({ type: BatchAssignSectionsDto })
+  @ApiResponse({ status: 200, description: 'Batch section assignment results.' })
+  batchAssignSections(@Body() dto: BatchAssignSectionsDto) {
+    return this.registrationsService.batchAssignSections(dto.assignments);
+  }
+
+  @Patch(':id/section')
+  @Roles('Assistant_Dean_1', 'Dean')
+  @ApiOperation({ summary: 'Assign a section to a single registration' })
+  @ApiParam({ name: 'id', description: 'Enrollment ID', type: Number })
+  @ApiBody({ type: AssignSectionDto })
+  @ApiResponse({ status: 200, description: 'Section assigned successfully.' })
+  @ApiResponse({ status: 400, description: 'Section does not belong to this course.' })
+  @ApiResponse({ status: 404, description: 'Registration or section not found.' })
+  assignSection(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: AssignSectionDto,
+  ) {
+    return this.registrationsService.assignSection(id, dto.sectionId);
   }
 }

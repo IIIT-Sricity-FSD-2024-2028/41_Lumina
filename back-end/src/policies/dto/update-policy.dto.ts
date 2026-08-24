@@ -73,6 +73,28 @@ export class UpdatePolicyDto {
   @IsOptional()
   termLocked?: boolean;
 
+  @ApiPropertyOptional({ example: 'Active', enum: ['Active', 'Deactivated'] })
+  @IsString()
+  @IsOptional()
+  @IsIn(['Active', 'Deactivated'])
+  systemStatus?: 'Active' | 'Deactivated';
+
+  @ApiPropertyOptional({ example: 'Open', enum: ['Open', 'Paused', 'Closed'] })
+  @IsString()
+  @IsOptional()
+  @IsIn(['Open', 'Paused', 'Closed'])
+  windowStatus?: 'Open' | 'Paused' | 'Closed';
+
+  @ApiPropertyOptional({ example: '2026-08-01T09:00' })
+  @IsString()
+  @IsOptional()
+  startDate?: string;
+
+  @ApiPropertyOptional({ example: '2026-08-30T17:00' })
+  @IsString()
+  @IsOptional()
+  endDate?: string;
+
   @ApiPropertyOptional({ example: 'Updated min credits to 12', description: 'Log message describing this policy change' })
   @IsString()
   @IsOptional()

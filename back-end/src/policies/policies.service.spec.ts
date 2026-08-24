@@ -69,4 +69,43 @@ describe('Policies and Dynamic Validation Integration', () => {
     expect(reg).toBeDefined();
     expect(reg.courseId).toBe('PC302');
   });
+
+  it('should update and persist enrollment window and system status', () => {
+    const result = policiesService.updateSettings(
+      {
+        systemStatus: 'Deactivated',
+        windowStatus: 'Paused',
+        startDate: '2026-09-01T09:00',
+        endDate: '2026-09-15T18:00',
+        logMessage: 'Paused window for maintenance',
+      },
+      'Assistant_Dean_2',
+    );
+
+    expect(result.settings.systemStatus).toBe('Deactivated');
+    expect(result.settings.windowStatus).toBe('Paused');
+    expect(result.settings.startDate).toBe('2026-09-01T09:00');
+    expect(result.settings.endDate).toBe('2026-09-15T18:00');
+    expect(result.logs[0].message).toBe('Paused window for maintenance');
+  });
+
+  it('should block enrollment when system is deactivated or window is closed/paused', () => {
+    // 1. Deactivated system
+    policiesService.updateSettings({ systemStatus: 'Deactivated' }, 'Assistant_Dean_2');
+    expect(() => {
+      registrationsService.enroll('S2024001', 'PC302');
+    }).toThrow('deactivated');
+
+    // 2. Closed window
+    policiesService.updateSettings({ systemStatus: 'Active', windowStatus: 'Closed' }, 'Assistant_Dean_2');
+    expect(() => {
+      registrationsService.enroll('S2024001', 'PC302');
+    }).toThrow('closed');
+
+    // 3. Paused window
+    policiesService.updateSettings({ systemStatus: 'Active', windowStatus: 'Paused' }, 'Assistant_Dean_2');
+    expect(() => {
+      registrationsService.enroll('S2024001', 'PC302');
+    }).toThrow('paused');
+  });
 });

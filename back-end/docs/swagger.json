@@ -486,6 +486,91 @@
         ]
       }
     },
+    "/registrations/batch-sections": {
+      "patch": {
+        "operationId": "RegistrationsController_batchAssignSections",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Role of the requesting user",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchAssignSectionsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Batch section assignment results."
+          }
+        },
+        "summary": "Batch-assign sections to multiple registrations",
+        "tags": [
+          "Registrations"
+        ]
+      }
+    },
+    "/registrations/{id}/section": {
+      "patch": {
+        "operationId": "RegistrationsController_assignSection",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Role of the requesting user",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Enrollment ID",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignSectionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Section assigned successfully."
+          },
+          "400": {
+            "description": "Section does not belong to this course."
+          },
+          "404": {
+            "description": "Registration or section not found."
+          }
+        },
+        "summary": "Assign a section to a single registration",
+        "tags": [
+          "Registrations"
+        ]
+      }
+    },
     "/overrides": {
       "get": {
         "description": "Returns all administrative override requests. Requires: Assistant_Dean_1, Assistant_Dean_2, or Dean.",
@@ -1446,6 +1531,53 @@
           "finalGrade"
         ]
       },
+      "BatchSectionItemDto": {
+        "type": "object",
+        "properties": {
+          "enrollmentId": {
+            "type": "number",
+            "example": 1,
+            "description": "Enrollment ID of the registration"
+          },
+          "sectionId": {
+            "type": "object",
+            "example": "PC402-S1",
+            "description": "Section ID to assign (null to unassign)"
+          }
+        },
+        "required": [
+          "enrollmentId",
+          "sectionId"
+        ]
+      },
+      "BatchAssignSectionsDto": {
+        "type": "object",
+        "properties": {
+          "assignments": {
+            "description": "Array of enrollment-to-section assignments",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BatchSectionItemDto"
+            }
+          }
+        },
+        "required": [
+          "assignments"
+        ]
+      },
+      "AssignSectionDto": {
+        "type": "object",
+        "properties": {
+          "sectionId": {
+            "type": "string",
+            "example": "PC402-S1",
+            "description": "The section ID to assign"
+          }
+        },
+        "required": [
+          "sectionId"
+        ]
+      },
       "CreateOverrideDto": {
         "type": "object",
         "properties": {
@@ -1550,6 +1682,31 @@
           "termLocked": {
             "type": "boolean",
             "example": true
+          },
+          "systemStatus": {
+            "type": "string",
+            "example": "Active",
+            "enum": [
+              "Active",
+              "Deactivated"
+            ]
+          },
+          "windowStatus": {
+            "type": "string",
+            "example": "Open",
+            "enum": [
+              "Open",
+              "Paused",
+              "Closed"
+            ]
+          },
+          "startDate": {
+            "type": "string",
+            "example": "2026-08-01T09:00"
+          },
+          "endDate": {
+            "type": "string",
+            "example": "2026-08-30T17:00"
           },
           "logMessage": {
             "type": "string",

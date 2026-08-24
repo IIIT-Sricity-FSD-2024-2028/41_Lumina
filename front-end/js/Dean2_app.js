@@ -351,17 +351,35 @@ function initEnrollmentPage() {
 
     let editingId = null;
 
-    function getSettings() {
-        const arr = DB.get('Enrollment_Settings');
-        return (arr && arr[0]) ? arr[0] : { systemStatus: 'Active', windowStatus: 'Open', startDate: '', endDate: '' };
+    async function getBackendPolicySettings() {
+        try {
+            const res = await fetch(`${API_BASE}/policies`, { headers: API_HEADERS });
+            if (res.ok) {
+                const data = await res.json();
+                return data.settings || {};
+            }
+        } catch (e) {
+            console.error('Failed to fetch policy settings:', e);
+        }
+        return { systemStatus: 'Active', windowStatus: 'Open', startDate: '', endDate: '' };
     }
 
-    function saveSettings(s) { DB.set('Enrollment_Settings', [s]); }
-
-    function updateSetting(key, value) {
-        const s = getSettings();
-        s[key] = value;
-        saveSettings(s);
+    async function updateSetting(key, value) {
+        try {
+            const labelMap = {
+                systemStatus: `System ${value}`,
+                windowStatus: `Enrollment Window ${value}`,
+                startDate: `Start date updated to ${value}`,
+                endDate: `End date updated to ${value}`
+            };
+            await fetch(`${API_BASE}/policies`, {
+                method: 'PATCH',
+                headers: API_HEADERS,
+                body: JSON.stringify({ [key]: value, logMessage: labelMap[key] || `Updated ${key}` })
+            });
+        } catch (e) {
+            console.error('Failed to update policy setting:', e);
+        }
         refreshEnrollmentUI();
     }
 
@@ -390,8 +408,10 @@ function initEnrollmentPage() {
     }
 
     async function refreshEnrollmentUI() {
-        const s = getSettings();
-        const phases = await fetch(API_BASE + '/enrollment-phases', {headers: API_HEADERS}).then(r=>r.json()).catch(()=>[]);
+        const [s, phases] = await Promise.all([
+            getBackendPolicySettings(),
+            fetch(API_BASE + '/enrollment-phases', {headers: API_HEADERS}).then(r=>r.json()).catch(()=>[])
+        ]);
 
         if (startDateInput) startDateInput.value = s.startDate || '';
         if (endDateInput) endDateInput.value = s.endDate || '';
@@ -495,7 +515,6 @@ function initEnrollmentPage() {
 // DASHBOARD PAGE
 // ==========================================
 async function initDashboardPage() {
-    const settings  = (DB.get('Enrollment_Settings') || [])[0] || {};
     const phases = await fetch(API_BASE + '/enrollment-phases', {headers: API_HEADERS}).then(r=>r.json()).catch(()=>[]);
     
     let ps = {};
@@ -510,6 +529,7 @@ async function initDashboardPage() {
     } catch (e) {
         console.error('Failed to fetch policies for dashboard:', e);
     }
+    const settings = ps;
     
     let overrides = [];
     try {

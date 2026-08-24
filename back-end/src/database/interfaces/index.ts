@@ -157,6 +157,10 @@ export interface PolicySettings {
   academicYear: string;
   term: string;
   termLocked: boolean;
+  systemStatus: 'Active' | 'Deactivated';
+  windowStatus: 'Open' | 'Paused' | 'Closed';
+  startDate: string;
+  endDate: string;
 }
 
 export interface PolicyChangeLog {
