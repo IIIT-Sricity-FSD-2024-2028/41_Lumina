@@ -4,3 +4,8 @@
 # Dependency folders (if using Node.js / NestJS / Frontend)
 node_modules/
 dist/
+
+# Environment Variables & Secrets
+.env
+.env.*
+!.env.example

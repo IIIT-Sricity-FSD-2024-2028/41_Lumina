@@ -17,8 +17,37 @@ async function bootstrap() {
     }),
   );
 
-  // ── CORS ───────────────────────────────────────────────────
-  app.enableCors();
+  // ── Dynamic Production-Ready CORS ─────────────────────────
+  const defaultOrigins = [
+    'http://localhost:3000',
+    'http://localhost:5500', // VSCode Live Server default
+    'http://127.0.0.1:5500',
+    'http://127.0.0.1:3000',
+  ];
+  const envOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim())
+    : [];
+  const allowedOrigins = [...new Set([...defaultOrigins, ...envOrigins])];
+
+  app.enableCors({
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean) => void,
+    ) => {
+      // Allow non-browser callers (curl, Postman, mobile apps, server-to-server)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS blocked request from origin: ${origin}`));
+      }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-role'],
+  });
+
+
 
   // ── Swagger / OpenAPI Configuration ────────────────────────
   const config = new DocumentBuilder()
