@@ -1,5 +1,6 @@
 import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { DatabaseModule } from './database/database.module';
 import { RolesGuard } from './common/guards/roles.guard';
 import { UsersModule } from './database/users/users.module';
@@ -19,6 +20,12 @@ import { LoggingMiddleware } from './common/middleware/logging.middleware';
 
 @Module({
   imports: [
+    ThrottlerModule.forRoot([
+      {
+        ttl: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '60000', 10),
+        limit: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
+      },
+    ]),
     DatabaseModule,
     AuthModule,
     UsersModule,
@@ -37,10 +44,15 @@ import { LoggingMiddleware } from './common/middleware/logging.middleware';
   providers: [
     {
       provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_GUARD,
       useClass: RolesGuard,
     },
   ],
 })
+
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
     // 1. SecurityMiddleware runs first to set defensive headers and sanitize payloads

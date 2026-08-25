@@ -1,0 +1,6 @@
+{
+  "name": "Lumina Super User Console",
+  "description": "University Course Enrollment & Academic Planning System Super User Console with full data management and live operational log monitoring.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

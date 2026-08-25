@@ -1,12 +1,30 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 import * as fs from 'fs';
 import * as path from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // ── Helmet HTTP Security Headers (Industry Standard) ───────
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: [`'self'`],
+          styleSrc: [`'self'`, `'unsafe-inline'`, 'https://fonts.googleapis.com', 'https://cdn.jsdelivr.net'],
+          fontSrc: [`'self'`, 'https://fonts.gstatic.com'],
+          imgSrc: [`'self'`, 'data:', 'https:'],
+          scriptSrc: [`'self'`, `'unsafe-inline'`, `'unsafe-eval'`, 'https://cdn.jsdelivr.net'],
+          connectSrc: [`'self'`, 'http://localhost:*', 'ws://localhost:*'],
+        },
+      },
+      crossOriginEmbedderPolicy: false,
+    }),
+  );
 
   // ── Global Validation Pipe ─────────────────────────────────
   app.useGlobalPipes(
@@ -16,6 +34,7 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
 
   // ── Dynamic Production-Ready CORS ─────────────────────────
   const defaultOrigins = [
