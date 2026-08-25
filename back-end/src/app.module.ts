@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { DatabaseModule } from './database/database.module';
 import { RolesGuard } from './common/guards/roles.guard';
@@ -13,6 +13,9 @@ import { CourseSlotsModule } from './course-slots/course-slots.module';
 import { EnrollmentPhasesModule } from './enrollment-phases/enrollment-phases.module';
 import { DegreeRequirementsModule } from './degree-requirements/degree-requirements.module';
 import { PoliciesModule } from './policies/policies.module';
+import { SuperUserModule } from './super-user/super-user.module';
+import { SecurityMiddleware } from './common/middleware/security.middleware';
+import { LoggingMiddleware } from './common/middleware/logging.middleware';
 
 @Module({
   imports: [
@@ -28,6 +31,7 @@ import { PoliciesModule } from './policies/policies.module';
     EnrollmentPhasesModule,
     DegreeRequirementsModule,
     PoliciesModule,
+    SuperUserModule,
   ],
   controllers: [],
   providers: [
@@ -37,4 +41,13 @@ import { PoliciesModule } from './policies/policies.module';
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    // 1. SecurityMiddleware runs first to set defensive headers and sanitize payloads
+    // 2. LoggingMiddleware runs next to track latency and write logs
+    consumer
+      .apply(SecurityMiddleware, LoggingMiddleware)
+      .forRoutes('*');
+  }
+}
+

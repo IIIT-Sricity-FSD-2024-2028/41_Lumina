@@ -42,7 +42,9 @@ async function bootstrap() {
     .addTag('CourseSlots', 'Timetable slot endpoints')
     .addTag('EnrollmentPhases', 'Enrollment window phase management')
     .addTag('Policies', 'Academic policy management endpoints')
+    .addTag('SuperUser', 'Super User / Top Admin monitoring and log audit endpoints')
     .build();
+
 
   const document = SwaggerModule.createDocument(app, config);
 

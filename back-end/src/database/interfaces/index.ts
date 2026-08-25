@@ -9,7 +9,9 @@ export type UserRole =
   | 'Faculty'
   | 'Assistant_Dean_1'
   | 'Assistant_Dean_2'
-  | 'Dean';
+  | 'Dean'
+  | 'Super_User';
+
 
 /** Course lifecycle status */
 export type CourseStatus = 'Active' | 'Inactive';

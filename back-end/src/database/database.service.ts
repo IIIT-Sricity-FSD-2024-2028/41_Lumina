@@ -89,7 +89,9 @@ export class DatabaseService implements OnModuleInit {
       { userId: 'A1_2024001', fullName: 'Ravi Kumar', email: 'admin1@lumina.iiits.in', password: 'password123', role: 'Assistant_Dean_1', deptId: 'CSE' },
       { userId: 'A2_2024001', fullName: 'Priya Sharma', email: 'admin2@lumina.iiits.in', password: 'password123', role: 'Assistant_Dean_2', deptId: 'CSE' },
       { userId: 'D2024001', fullName: 'Super Dean', email: 'dean@lumina.iiits.in', password: 'password123', role: 'Dean', deptId: 'CSE' },
+      { userId: 'SU2024001', fullName: 'System Administrator', email: 'superuser@lumina.iiits.in', password: 'password123', role: 'Super_User', deptId: 'CSE' },
     ];
+
 
     this.students = [
       { studentId: 'S2024001', enrollmentYear: 2024, currentSemester: 4 },
