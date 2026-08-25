@@ -2,6 +2,8 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { AllExceptionsFilter } from './common/filters/http-exception.filter';
+
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -16,6 +18,12 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  // ── Global Exception Filter ────────────────────────────────
+  // Catches ALL exceptions across the entire application.
+  // Logs errors to console AND persists them to logs/error-YYYY-MM-DD.log
+  app.useGlobalFilters(new AllExceptionsFilter());
+
 
   // ── CORS ───────────────────────────────────────────────────
   app.enableCors();
