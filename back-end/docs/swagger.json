@@ -439,6 +439,41 @@
         ]
       }
     },
+    "/registrations/batch-grades": {
+      "patch": {
+        "operationId": "RegistrationsController_batchUpdateGrades",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Role of the requesting user",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchSubmitGradesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Batch grade submission results."
+          }
+        },
+        "summary": "Batch-submit final grades for multiple students",
+        "tags": [
+          "Registrations"
+        ]
+      }
+    },
     "/registrations/{id}/grade": {
       "patch": {
         "operationId": "RegistrationsController_updateGrade",
@@ -480,7 +515,7 @@
             "description": "Registration not found."
           }
         },
-        "summary": "Submit final grade",
+        "summary": "Submit final grade for a single registration",
         "tags": [
           "Registrations"
         ]
@@ -736,6 +771,7 @@
           {
             "name": "x-role",
             "in": "header",
+            "description": "Role of the requesting user",
             "required": true,
             "schema": {
               "type": "string"
@@ -759,6 +795,7 @@
           {
             "name": "x-role",
             "in": "header",
+            "description": "Role of the requesting user",
             "required": true,
             "schema": {
               "type": "string"
@@ -773,9 +810,22 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAnnouncementDto"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": "Announcement created."
+          },
+          "400": {
+            "description": "Validation error."
           }
         },
         "summary": "Create an announcement",
@@ -792,6 +842,7 @@
           {
             "name": "x-role",
             "in": "header",
+            "description": "Role of the requesting user",
             "required": true,
             "schema": {
               "type": "string"
@@ -801,14 +852,28 @@
             "name": "id",
             "required": true,
             "in": "path",
+            "description": "Announcement ID",
             "schema": {
-              "type": "string"
+              "type": "number"
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAnnouncementDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Announcement updated."
+          },
+          "404": {
+            "description": "Announcement not found."
           }
         },
         "summary": "Update an announcement",
@@ -823,6 +888,7 @@
           {
             "name": "x-role",
             "in": "header",
+            "description": "Role of the requesting user",
             "required": true,
             "schema": {
               "type": "string"
@@ -832,14 +898,18 @@
             "name": "id",
             "required": true,
             "in": "path",
+            "description": "Announcement ID",
             "schema": {
-              "type": "string"
+              "type": "number"
             }
           }
         ],
         "responses": {
           "200": {
             "description": "Announcement deleted."
+          },
+          "404": {
+            "description": "Announcement not found."
           }
         },
         "summary": "Delete an announcement",
@@ -855,6 +925,7 @@
           {
             "name": "x-role",
             "in": "header",
+            "description": "Role of the requesting user",
             "required": true,
             "schema": {
               "type": "string"
@@ -863,9 +934,10 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "List of all sections."
           }
         },
+        "summary": "Get all sections",
         "tags": [
           "Sections"
         ]
@@ -876,17 +948,32 @@
           {
             "name": "x-role",
             "in": "header",
+            "description": "Role of the requesting user",
             "required": true,
             "schema": {
               "type": "string"
             }
           }
         ],
-        "responses": {
-          "201": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSectionDto"
+              }
+            }
           }
         },
+        "responses": {
+          "201": {
+            "description": "Section created successfully."
+          },
+          "400": {
+            "description": "Validation error."
+          }
+        },
+        "summary": "Create a new course section",
         "tags": [
           "Sections"
         ]
@@ -899,6 +986,7 @@
           {
             "name": "x-role",
             "in": "header",
+            "description": "Role of the requesting user",
             "required": true,
             "schema": {
               "type": "string"
@@ -908,16 +996,32 @@
             "name": "id",
             "required": true,
             "in": "path",
+            "description": "Section ID",
             "schema": {
+              "example": "PC402-S1",
               "type": "string"
             }
           }
         ],
-        "responses": {
-          "200": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSectionDto"
+              }
+            }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Section updated successfully."
+          },
+          "404": {
+            "description": "Section not found."
+          }
+        },
+        "summary": "Update a section",
         "tags": [
           "Sections"
         ]
@@ -928,6 +1032,7 @@
           {
             "name": "x-role",
             "in": "header",
+            "description": "Role of the requesting user",
             "required": true,
             "schema": {
               "type": "string"
@@ -937,16 +1042,19 @@
             "name": "id",
             "required": true,
             "in": "path",
+            "description": "Section ID",
             "schema": {
+              "example": "PC402-S1",
               "type": "string"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Section deleted."
           }
         },
+        "summary": "Delete a section",
         "tags": [
           "Sections"
         ]
@@ -959,6 +1067,7 @@
           {
             "name": "x-role",
             "in": "header",
+            "description": "Role of the requesting user",
             "required": true,
             "schema": {
               "type": "string"
@@ -967,9 +1076,10 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "List of all course slots."
           }
         },
+        "summary": "Get all timetable course slots",
         "tags": [
           "CourseSlots"
         ]
@@ -980,17 +1090,32 @@
           {
             "name": "x-role",
             "in": "header",
+            "description": "Role of the requesting user",
             "required": true,
             "schema": {
               "type": "string"
             }
           }
         ],
-        "responses": {
-          "201": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCourseSlotDto"
+              }
+            }
           }
         },
+        "responses": {
+          "201": {
+            "description": "Course slot created successfully."
+          },
+          "400": {
+            "description": "Validation error."
+          }
+        },
+        "summary": "Create a new timetable course slot",
         "tags": [
           "CourseSlots"
         ]
@@ -1003,6 +1128,7 @@
           {
             "name": "x-role",
             "in": "header",
+            "description": "Role of the requesting user",
             "required": true,
             "schema": {
               "type": "string"
@@ -1012,16 +1138,31 @@
             "name": "id",
             "required": true,
             "in": "path",
+            "description": "Slot ID",
             "schema": {
-              "type": "string"
+              "type": "number"
             }
           }
         ],
-        "responses": {
-          "200": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCourseSlotDto"
+              }
+            }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Course slot updated successfully."
+          },
+          "404": {
+            "description": "Course slot not found."
+          }
+        },
+        "summary": "Update a timetable course slot",
         "tags": [
           "CourseSlots"
         ]
@@ -1032,6 +1173,7 @@
           {
             "name": "x-role",
             "in": "header",
+            "description": "Role of the requesting user",
             "required": true,
             "schema": {
               "type": "string"
@@ -1041,16 +1183,18 @@
             "name": "id",
             "required": true,
             "in": "path",
+            "description": "Slot ID",
             "schema": {
-              "type": "string"
+              "type": "number"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Course slot deleted."
           }
         },
+        "summary": "Delete a timetable course slot",
         "tags": [
           "CourseSlots"
         ]
@@ -1063,6 +1207,7 @@
           {
             "name": "x-role",
             "in": "header",
+            "description": "Role of the requesting user",
             "required": true,
             "schema": {
               "type": "string"
@@ -1071,9 +1216,10 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "List of enrollment phases."
           }
         },
+        "summary": "Get all enrollment phases",
         "tags": [
           "EnrollmentPhases"
         ]
@@ -1084,17 +1230,32 @@
           {
             "name": "x-role",
             "in": "header",
+            "description": "Role of the requesting user",
             "required": true,
             "schema": {
               "type": "string"
             }
           }
         ],
-        "responses": {
-          "201": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEnrollmentPhaseDto"
+              }
+            }
           }
         },
+        "responses": {
+          "201": {
+            "description": "Enrollment phase created."
+          },
+          "400": {
+            "description": "Validation error."
+          }
+        },
+        "summary": "Create a new enrollment phase",
         "tags": [
           "EnrollmentPhases"
         ]
@@ -1107,6 +1268,7 @@
           {
             "name": "x-role",
             "in": "header",
+            "description": "Role of the requesting user",
             "required": true,
             "schema": {
               "type": "string"
@@ -1116,16 +1278,31 @@
             "name": "id",
             "required": true,
             "in": "path",
+            "description": "Phase ID",
             "schema": {
-              "type": "string"
+              "type": "number"
             }
           }
         ],
-        "responses": {
-          "200": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEnrollmentPhaseDto"
+              }
+            }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Enrollment phase updated."
+          },
+          "404": {
+            "description": "Phase not found."
+          }
+        },
+        "summary": "Update an enrollment phase",
         "tags": [
           "EnrollmentPhases"
         ]
@@ -1136,6 +1313,7 @@
           {
             "name": "x-role",
             "in": "header",
+            "description": "Role of the requesting user",
             "required": true,
             "schema": {
               "type": "string"
@@ -1145,16 +1323,21 @@
             "name": "id",
             "required": true,
             "in": "path",
+            "description": "Phase ID",
             "schema": {
-              "type": "string"
+              "type": "number"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Enrollment phase deleted."
+          },
+          "404": {
+            "description": "Phase not found."
           }
         },
+        "summary": "Delete an enrollment phase",
         "tags": [
           "EnrollmentPhases"
         ]
@@ -1518,6 +1701,40 @@
           "Course_ID"
         ]
       },
+      "GradeSubmissionItemDto": {
+        "type": "object",
+        "properties": {
+          "enrollmentId": {
+            "type": "number",
+            "example": 180,
+            "description": "Enrollment ID"
+          },
+          "finalGrade": {
+            "type": "string",
+            "example": "A",
+            "description": "Final Grade (e.g. S, A, B, C, D, F)"
+          }
+        },
+        "required": [
+          "enrollmentId",
+          "finalGrade"
+        ]
+      },
+      "BatchSubmitGradesDto": {
+        "type": "object",
+        "properties": {
+          "grades": {
+            "description": "Array of student grades to update",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GradeSubmissionItemDto"
+            }
+          }
+        },
+        "required": [
+          "grades"
+        ]
+      },
       "UpdateGradeDto": {
         "type": "object",
         "properties": {
@@ -1619,6 +1836,261 @@
         "required": [
           "Approval_Status"
         ]
+      },
+      "CreateAnnouncementDto": {
+        "type": "object",
+        "properties": {
+          "courseId": {
+            "type": "string",
+            "example": "PC402",
+            "description": "Course ID for the announcement"
+          },
+          "title": {
+            "type": "string",
+            "example": "Midterm Schedule Announcement",
+            "description": "Announcement title"
+          },
+          "message": {
+            "type": "string",
+            "example": "Midterm will be conducted on Wednesday.",
+            "description": "Announcement body"
+          }
+        },
+        "required": [
+          "courseId",
+          "title",
+          "message"
+        ]
+      },
+      "UpdateAnnouncementDto": {
+        "type": "object",
+        "properties": {
+          "courseId": {
+            "type": "string",
+            "example": "PC402",
+            "description": "Course ID for the announcement"
+          },
+          "title": {
+            "type": "string",
+            "example": "Midterm Schedule Announcement",
+            "description": "Announcement title"
+          },
+          "message": {
+            "type": "string",
+            "example": "Midterm will be conducted on Wednesday.",
+            "description": "Announcement body"
+          }
+        }
+      },
+      "CreateSectionDto": {
+        "type": "object",
+        "properties": {
+          "sectionId": {
+            "type": "string",
+            "example": "PC402-S1",
+            "description": "Unique section identifier"
+          },
+          "sectionName": {
+            "type": "string",
+            "example": "S1",
+            "description": "Display name for the section"
+          },
+          "courseId": {
+            "type": "string",
+            "example": "PC402",
+            "description": "Associated course ID"
+          },
+          "termId": {
+            "type": "string",
+            "example": "SPRING2026",
+            "description": "Academic term ID"
+          }
+        },
+        "required": [
+          "sectionId",
+          "sectionName",
+          "courseId",
+          "termId"
+        ]
+      },
+      "UpdateSectionDto": {
+        "type": "object",
+        "properties": {
+          "sectionId": {
+            "type": "string",
+            "example": "PC402-S1",
+            "description": "Unique section identifier"
+          },
+          "sectionName": {
+            "type": "string",
+            "example": "S1",
+            "description": "Display name for the section"
+          },
+          "courseId": {
+            "type": "string",
+            "example": "PC402",
+            "description": "Associated course ID"
+          },
+          "termId": {
+            "type": "string",
+            "example": "SPRING2026",
+            "description": "Academic term ID"
+          }
+        }
+      },
+      "CreateCourseSlotDto": {
+        "type": "object",
+        "properties": {
+          "sectionId": {
+            "type": "string",
+            "example": "PC402-S1",
+            "description": "Section ID"
+          },
+          "facultyId": {
+            "type": "string",
+            "example": "F2024001",
+            "description": "Faculty User ID"
+          },
+          "roomNumber": {
+            "type": "string",
+            "example": "G01",
+            "description": "Assigned classroom / lab number"
+          },
+          "dayOfWeek": {
+            "type": "string",
+            "example": "Monday",
+            "description": "Day of the week"
+          },
+          "startTime": {
+            "type": "string",
+            "example": "08:45",
+            "description": "Slot start time (HH:MM)"
+          },
+          "endTime": {
+            "type": "string",
+            "example": "09:45",
+            "description": "Slot end time (HH:MM)"
+          },
+          "syllabus": {
+            "type": "object",
+            "example": "Syllabus details",
+            "description": "Optional syllabus or class notes"
+          }
+        },
+        "required": [
+          "sectionId",
+          "facultyId",
+          "roomNumber",
+          "dayOfWeek",
+          "startTime",
+          "endTime"
+        ]
+      },
+      "UpdateCourseSlotDto": {
+        "type": "object",
+        "properties": {
+          "sectionId": {
+            "type": "string",
+            "example": "PC402-S1",
+            "description": "Section ID"
+          },
+          "facultyId": {
+            "type": "string",
+            "example": "F2024001",
+            "description": "Faculty User ID"
+          },
+          "roomNumber": {
+            "type": "string",
+            "example": "G01",
+            "description": "Assigned classroom / lab number"
+          },
+          "dayOfWeek": {
+            "type": "string",
+            "example": "Monday",
+            "description": "Day of the week"
+          },
+          "startTime": {
+            "type": "string",
+            "example": "08:45",
+            "description": "Slot start time (HH:MM)"
+          },
+          "endTime": {
+            "type": "string",
+            "example": "09:45",
+            "description": "Slot end time (HH:MM)"
+          },
+          "syllabus": {
+            "type": "object",
+            "example": "Syllabus details",
+            "description": "Optional syllabus or class notes"
+          }
+        }
+      },
+      "CreateEnrollmentPhaseDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Phase 1 - Final Year Priority",
+            "description": "Phase Name"
+          },
+          "eligibleGroups": {
+            "type": "string",
+            "example": "Final Year",
+            "description": "Eligible student group (e.g. Final Year, 3rd Year, 2nd Year, 1st Year, Backlog Students, All Students)"
+          },
+          "timeline": {
+            "type": "string",
+            "example": "Aug 1 – Aug 5, 2026",
+            "description": "Phase timeline display string"
+          },
+          "status": {
+            "type": "string",
+            "example": "Upcoming",
+            "enum": [
+              "Upcoming",
+              "Active",
+              "Completed"
+            ],
+            "description": "Phase status"
+          }
+        },
+        "required": [
+          "name",
+          "eligibleGroups",
+          "timeline",
+          "status"
+        ]
+      },
+      "UpdateEnrollmentPhaseDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Phase 1 - Final Year Priority",
+            "description": "Phase Name"
+          },
+          "eligibleGroups": {
+            "type": "string",
+            "example": "Final Year",
+            "description": "Eligible student group (e.g. Final Year, 3rd Year, 2nd Year, 1st Year, Backlog Students, All Students)"
+          },
+          "timeline": {
+            "type": "string",
+            "example": "Aug 1 – Aug 5, 2026",
+            "description": "Phase timeline display string"
+          },
+          "status": {
+            "type": "string",
+            "example": "Upcoming",
+            "enum": [
+              "Upcoming",
+              "Active",
+              "Completed"
+            ],
+            "description": "Phase status"
+          }
+        }
       },
       "UpdatePolicyDto": {
         "type": "object",
