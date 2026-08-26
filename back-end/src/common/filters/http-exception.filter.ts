@@ -152,10 +152,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
         `${timestamp} | WARN | ROLE: ${role} | ${method} | ${urlPath} | ${statusLabel} | ${duration} | IP: ${ip} | UA: ${ua} | MSG: ${messages.join(', ')} | ${stackFirstLine}\n`;
 
 
-      // ── Write to date-stamped file ──────────────────────────
-      const today      = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-      const logsDir    = path.resolve(process.cwd(), 'logs');
-      const logFilePath = path.join(logsDir, `error-${today}.log`);
+      // ── Write to unified logs/error.log ─────────────────────
+      const logsDir     = path.resolve(process.cwd(), 'logs');
+      const logFilePath = path.join(logsDir, 'error.log');
 
       // Auto-create logs/ directory if it does not exist
       if (!fs.existsSync(logsDir)) {
@@ -163,6 +162,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       }
 
       fs.appendFileSync(logFilePath, logLine, 'utf8');
+
     } catch (fileWriteError) {
       // Never let file-writing crash the application
       this.logger.warn(

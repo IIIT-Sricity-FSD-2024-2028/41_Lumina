@@ -528,3 +528,8 @@
 2026-08-25T12:15:20.296Z | INFO  | ROLE: Dean         | GET    | /courses | 200 OK | 1ms | IP: 127.0.0.1 | UA: curl/7.81.0
 2026-08-25T12:15:20.306Z | WARN  | ROLE: Dean         | GET    | /courses | 429 STATUS | 2ms | IP: 127.0.0.1 | UA: curl/7.81.0
 2026-08-25T12:15:20.340Z | WARN  | ROLE: Dean         | GET    | /courses | 429 STATUS | 0ms | IP: 127.0.0.1 | UA: curl/7.81.0
+2026-08-26T12:00:18.042Z | INFO  | ROLE: Dean         | GET    | /courses | 200 OK | 6ms | IP: 127.0.0.1 | UA: curl/7.81.0
+2026-08-26T12:00:18.075Z | WARN  | ROLE: Anonymous    | GET    | /non-existent-endpoint | 404 NOT FOUND | 3ms | IP: 127.0.0.1 | UA: curl/7.81.0
+2026-08-26T12:00:18.104Z | WARN  | ROLE: Anonymous    | GET    | /courses | 403 FORBIDDEN | 3ms | IP: 127.0.0.1 | UA: curl/7.81.0
+2026-08-26T12:00:18.166Z | WARN  | ROLE: Anonymous    | POST   | /auth/login | 401 UNAUTHORIZED | 4ms | IP: 127.0.0.1 | UA: curl/7.81.0
+2026-08-26T12:05:12.004Z | WARN  | ROLE: Anonymous    | GET    | /trigger-test-error | 404 NOT FOUND | 6ms | IP: 127.0.0.1 | UA: curl/7.81.0
