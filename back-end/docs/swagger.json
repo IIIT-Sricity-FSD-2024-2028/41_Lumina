@@ -1438,6 +1438,136 @@
           "Policies"
         ]
       }
+    },
+    "/super-user/logs": {
+      "get": {
+        "description": "Retrieves recent access, error, or auth log records stored on the filesystem.",
+        "operationId": "SuperUserController_getLogs",
+        "parameters": [
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "description": "Log type to query (default: access)",
+            "schema": {
+              "enum": [
+                "access",
+                "error",
+                "auth"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "lines",
+            "required": false,
+            "in": "query",
+            "description": "Number of recent lines to retrieve (default: 50)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Must be Super_User",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Log lines retrieved successfully."
+          },
+          "403": {
+            "description": "Access denied. Only Super_User role is authorized."
+          }
+        },
+        "summary": "View server logs from disk (Super User only)",
+        "tags": [
+          "SuperUser"
+        ]
+      }
+    },
+    "/super-user/logs/archive": {
+      "post": {
+        "description": "Forces an immediate archive snapshot of active log files to disk.",
+        "operationId": "SuperUserController_triggerArchive",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Must be Super_User",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Trigger manual log snapshot archive (Super User only)",
+        "tags": [
+          "SuperUser"
+        ]
+      }
+    },
+    "/super-user/system-health": {
+      "get": {
+        "description": "Returns server uptime, memory usage, CPU count, and Lumina ecosystem counts.",
+        "operationId": "SuperUserController_getSystemHealth",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Must be Super_User",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "System health & resource metrics (Super User only)",
+        "tags": [
+          "SuperUser"
+        ]
+      }
+    },
+    "/super-user/users": {
+      "get": {
+        "description": "Returns comprehensive user list across Students, Faculty, Deans, and Super Users.",
+        "operationId": "SuperUserController_getUsersSummary",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Must be Super_User",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "List all system users and role breakdown (Super User only)",
+        "tags": [
+          "SuperUser"
+        ]
+      }
     }
   },
   "info": {
@@ -1486,6 +1616,10 @@
     {
       "name": "Policies",
       "description": "Academic policy management endpoints"
+    },
+    {
+      "name": "SuperUser",
+      "description": "Super User / Top Admin monitoring and log audit endpoints"
     }
   ],
   "servers": [],

@@ -2,7 +2,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     const API_BASE = 'http://localhost:3000';
-    
+
     // --- 1. PASSWORD VISIBILITY TOGGLE ---
     const passwordInput = document.getElementById('password');
     const toggleButton = document.querySelector('.password-toggle');
@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleButton.addEventListener('click', () => {
             const isPassword = passwordInput.getAttribute('type') === 'password';
             passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
-            
+
             const icon = toggleButton.querySelector('img');
             if (icon) {
                 icon.setAttribute('src', isPassword ? 'assets/icons/hide_password.svg' : 'assets/icons/hide_password.svg');
@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
         passwordInput.addEventListener('input', () => loginError.classList.add('hidden'));
 
         loginForm.addEventListener('submit', async function (e) {
-            e.preventDefault(); 
+            e.preventDefault();
 
             loginError.classList.add('hidden');
 

@@ -1,6 +1,8 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
+import type { Request } from 'express';
 import { AuthService } from './auth.service';
+
 import { Roles } from '../common/decorators/roles.decorator';
 
 @ApiTags('Auth')
@@ -23,7 +25,9 @@ export class AuthController {
   })
   @ApiResponse({ status: 201, description: 'Login successful. Returns session object.' })
   @ApiResponse({ status: 401, description: 'Invalid credentials.' })
-  login(@Body() body: { User_ID: string; Password: string }) {
-    return this.authService.login(body.User_ID, body.Password);
+  login(@Body() body: { User_ID: string; Password: string }, @Req() req: Request) {
+    const rawIp = req.ip || req.socket.remoteAddress || '127.0.0.1';
+    const clientIp = rawIp.replace(/^.*:/, '') || '127.0.0.1';
+    return this.authService.login(body.User_ID, body.Password, clientIp);
   }
 }

@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 
@@ -9,6 +10,23 @@ import * as path from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // ── Helmet HTTP Security Headers (Industry Standard) ───────
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: [`'self'`],
+          styleSrc: [`'self'`, `'unsafe-inline'`, 'https://fonts.googleapis.com', 'https://cdn.jsdelivr.net'],
+          fontSrc: [`'self'`, 'https://fonts.gstatic.com'],
+          imgSrc: [`'self'`, 'data:', 'https:'],
+          scriptSrc: [`'self'`, `'unsafe-inline'`, `'unsafe-eval'`, 'https://cdn.jsdelivr.net'],
+          connectSrc: [`'self'`, 'http://localhost:*', 'ws://localhost:*'],
+        },
+      },
+      crossOriginEmbedderPolicy: false,
+    }),
+  );
 
   // ── Global Validation Pipe ─────────────────────────────────
   app.useGlobalPipes(
@@ -24,9 +42,35 @@ async function bootstrap() {
   // Logs errors to console AND persists them to logs/error-YYYY-MM-DD.log
   app.useGlobalFilters(new AllExceptionsFilter());
 
+  // ── Dynamic Production-Ready CORS ─────────────────────────
+  const defaultOrigins = [
+    'http://localhost:3000',
+    'http://localhost:5500', // VSCode Live Server default
+    'http://127.0.0.1:5500',
+    'http://127.0.0.1:3000',
+  ];
+  const envOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim())
+    : [];
+  const allowedOrigins = [...new Set([...defaultOrigins, ...envOrigins])];
 
-  // ── CORS ───────────────────────────────────────────────────
-  app.enableCors();
+  app.enableCors({
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean) => void,
+    ) => {
+      // Allow non-browser callers (curl, Postman, mobile apps, server-to-server)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS blocked request from origin: ${origin}`));
+      }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-role'],
+  });
 
   // ── Swagger / OpenAPI Configuration ────────────────────────
   const config = new DocumentBuilder()
@@ -50,7 +94,9 @@ async function bootstrap() {
     .addTag('CourseSlots', 'Timetable slot endpoints')
     .addTag('EnrollmentPhases', 'Enrollment window phase management')
     .addTag('Policies', 'Academic policy management endpoints')
+    .addTag('SuperUser', 'Super User / Top Admin monitoring and log audit endpoints')
     .build();
+
 
   const document = SwaggerModule.createDocument(app, config);
 
