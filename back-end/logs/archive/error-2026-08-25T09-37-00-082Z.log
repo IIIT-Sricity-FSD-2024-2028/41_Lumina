@@ -1,4 +1,0 @@
-2026-08-25T09:08:35.097Z | WARN  | ROLE: Anonymous    | POST   | /auth/login | 401 UNAUTHORIZED | 1ms | IP: 127.0.0.1 | UA: curl/7.81.0
-2026-08-25T09:36:59.890Z | WARN  | ROLE: Anonymous    | GET    | /courses | 403 FORBIDDEN | 4ms | IP: 127.0.0.1 | UA: curl/7.81.0
-2026-08-25T09:36:59.990Z | WARN  | ROLE: Anonymous    | POST   | /auth/login | 401 UNAUTHORIZED | 1ms | IP: 127.0.0.1 | UA: curl/7.81.0
-2026-08-25T09:37:00.056Z | WARN  | ROLE: Student      | GET    | /super-user/system-health | 403 FORBIDDEN | 1ms | IP: 127.0.0.1 | UA: curl/7.81.0

@@ -9,3 +9,7 @@ dist/
 .env
 .env.*
 !.env.example
+
+# Runtime Logs
+back-end/logs/*.log
+back-end/logs/archive/
