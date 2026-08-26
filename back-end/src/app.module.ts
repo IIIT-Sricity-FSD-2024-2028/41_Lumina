@@ -1,4 +1,9 @@
-import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
+import {
+  Module,
+  NestModule,
+  MiddlewareConsumer,
+  RequestMethod,
+} from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { DatabaseModule } from './database/database.module';
@@ -17,6 +22,7 @@ import { PoliciesModule } from './policies/policies.module';
 import { SuperUserModule } from './super-user/super-user.module';
 import { SecurityMiddleware } from './common/middleware/security.middleware';
 import { LoggingMiddleware } from './common/middleware/logging.middleware';
+import { RouteMiddleware } from './common/middleware/route.middleware';
 
 @Module({
   imports: [
@@ -52,14 +58,13 @@ import { LoggingMiddleware } from './common/middleware/logging.middleware';
     },
   ],
 })
-
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
     // 1. SecurityMiddleware runs first to set defensive headers and sanitize payloads
     // 2. LoggingMiddleware runs next to track latency and write logs
+    // 3. RouteMiddleware runs to intercept route-level calls, attach context, and validate x-role
     consumer
-      .apply(SecurityMiddleware, LoggingMiddleware)
-      .forRoutes('*');
+      .apply(SecurityMiddleware, LoggingMiddleware, RouteMiddleware)
+      .forRoutes({ path: '*', method: RequestMethod.ALL });
   }
 }
-
