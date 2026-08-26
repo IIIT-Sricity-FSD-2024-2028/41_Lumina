@@ -13,3 +13,8 @@ dist/
 # Runtime Logs
 back-end/logs/*.log
 back-end/logs/archive/
+
+# Uploaded Files
+back-end/uploads/
+uploads/
+

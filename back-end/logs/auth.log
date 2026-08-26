@@ -1,6 +1,0 @@
-2026-08-25T09:08:26.536Z | AUTH_SUCCESS | USER: SU2024001  | ROLE: Super_User   | IP: 127.0.0.1 | User logged in successfully.
-2026-08-25T09:08:35.096Z | AUTH_FAILED  | USER: SU2024001  | ROLE: Anonymous    | IP: 127.0.0.1 | Invalid Username or Password.
-2026-08-25T09:36:59.964Z | AUTH_SUCCESS | USER: SU2024001  | ROLE: Super_User   | IP: 127.0.0.1 | User logged in successfully.
-2026-08-25T09:36:59.989Z | AUTH_FAILED  | USER: FAKE_USER  | ROLE: Anonymous    | IP: 127.0.0.1 | Invalid Username or Password.
-2026-08-25T11:45:13.417Z | AUTH_SUCCESS | USER: SU2024001  | ROLE: Super_User   | IP: 127.0.0.1 | User logged in successfully.
-2026-08-26T12:00:18.165Z | AUTH_FAILED  | USER: UNKNOWN    | ROLE: Anonymous    | IP: 127.0.0.1 | Invalid Username or Password.
