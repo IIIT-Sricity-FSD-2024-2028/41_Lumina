@@ -20,7 +20,9 @@ import * as path from 'path';
  *  2. Derive an appropriate HTTP status code.
  *  3. Return a consistent, structured JSON error response to the client.
  *  4. Log every error to the console via NestJS Logger.
- *  5. Persist every error to a date-stamped file in back-end/logs/.
+ *  5. Persist every error to a date-stamped file in back-end/logs/
+ *     in a single-line pipe-separated format:
+ *     TIMESTAMP | WARN | ROLE: <role> | METHOD | PATH | STATUS CODE+NAME | Xms | IP: x.x.x.x | UA: <agent>
  *
  * Registered globally in main.ts via app.useGlobalFilters().
  *
@@ -28,7 +30,7 @@ import * as path from 'path';
  *   Any thrown exception → AllExceptionsFilter.catch()
  *     → determine status & message
  *     → log to console
- *     → append to logs/error-YYYY-MM-DD.log
+ *     → append single-line entry to logs/error-YYYY-MM-DD.log
  *     → send JSON response to client
  */
 @Catch()
@@ -39,6 +41,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const request = ctx.getRequest<Request>();
     const response = ctx.getResponse<Response>();
+
+    // Track response time — start time is stamped when the request entered
+    const startTime: number =
+      (request as any)._startTime ?? Date.now();
+    const responseTimeMs = Date.now() - startTime;
 
     // ── 1. Determine HTTP status code ────────────────────────
     const status =
@@ -67,7 +74,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     // Normalise to array for consistent API shape
     const messages = Array.isArray(message) ? message : [message];
 
-    // ── 3. Build structured error response ───────────────────
+    // ── 3. Build structured JSON response ────────────────────
     const errorResponse = {
       statusCode: status,
       error: this.getHttpErrorName(status),
@@ -83,8 +90,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
       exception instanceof Error ? exception.stack : undefined,
     );
 
-    // ── 5. Persist error to file ─────────────────────────────
-    this.writeErrorToFile(errorResponse, exception);
+    // ── 5. Persist error to file (single-line format) ────────
+    this.writeErrorToFile(request, status, responseTimeMs, messages, exception);
 
     // ── 6. Send response ─────────────────────────────────────
     response.status(status).json(errorResponse);
@@ -95,41 +102,69 @@ export class AllExceptionsFilter implements ExceptionFilter {
   // ─────────────────────────────────────────────────────────────
 
   /**
-   * Appends a structured error entry to today's log file.
+   * Appends a single-line error entry to today's log file.
+   *
+   * Format:
+   *   TIMESTAMP | WARN | ROLE: <role> | METHOD | PATH | STATUS CODE+NAME | Xms | IP: x.x.x.x | UA: <agent>
+   *
+   * Example:
+   *   2026-08-25T09:08:35.097Z | WARN | ROLE: Anonymous | POST | /auth/login | 401 UNAUTHORIZED | 1ms | IP: 127.0.0.1 | UA: curl/7.81.0
+   *
    * File pattern: back-end/logs/error-YYYY-MM-DD.log
-   * Each entry is a JSON object followed by a newline separator.
    */
-  private writeErrorToFile(errorResponse: object, exception: unknown): void {
+  private writeErrorToFile(
+    request: Request,
+    status: number,
+    responseTimeMs: number,
+    messages: string[],
+    exception: unknown,
+  ): void {
     try {
-      const stackTrace =
+      // ── Extract fields ──────────────────────────────────────
+      const timestamp = new Date().toISOString();
+
+      // Role from x-role header; fallback to 'Anonymous'
+      const role = (request.headers['x-role'] as string) ?? 'Anonymous';
+
+      const method  = request.method.padEnd(6);
+      const urlPath = request.url;
+
+      const statusLabel = `${status} ${this.getHttpErrorName(status).toUpperCase()}`;
+
+      const duration = `${responseTimeMs}ms`;
+
+      // Client IP — handle proxies (X-Forwarded-For)
+      const ip =
+        (request.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ??
+        request.socket?.remoteAddress ??
+        '0.0.0.0';
+
+      // User-Agent header
+      const ua = request.headers['user-agent'] ?? 'Unknown';
+
+      // ── Build single log line (same fields as before, one line) ──
+      const stackFirstLine =
         exception instanceof Error
-          ? exception.stack ?? 'No stack trace available'
-          : 'No stack trace available';
+          ? (exception.stack ?? '').split('\n')[0]
+          : 'No stack';
 
-      const logEntry = {
-        ...errorResponse,
-        stack: stackTrace,
-      };
+      const logLine =
+        `${timestamp} | WARN | ROLE: ${role} | ${method} | ${urlPath} | ${statusLabel} | ${duration} | IP: ${ip} | UA: ${ua} | MSG: ${messages.join(', ')} | ${stackFirstLine}\n`;
 
-      // Build file path relative to the process working directory (back-end/)
-      const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-      const logsDir = path.resolve(process.cwd(), 'logs');
+
+      // ── Write to date-stamped file ──────────────────────────
+      const today      = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+      const logsDir    = path.resolve(process.cwd(), 'logs');
       const logFilePath = path.join(logsDir, `error-${today}.log`);
 
-      // Create logs/ directory automatically if it does not exist
+      // Auto-create logs/ directory if it does not exist
       if (!fs.existsSync(logsDir)) {
         fs.mkdirSync(logsDir, { recursive: true });
       }
 
-      // Append entry — uses a separator line for readability
-      const separator = '\n' + '-'.repeat(80) + '\n';
-      fs.appendFileSync(
-        logFilePath,
-        JSON.stringify(logEntry, null, 2) + separator,
-        'utf8',
-      );
+      fs.appendFileSync(logFilePath, logLine, 'utf8');
     } catch (fileWriteError) {
-      // Failing to write the log must never crash the application
+      // Never let file-writing crash the application
       this.logger.warn(
         `Could not write to error log file: ${(fileWriteError as Error).message}`,
       );
