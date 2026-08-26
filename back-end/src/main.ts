@@ -3,6 +3,8 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
+import { AllExceptionsFilter } from './common/filters/http-exception.filter';
+
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -35,6 +37,10 @@ async function bootstrap() {
     }),
   );
 
+  // ── Global Exception Filter ────────────────────────────────
+  // Catches ALL exceptions across the entire application.
+  // Logs errors to console AND persists them to logs/error-YYYY-MM-DD.log
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   // ── Dynamic Production-Ready CORS ─────────────────────────
   const defaultOrigins = [
@@ -65,8 +71,6 @@ async function bootstrap() {
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-role'],
   });
-
-
 
   // ── Swagger / OpenAPI Configuration ────────────────────────
   const config = new DocumentBuilder()
