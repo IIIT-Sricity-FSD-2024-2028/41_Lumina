@@ -1,8 +1,30 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, ParseIntPipe } from '@nestjs/common';
-import { ApiTags, ApiHeader, ApiOperation, ApiResponse, ApiBody, ApiParam } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  ParseIntPipe,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  ApiTags,
+  ApiHeader,
+  ApiOperation,
+  ApiResponse,
+  ApiBody,
+  ApiParam,
+  ApiConsumes,
+} from '@nestjs/swagger';
 import { CourseSlotsService } from './course-slots.service';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CreateCourseSlotDto, UpdateCourseSlotDto } from '../common/dto';
+import { multerUploadOptions } from './file-upload.config';
 
 @ApiTags('CourseSlots')
 @ApiHeader({ name: 'x-role', required: true, description: 'Role of the requesting user' })
@@ -28,6 +50,40 @@ export class CourseSlotsController {
     return this.courseSlotsService.create(dto);
   }
 
+  @Post(':id/syllabus')
+  @Roles('Assistant_Dean_1', 'Dean', 'Faculty')
+  @UseInterceptors(FileInterceptor('file', multerUploadOptions))
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Upload a syllabus file for a course slot' })
+  @ApiParam({ name: 'id', description: 'Slot ID', type: Number })
+  @ApiBody({
+    description: 'Syllabus document (PDF, Word, Text, CSV, Excel, Image - max 5MB)',
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+      required: ['file'],
+    },
+  })
+  @ApiResponse({ status: 201, description: 'Syllabus uploaded successfully.' })
+  @ApiResponse({ status: 400, description: 'Invalid file type, size exceeded, or no file provided.' })
+  @ApiResponse({ status: 404, description: 'Course slot not found.' })
+  uploadSyllabus(
+    @Param('id', ParseIntPipe) id: number,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException(
+        'No file provided. Please upload a valid file using the "file" field.',
+      );
+    }
+    return this.courseSlotsService.uploadSyllabus(id, file);
+  }
+
   @Put(':id')
   @Roles('Assistant_Dean_1', 'Dean')
   @ApiOperation({ summary: 'Update a timetable course slot' })
@@ -51,3 +107,4 @@ export class CourseSlotsController {
     return this.courseSlotsService.remove(id);
   }
 }
+
