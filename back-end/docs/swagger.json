@@ -1121,6 +1121,66 @@
         ]
       }
     },
+    "/course-slots/{id}/syllabus": {
+      "post": {
+        "operationId": "CourseSlotsController_uploadSyllabus",
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "description": "Role of the requesting user",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Slot ID",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Syllabus document (PDF, Word, Text, CSV, Excel, Image - max 5MB)",
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Syllabus uploaded successfully."
+          },
+          "400": {
+            "description": "Invalid file type, size exceeded, or no file provided."
+          },
+          "404": {
+            "description": "Course slot not found."
+          }
+        },
+        "summary": "Upload a syllabus file for a course slot",
+        "tags": [
+          "CourseSlots"
+        ]
+      }
+    },
     "/course-slots/{id}": {
       "put": {
         "operationId": "CourseSlotsController_update",
