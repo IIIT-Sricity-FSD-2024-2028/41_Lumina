@@ -9,7 +9,13 @@
   async function fetchFacultyData() {
     var sessionData = JSON.parse(localStorage.getItem('Lumina_Session') || '{}');
     var role = sessionData.Role || 'Faculty';
-    var headers = { 'x-role': role };
+    var headers = {
+      'Content-Type': 'application/json',
+      ...(sessionData.accessToken ? { 'Authorization': `Bearer ${sessionData.accessToken}` } : {}),
+      'x-role': role,
+    };
+
+
 
     try {
       var [usersRes, coursesRes, regsRes, sectionsRes, slotsRes, annRes] = await Promise.all([

@@ -3,7 +3,13 @@ async function initStudentApp() {
   var session = localStorage.getItem('Lumina_Session');
   var sessionUser = session ? JSON.parse(session) : null;
   var role = sessionUser ? sessionUser.Role : 'Student';
-  var headers = { 'x-role': role };
+  var headers = {
+    'Content-Type': 'application/json',
+    ...(sessionUser && sessionUser.accessToken ? { 'Authorization': `Bearer ${sessionUser.accessToken}` } : {}),
+    'x-role': role,
+  };
+
+
 
   if (sessionUser && sessionUser.Role === 'Student') {
     window._studentAppCache['Users'] = [{

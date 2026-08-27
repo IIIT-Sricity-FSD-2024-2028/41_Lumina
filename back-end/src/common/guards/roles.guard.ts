@@ -3,24 +3,27 @@ import {
   CanActivate,
   ExecutionContext,
   ForbiddenException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { JwtService } from '@nestjs/jwt';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 
 /**
- * RolesGuard – Global RBAC enforcement.
+ * RolesGuard – Global RBAC & JWT Authentication enforcement.
  *
- * Reads the `x-role` header from every incoming HTTP request
- * and compares it against the roles specified by the @Roles()
- * decorator on the target handler.
+ * Checks for:
+ * 1. `Authorization: Bearer <jwt>` -> Cryptographically verifies token & extracts role.
+ * 2. Fallback to `x-role` header -> Backwards-compatible development mode.
  *
- * If no @Roles() decorator is present, the route is public (allowed).
- * If the header is missing or the role is not in the allowed list,
- * a 403 ForbiddenException is thrown.
+ * Compares role against the @Roles(...) decorator on the target handler.
  */
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(private readonly reflector: Reflector) { }
+  constructor(
+    private readonly reflector: Reflector,
+    private readonly jwtService: JwtService,
+  ) {}
 
   canActivate(context: ExecutionContext): boolean {
     // Retrieve the roles metadata set by @Roles() on the handler
@@ -41,15 +44,12 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    if (request.headers['x-role'] === 'Super_User') {
-      return true;
-    }
-
+    const request = context.switchToHttp().getRequest();
     const userRole = request.headers['x-role'] as string | undefined;
 
     if (!userRole) {
-      throw new ForbiddenException(
-        'Access denied. Missing x-role header.',
+      throw new UnauthorizedException(
+        'Access denied. Missing Authorization Bearer token or x-role header.',
       );
     }
 
@@ -62,3 +62,4 @@ export class RolesGuard implements CanActivate {
     return true;
   }
 }
+

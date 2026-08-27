@@ -20,8 +20,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const headers = {
         'Content-Type': 'application/json',
+        ...(currentUser && currentUser.accessToken ? { 'Authorization': `Bearer ${currentUser.accessToken}` } : {}),
         'x-role': currentUser.Role,
     };
+
 
     // Logout logic
     document.getElementById('logout-btn').addEventListener('click', () => {

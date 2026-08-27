@@ -3,8 +3,10 @@ const sessionData = localStorage.getItem('Lumina_Session');
 const currentUser = sessionData ? JSON.parse(sessionData) : null;
 const API_HEADERS = {
     'Content-Type': 'application/json',
+    ...(currentUser && currentUser.accessToken ? { 'Authorization': `Bearer ${currentUser.accessToken}` } : {}),
     'x-role': currentUser ? currentUser.Role : 'Assistant_Dean_2'
 };
+
 
 // ==========================================
 // DB MOCK FOR AD2 SETTINGS

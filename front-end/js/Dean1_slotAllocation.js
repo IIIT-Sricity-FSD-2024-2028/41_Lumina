@@ -23,13 +23,22 @@ function updateProgressOnHome(appData) {
   }
 }
 
+function getDean1Headers() {
+  const session = JSON.parse(localStorage.getItem('Lumina_Session') || '{}');
+  return {
+    'Content-Type': 'application/json',
+    ...(session.accessToken ? { 'Authorization': `Bearer ${session.accessToken}` } : {}),
+    'x-role': session.Role || 'Assistant_Dean_1'
+  };
+}
+
 /**
  * Adds a new slot allocation to the institutional timetable.
  * @param {Object} alloc - The allocation object {day, timeSlot, courseCode, room, professor, section}
  * @param {Object} appData - Global app data
  */
 async function addAllocation(alloc, appData) {
-  const headers = { 'Content-Type': 'application/json', 'x-role': 'Assistant_Dean_1' };
+  const headers = getDean1Headers();
   try {
     const res = await fetch('http://localhost:3000/course-slots', {
       method: 'POST',
@@ -54,7 +63,7 @@ async function addAllocation(alloc, appData) {
 }
 
 async function updateAllocation(oldAlloc, newAlloc, appData) {
-  const headers = { 'Content-Type': 'application/json', 'x-role': 'Assistant_Dean_1' };
+  const headers = getDean1Headers();
   try {
     const res = await fetch(`http://localhost:3000/course-slots/${oldAlloc.id}`, {
       method: 'PUT',
@@ -78,7 +87,7 @@ async function updateAllocation(oldAlloc, newAlloc, appData) {
 }
 
 async function removeAllocation(alloc, appData) {
-  const headers = { 'Content-Type': 'application/json', 'x-role': 'Assistant_Dean_1' };
+  const headers = getDean1Headers();
   try {
     const res = await fetch(`http://localhost:3000/course-slots/${alloc.id}`, {
       method: 'DELETE',

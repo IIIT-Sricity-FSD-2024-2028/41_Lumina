@@ -9,8 +9,10 @@ const sessionData = localStorage.getItem('Lumina_Session');
 const currentUser = sessionData ? JSON.parse(sessionData) : null;
 const API_HEADERS = {
     'Content-Type': 'application/json',
+    ...(currentUser && currentUser.accessToken ? { 'Authorization': `Bearer ${currentUser.accessToken}` } : {}),
     'x-role': currentUser ? currentUser.Role : 'Assistant_Dean_1'
 };
+
 let appData;
 let filteredCourses = [];
 let currentPage = 1;

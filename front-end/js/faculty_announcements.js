@@ -123,11 +123,14 @@ function initFacultyPage() {
     var title = document.getElementById("annTitle").value.trim();
     var msg = document.getElementById("annMsg").value.trim();
 
+    var session = JSON.parse(localStorage.getItem('Lumina_Session') || '{}');
     var headers = {
       'Content-Type': 'application/json',
+      ...(session.accessToken ? { 'Authorization': `Bearer ${session.accessToken}` } : {}),
       'x-role': 'Faculty',
       'x-user-id': faculty.id || 'F2024001'
     };
+
 
     try {
       if(editId){
@@ -213,13 +216,17 @@ function initFacultyPage() {
   document.getElementById("confirmDelBtn").addEventListener("click", async function(){
     if(deleteTargetId === null) return;
     try {
+      var session = JSON.parse(localStorage.getItem('Lumina_Session') || '{}');
       await fetch('http://localhost:3000/announcements/' + deleteTargetId, {
         method: 'DELETE',
         headers: {
+          'Content-Type': 'application/json',
+          ...(session.accessToken ? { 'Authorization': `Bearer ${session.accessToken}` } : {}),
           'x-role': 'Faculty',
           'x-user-id': faculty.id || 'F2024001'
         }
       });
+
       announcements = announcements.filter(function(a){ return a.id !== deleteTargetId; });
       document.getElementById("deleteModal").classList.remove("open");
       deleteTargetId = null;

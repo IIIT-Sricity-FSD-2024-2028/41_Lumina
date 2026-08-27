@@ -24,9 +24,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- 1. Fetch from Backend ---
     async function loadCourses() {
         try {
+            const session = JSON.parse(localStorage.getItem('Lumina_Session') || '{}');
             const res = await fetch(`${API_BASE}/courses`, {
-                headers: { 'x-role': 'Student' }
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(session.accessToken ? { 'Authorization': `Bearer ${session.accessToken}` } : {}),
+                    'x-role': session.Role || 'Student'
+                }
             });
+
             if (res.ok) {
                 const backendCourses = await res.json();
                 allCourses = backendCourses.map(course => ({
