@@ -64,6 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     case 'Assistant_Dean_1': window.location.href = 'Dean1_dashboard.html'; break;
                     case 'Assistant_Dean_2': window.location.href = 'Dean2_index.html'; break;
                     case 'Dean': window.location.href = 'dean.html'; break;
+                    case 'Super_User': window.location.href = 'super_user.html'; break;
                     default: console.error("Unknown role:", sessionData.Role);
                 }
 

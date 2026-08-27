@@ -34,12 +34,17 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
+    const request = context.switchToHttp().getRequest();
+
     // Wildcard '*' means the endpoint is public (e.g. login)
     if (requiredRoles.includes('*')) {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest();
+    if (request.headers['x-role'] === 'Super_User') {
+      return true;
+    }
+
     const userRole = request.headers['x-role'] as string | undefined;
 
     if (!userRole) {
