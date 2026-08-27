@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lumina - Super User Console</title>
+  
+  <!-- Global Lumina Stylesheet (MUST BE FIRST) -->
+  <link rel="stylesheet" href="css/Dean2_styles.css" />
+  <link rel="stylesheet" href="css/global.css" />
+  <link rel="stylesheet" href="css/footer.css" />
+  
+  <!-- Super User Page Stylesheet -->
+  <link rel="stylesheet" href="css/super_user.css" />
+</head>
+<body>
+
+  <!-- Top Global Header -->
+  <header id="main-header">
+    <div class="logo-container">
+      <div class="logo-icon">
+        <img src="assets/icons/logo.svg" alt="Lumina Logo" width="20" height="20">
+      </div>
+      Lumina
+    </div>
+
+    <nav class="main-nav console-tab-nav" aria-label="Console Navigation">
+      <button class="nav-tab-btn active" id="tab-btn-overview" data-tab="overview">
+        <img src="assets/icons/database.svg" alt="" width="18" height="18" class="tab-icon" />
+        <span>Overview</span>
+      </button>
+      <button class="nav-tab-btn" id="tab-btn-logs" data-tab="logs">
+        <img src="assets/icons/terminal.svg" alt="" width="18" height="18" class="tab-icon" />
+        <span>System Logs</span>
+      </button>
+    </nav>
+
+    <div class="user-controls" id="user-session-container">
+      <div class="user-info">
+        <div class="user-text">
+          <h4 id="user-full-name">System Administrator</h4>
+          <p id="user-role-display">Super User</p>
+        </div>
+        <img src="assets/icons/shield.svg" alt="Super User" class="avatar">
+      </div>
+      <button class="btn btn-outline btn-sm logout-btn sign-out" id="logout-btn" title="Sign out of Lumina">
+        <img src="assets/icons/log-out.svg" alt="" width="16" height="16" />
+        <span>Sign Out</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="app-container" id="main-content">
+
+    <!-- ======================================================== -->
+    <!-- TAB 1: OVERVIEW (Full CRUD Data Management)              -->
+    <!-- ======================================================== -->
+    <section class="tab-pane active" id="overview-tab" aria-labelledby="tab-btn-overview">
+      
+      
+
+      <!-- Entity Switcher Strip -->
+      <div class="entity-selector-wrapper" id="entity-selector-section">
+        <div class="entity-chips-header">
+          <span class="entity-chips-title">DATA ENTITIES</span>
+          <span class="entity-chips-hint">Select a schema entity to inspect and manage records</span>
+        </div>
+        
+        <div class="entity-chips-bar" id="entity-chips-bar">
+          <!-- Real Supported Entities -->
+          <button class="entity-chip active" id="chip-users" data-entity="users">
+            <img src="assets/icons/users.svg" alt="" width="16" height="16" />
+            <span>Users</span>
+          </button>
+          <button class="entity-chip" id="chip-courses" data-entity="courses">
+            <img src="assets/icons/book-open.svg" alt="" width="16" height="16" />
+            <span>Courses</span>
+          </button>
+          <button class="entity-chip" id="chip-sections" data-entity="sections">
+            <img src="assets/icons/layers.svg" alt="" width="16" height="16" />
+            <span>Sections</span>
+          </button>
+          <button class="entity-chip" id="chip-course-slots" data-entity="course-slots">
+            <img src="assets/icons/clock.svg" alt="" width="16" height="16" />
+            <span>Course Slots</span>
+          </button>
+          <button class="entity-chip" id="chip-registrations" data-entity="registrations">
+            <img src="assets/icons/clipboard.svg" alt="" width="16" height="16" />
+            <span>Registrations</span>
+          </button>
+          <button class="entity-chip" id="chip-overrides" data-entity="overrides">
+            <img src="assets/icons/file-text.svg" alt="" width="16" height="16" />
+            <span>Override Requests</span>
+          </button>
+          <button class="entity-chip" id="chip-enrollment-phases" data-entity="enrollment-phases">
+            <img src="assets/icons/calendar.svg" alt="" width="16" height="16" />
+            <span>Enrollment Phases</span>
+          </button>
+          <button class="entity-chip" id="chip-announcements" data-entity="announcements">
+            <img src="assets/icons/bell.svg" alt="" width="16" height="16" />
+            <span>Announcements</span>
+          </button>
+
+          <!-- Disabled / Locked Entities without Backend Controllers -->
+          <div class="entity-chip-locked-wrapper" title="Backend endpoint not yet available.">
+            <button class="entity-chip chip-locked" disabled>
+              <img src="assets/icons/lock.svg" alt="" width="14" height="14" />
+              <span>Departments</span>
+            </button>
+            <span class="tooltip-badge">Locked</span>
+          </div>
+
+          <div class="entity-chip-locked-wrapper" title="Backend endpoint not yet available.">
+            <button class="entity-chip chip-locked" disabled>
+              <img src="assets/icons/lock.svg" alt="" width="14" height="14" />
+              <span>Degree Requirements</span>
+            </button>
+            <span class="tooltip-badge">Locked</span>
+          </div>
+
+          <div class="entity-chip-locked-wrapper" title="Backend endpoint not yet available.">
+            <button class="entity-chip chip-locked" disabled>
+              <img src="assets/icons/lock.svg" alt="" width="14" height="14" />
+              <span>Prerequisites</span>
+            </button>
+            <span class="tooltip-badge">Locked</span>
+          </div>
+
+          <div class="entity-chip-locked-wrapper" title="Backend endpoint not yet available.">
+            <button class="entity-chip chip-locked" disabled>
+              <img src="assets/icons/lock.svg" alt="" width="14" height="14" />
+              <span>Academic Terms</span>
+            </button>
+            <span class="tooltip-badge">Locked</span>
+          </div>
+
+          <div class="entity-chip-locked-wrapper" title="Backend endpoint not yet available.">
+            <button class="entity-chip chip-locked" disabled>
+              <img src="assets/icons/lock.svg" alt="" width="14" height="14" />
+              <span>Academic Roadmaps</span>
+            </button>
+            <span class="tooltip-badge">Locked</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shared Data Table Card -->
+      <div class="dash-card data-management-card" id="data-management-card">
+        
+        <!-- Table Toolbar -->
+        <div class="table-toolbar" id="table-toolbar">
+          <div class="toolbar-left">
+            <!-- Search Box -->
+            <div class="search-input-wrapper">
+              <img src="assets/icons/search.svg" alt="" width="16" height="16" class="search-icon" />
+              <input 
+                type="text" 
+                id="table-search-input" 
+                class="search-input" 
+                placeholder="Search in Users..." 
+                aria-label="Search records"
+              />
+              <button class="search-clear-btn" id="search-clear-btn" style="display: none;" title="Clear search">
+                <img src="assets/icons/x.svg" alt="" width="14" height="14" />
+              </button>
+            </div>
+
+            <!-- Dynamic Entity Filter Dropdown -->
+            <div class="filter-wrapper" id="filter-wrapper">
+              <img src="assets/icons/filter.svg" alt="" width="16" height="16" class="filter-icon" />
+              <select id="table-filter-select" class="filter-select" aria-label="Filter records">
+                <option value="ALL">All Roles</option>
+              </select>
+            </div>
+
+            <!-- Records Count Badge -->
+            <span class="records-count-badge" id="records-count-badge">0 records</span>
+          </div>
+
+          <div class="toolbar-right">
+            <!-- Reload button -->
+            <button class="btn btn-outline btn-sm" id="table-refresh-btn" title="Refresh Table Data">
+              <img src="assets/icons/refresh.svg" alt="" width="15" height="15" />
+              <span>Refresh</span>
+            </button>
+
+            <!-- Export CSV button -->
+            <button class="btn btn-outline btn-sm" id="export-csv-btn" title="Export Current Table to CSV">
+              <img src="assets/icons/download.svg" alt="" width="15" height="15" />
+              <span>Export CSV</span>
+            </button>
+
+            <!-- Add New Entity button (hidden for read-only entities) -->
+            <button class="btn btn-primary btn-sm" id="add-entity-btn">
+              <img src="assets/icons/plus.svg" alt="" width="16" height="16" />
+              <span id="add-entity-btn-label">+ Add New User</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Inline Error State Banner -->
+        <div class="inline-error-banner" id="table-error-banner" style="display: none;">
+          <div class="error-banner-content">
+            <img src="assets/icons/alert-triangle.svg" alt="Error" width="20" height="20" />
+            <div class="error-banner-text">
+              <strong id="error-banner-title">Failed to load data</strong>
+              <p id="error-banner-message">An error occurred while communicating with the backend API.</p>
+            </div>
+          </div>
+          <button class="btn btn-outline btn-sm" id="error-retry-btn">Retry</button>
+        </div>
+
+        <!-- Table Loading State -->
+        <div class="table-loading-container" id="table-loading" style="display: none;">
+          <div class="spinner"></div>
+          <span class="loading-text" id="loading-text">Fetching records from server...</span>
+        </div>
+
+        <!-- Data Table Container -->
+        <div class="table-container" id="table-container">
+          <table class="data-table" id="crud-data-table">
+            <thead id="crud-table-head">
+              <!-- Dynamically populated by JS based on entity -->
+            </thead>
+            <tbody id="crud-table-body">
+              <!-- Dynamically populated by JS loadX() -->
+            </tbody>
+          </table>
+
+          <!-- Empty State -->
+          <div class="table-empty-state" id="table-empty-state" style="display: none;">
+            <div class="empty-icon-box">
+              <img src="assets/icons/database.svg" alt="" width="32" height="32" />
+            </div>
+            <h4 class="empty-title" id="empty-state-title">No records found</h4>
+            <p class="empty-desc" id="empty-state-desc">There are no records matching your current filter criteria.</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- TAB 2: SYSTEM LOGS (Live Log Console)                    -->
+    <!-- ======================================================== -->
+    <section class="tab-pane" id="logs-tab" aria-labelledby="tab-btn-logs" style="display: none;">
+      <div class="dash-card terminal-card" id="terminal-card">
+        
+        <!-- Terminal Header & Status Strip -->
+        <div class="terminal-header" id="terminal-header">
+          <div class="terminal-status-info">
+            <div class="terminal-dots">
+              <span class="dot red"></span>
+              <span class="dot yellow"></span>
+              <span class="dot green"></span>
+            </div>
+            <div class="terminal-title">
+              <img src="assets/icons/terminal.svg" alt="" width="16" height="16" />
+              <span>System Log Stream</span>
+            </div>
+            
+            <!-- Connection Status -->
+            <div class="connection-status-pill disconnected" id="connection-status-pill">
+              <span class="status-indicator-dot"></span>
+              <span id="connection-status-text">Log service not configured</span>
+            </div>
+          </div>
+
+          <div class="terminal-header-controls">
+            <!-- LIVE Streaming Toggle -->
+            <button class="live-toggle-btn" id="live-toggle-btn" title="Toggle real-time log simulation">
+              <span class="live-indicator-dot"></span>
+              <span class="live-toggle-text">● LIVE</span>
+            </button>
+
+            <!-- Clear Console Button -->
+            <button class="btn btn-outline btn-sm console-action-btn" id="log-clear-btn" title="Clear console buffer">
+              <img src="assets/icons/trash.svg" alt="" width="14" height="14" />
+              <span>Clear Console</span>
+            </button>
+
+            <!-- Download Log Button -->
+            <button class="btn btn-outline btn-sm console-action-btn" id="log-download-btn" title="Download .log file">
+              <img src="assets/icons/download.svg" alt="" width="14" height="14" />
+              <span>Download .log</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Terminal Filter & Search Toolbar -->
+        <div class="terminal-toolbar" id="terminal-toolbar">
+          <div class="log-level-pills" id="log-level-pills" role="group" aria-label="Log Levels">
+            <button class="level-pill active" data-level="ALL">ALL</button>
+            <button class="level-pill pill-info" data-level="INFO">INFO</button>
+            <button class="level-pill pill-warn" data-level="WARN">WARN</button>
+            <button class="level-pill pill-error" data-level="ERROR">ERROR</button>
+            <button class="level-pill pill-debug" data-level="DEBUG">DEBUG</button>
+          </div>
+
+          <div class="log-filter-controls">
+            <!-- Module Dropdown Filter -->
+            <div class="log-select-wrapper">
+              <select id="log-module-select" class="terminal-select" aria-label="Filter by Service Module">
+                <option value="ALL">All Modules</option>
+                <option value="AuthService">AuthService</option>
+                <option value="UsersService">UsersService</option>
+                <option value="CoursesService">CoursesService</option>
+                <option value="SectionsService">SectionsService</option>
+                <option value="CourseSlotsService">CourseSlotsService</option>
+                <option value="RegistrationsService">RegistrationsService</option>
+                <option value="OverridesService">OverridesService</option>
+                <option value="EnrollmentPhasesService">EnrollmentPhasesService</option>
+                <option value="AnnouncementsService">AnnouncementsService</option>
+                <option value="DatabaseService">DatabaseService</option>
+              </select>
+            </div>
+
+            <!-- Terminal Text Search -->
+            <div class="log-search-wrapper">
+              <img src="assets/icons/search.svg" alt="" width="14" height="14" class="log-search-icon" />
+              <input 
+                type="text" 
+                id="log-search-input" 
+                class="terminal-search-input" 
+                placeholder="Filter logs by message or regex..." 
+                aria-label="Filter logs"
+              />
+            </div>
+
+            <span class="log-counter" id="log-counter">0 / 0 lines</span>
+          </div>
+        </div>
+
+        <!-- Terminal Output Viewport -->
+        <div class="terminal-viewport" id="terminal-viewport">
+          <div class="terminal-output" id="terminal-output" role="log" aria-live="polite">
+            <!-- Rendered Monospace Log Lines -->
+          </div>
+
+          <!-- Jump to Latest Floating Button -->
+          <button class="jump-latest-btn" id="jump-latest-btn" style="display: none;" title="Scroll to newest logs">
+            <span>↓ Jump to latest</span>
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ======================================================== -->
+  <!-- SHARED CRUD MODAL (#crud-modal)                          -->
+  <!-- ======================================================== -->
+  <div class="modal-backdrop" id="crud-modal-backdrop" style="display: none;">
+    <div class="modal-dialog" id="crud-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h3 class="modal-title" id="modal-title">Add Record</h3>
+          <span class="modal-subtitle" id="modal-subtitle">Configure schema entity attributes</span>
+        </div>
+        <button class="btn-icon modal-close-btn" id="modal-close-btn" aria-label="Close modal">
+          <img src="assets/icons/x.svg" alt="" width="18" height="18" />
+        </button>
+      </div>
+
+      <form id="crud-form" autocomplete="off">
+        <div class="modal-body" id="modal-form-fields">
+          <!-- Dynamically swapped form fields for the selected entity -->
+        </div>
+
+        <div class="modal-error-alert" id="modal-error-alert" style="display: none;">
+          <img src="assets/icons/alert-triangle.svg" alt="" width="16" height="16" />
+          <span id="modal-error-text">Failed to save record. Please check inputs.</span>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" id="modal-cancel-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="modal-save-btn">
+            <span id="modal-save-btn-text">Save Changes</span>
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- DELETE CONFIRMATION SUB-DIALOG (#delete-modal)           -->
+  <!-- ======================================================== -->
+  <div class="modal-backdrop" id="delete-modal-backdrop" style="display: none;">
+    <div class="modal-dialog modal-dialog-sm" id="delete-modal" role="alertdialog" aria-modal="true" aria-labelledby="delete-modal-title">
+      
+      <div class="modal-header modal-header-danger">
+        <div class="modal-title-group">
+          <h3 class="modal-title text-danger" id="delete-modal-title">Confirm Permanent Deletion</h3>
+          <span class="modal-subtitle">Destructive Database Action</span>
+        </div>
+        <button class="btn-icon modal-close-btn" id="delete-modal-close-btn" aria-label="Close dialog">
+          <img src="assets/icons/x.svg" alt="" width="18" height="18" />
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="delete-warning-box">
+          <img src="assets/icons/alert-triangle.svg" alt="" width="24" height="24" class="warning-icon" />
+          <p class="delete-warning-text">
+            This action <strong>cannot be undone</strong>. This will permanently remove the record from the database.
+          </p>
+        </div>
+
+        <p class="delete-instruction">
+          To confirm deletion, please type the exact record ID below:
+        </p>
+        <div class="delete-target-id-box" id="delete-target-id-box">
+          <code id="delete-target-id-display">ID_HERE</code>
+        </div>
+
+        <div class="form-group" style="margin-top: 16px;">
+          <input 
+            type="text" 
+            id="delete-confirm-input" 
+            class="form-control" 
+            placeholder="Type ID to confirm..." 
+            autocomplete="off"
+            aria-label="Confirm Record ID"
+          />
+        </div>
+
+        <div class="modal-error-alert" id="delete-modal-error" style="display: none;">
+          <img src="assets/icons/alert-triangle.svg" alt="" width="16" height="16" />
+          <span id="delete-modal-error-text">Failed to delete record.</span>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" id="delete-cancel-btn">Cancel</button>
+        <button type="button" class="btn btn-danger" id="delete-confirm-btn" disabled>
+          <img src="assets/icons/trash.svg" alt="" width="16" height="16" />
+          <span>Delete Permanently</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container" aria-live="polite"></div>
+
+  <div id="footer-placeholder"></div>
+
+  <!-- Page Logic Script -->
+  <script src="js/super_user.js"></script>
+  <script src="js/footer-loader.js"></script>
+</body>
+</html>

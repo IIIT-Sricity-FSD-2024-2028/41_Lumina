@@ -37,37 +37,15 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
+    const request = context.switchToHttp().getRequest();
+
     // Wildcard '*' means the endpoint is public (e.g. login)
     if (requiredRoles.includes('*')) {
       return true;
     }
 
     const request = context.switchToHttp().getRequest();
-    let userRole: string | undefined;
-
-    // ── 1. JWT Authentication (Industry Standard) ─────────────
-    const authHeader = request.headers['authorization'] as string | undefined;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.substring(7).trim();
-      try {
-        const decoded = this.jwtService.verify(token, {
-          secret:
-            process.env.JWT_SECRET ||
-            'lumina_super_secure_jwt_secret_key_2026_academic_platform',
-        });
-        request.user = decoded;
-        userRole = decoded.role;
-      } catch (err) {
-        throw new UnauthorizedException(
-          'Invalid or expired authentication token (JWT verification failed).',
-        );
-      }
-    }
-
-    // ── 2. Fallback to x-role header (Compatibility Mode) ─────
-    if (!userRole) {
-      userRole = request.headers['x-role'] as string | undefined;
-    }
+    const userRole = request.headers['x-role'] as string | undefined;
 
     if (!userRole) {
       throw new UnauthorizedException(
