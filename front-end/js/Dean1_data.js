@@ -19,7 +19,13 @@ var _dean1ApiCache = {};
 async function fetchDean1Data() {
   const sessionData = JSON.parse(localStorage.getItem('Lumina_Session') || '{}');
   const role = sessionData.Role || 'Assistant_Dean_1';
-  const headers = { 'x-role': role };
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(sessionData.accessToken ? { 'Authorization': `Bearer ${sessionData.accessToken}` } : {}),
+    'x-role': role,
+  };
+
+
   try {
     const [coursesRes, usersRes, regsRes, sectionsRes, slotsRes, overridesRes, degreeReqRes, prereqRes] = await Promise.all([
       fetch('http://localhost:3000/courses', { headers }),
