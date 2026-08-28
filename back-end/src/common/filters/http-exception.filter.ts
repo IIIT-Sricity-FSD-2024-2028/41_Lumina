@@ -148,8 +148,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
           ? (exception.stack ?? '').split('\n')[0]
           : 'No stack';
 
+      const logLevel = status >= 500 ? 'ERROR' : 'WARN';
       const logLine =
-        `${timestamp} | WARN | ROLE: ${role} | ${method} | ${urlPath} | ${statusLabel} | ${duration} | IP: ${ip} | UA: ${ua} | MSG: ${messages.join(', ')} | ${stackFirstLine}\n`;
+        `${timestamp} | ${logLevel.padEnd(5)} | ROLE: ${role.padEnd(12)} | ${method} | ${urlPath} | ${statusLabel} | ${duration} | IP: ${ip} | UA: ${ua} | MSG: ${messages.join(', ')} | ${stackFirstLine}\n`;
+
 
 
       // ── Write to unified logs/error.log ─────────────────────

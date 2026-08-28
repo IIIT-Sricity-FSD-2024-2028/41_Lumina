@@ -13,22 +13,27 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 1. SESSION PROTECTION & ROLE GUARD ---
     // =========================================================================
     let sessionData = localStorage.getItem('Lumina_Session');
+    let currentUser = null;
+    try {
+        currentUser = sessionData ? JSON.parse(sessionData) : null;
+    } catch (e) {
+        localStorage.removeItem('Lumina_Session');
+        window.location.href = 'login.html';
+        return;
+    }
     
-    if (!sessionData) {
+    if (!currentUser || currentUser.Role !== 'Super_User') {
         window.location.href = 'login.html';
         return;
     }
 
-    const currentUser = JSON.parse(sessionData);
-    if (currentUser.Role !== 'Super_User') {
-        window.location.href = 'login.html';
-        return;
-    }
 
     const headers = {
         'Content-Type': 'application/json',
+        ...(currentUser && currentUser.accessToken ? { 'Authorization': `Bearer ${currentUser.accessToken}` } : {}),
         'x-role': currentUser.Role,
     };
+
 
     // Populate Top Navigation User Info
     const userNameEl = document.getElementById('user-full-name');
@@ -177,18 +182,19 @@ document.addEventListener('DOMContentLoaded', () => {
             title: 'Enrollment Phases',
             singular: 'Enrollment Phase',
             endpoint: '/enrollment-phases',
-            idKey: 'phaseId',
+            idKey: 'id',
             canCreate: true,
             canEdit: true,
             canDelete: true,
-            columns: ['Phase ID', 'Term', 'Phase Name', 'Start Date', 'End Date', 'Actions'],
+            columns: ['Phase ID', 'Phase Name', 'Eligible Groups', 'Timeline', 'Status', 'Actions'],
             filterOptions: [
-                { value: 'ALL', label: 'All Terms' },
-                { value: 'Fall 2026', label: 'Fall 2026' },
-                { value: 'Spring 2026', label: 'Spring 2026' },
+                { value: 'ALL', label: 'All Statuses' },
+                { value: 'Active', label: 'Active' },
+                { value: 'Upcoming', label: 'Upcoming' },
+                { value: 'Completed', label: 'Completed' },
             ],
-            filterFn: (item, filterVal) => (filterVal === 'ALL' ? true : item.term === filterVal),
-            searchFields: ['phaseId', 'term', 'phaseName', 'startDate', 'endDate'],
+            filterFn: (item, filterVal) => (filterVal === 'ALL' ? true : item.status === filterVal),
+            searchFields: ['id', 'name', 'eligibleGroups', 'timeline', 'status'],
         },
         announcements: {
             title: 'Announcements',
@@ -196,16 +202,17 @@ document.addEventListener('DOMContentLoaded', () => {
             endpoint: '/announcements',
             idKey: 'announcementId',
             canCreate: true,
-            canEdit: false, // Prompt rule: Edit ❌
-            canDelete: false, // Prompt rule: Delete ❌
-            columns: ['Announcement ID', 'Title', 'Body', 'Posted By', 'Date', 'Actions'],
+            canEdit: true,
+            canDelete: true,
+            columns: ['ID', 'Course', 'Title', 'Message', 'Posted By', 'Date', 'Actions'],
             filterOptions: [
                 { value: 'ALL', label: 'All Announcements' },
             ],
             filterFn: () => true,
-            searchFields: ['announcementId', 'title', 'body', 'postedBy', 'date'],
+            searchFields: ['announcementId', 'id', 'courseId', 'title', 'message', 'facultyId', 'createdAt'],
         },
     };
+
 
     // =========================================================================
     // --- 3. OVERVIEW TAB: CRUD ENGINE & DATA FETCHERS ---
@@ -476,21 +483,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     </tr>
                 `;
 
-            case 'enrollment-phases':
+            case 'enrollment-phases': {
+                const id = item.id || item.phaseId;
                 return `
-                    <tr data-id="${escapeHtml(item.phaseId)}">
-                        <td><strong>${escapeHtml(item.phaseId)}</strong></td>
-                        <td>${escapeHtml(item.term || '—')}</td>
-                        <td><strong>${escapeHtml(item.phaseName || '—')}</strong></td>
-                        <td>${formatDate(item.startDate)}</td>
-                        <td>${formatDate(item.endDate)}</td>
+                    <tr data-id="${escapeHtml(id)}">
+                        <td><strong>${escapeHtml(id)}</strong></td>
+                        <td><strong>${escapeHtml(item.name || item.phaseName || '—')}</strong></td>
+                        <td>${escapeHtml(item.eligibleGroups || 'All Students')}</td>
+                        <td>${escapeHtml(item.timeline || (item.startDate ? `${item.startDate} – ${item.endDate}` : '—'))}</td>
+                        <td><span class="${getStatusBadgeClass(item.status)}">${escapeHtml(item.status || 'Active')}</span></td>
                         <td>
                             <div class="row-actions">
-                                <button class="action-btn-edit" data-action="edit" data-id="${escapeHtml(item.phaseId)}" title="Edit Phase">
+                                <button class="action-btn-edit" data-action="edit" data-id="${escapeHtml(id)}" title="Edit Phase">
                                     <img src="assets/icons/edit.svg" alt="" width="13" height="13" />
                                     <span>Edit</span>
                                 </button>
-                                <button class="action-btn-delete" data-action="delete" data-id="${escapeHtml(item.phaseId)}" title="Delete Phase">
+                                <button class="action-btn-delete" data-action="delete" data-id="${escapeHtml(id)}" title="Delete Phase">
                                     <img src="assets/icons/trash.svg" alt="" width="13" height="13" />
                                     <span>Delete</span>
                                 </button>
@@ -498,22 +506,34 @@ document.addEventListener('DOMContentLoaded', () => {
                         </td>
                     </tr>
                 `;
+            }
 
-            case 'announcements':
+            case 'announcements': {
+                const id = item.announcementId || item.id;
                 return `
-                    <tr data-id="${escapeHtml(item.announcementId)}">
-                        <td><strong>${escapeHtml(item.announcementId)}</strong></td>
+                    <tr data-id="${escapeHtml(id)}">
+                        <td><strong>${escapeHtml(id)}</strong></td>
+                        <td><span class="badge-active">${escapeHtml(item.courseId || 'ALL')}</span></td>
                         <td><strong>${escapeHtml(item.title || '—')}</strong></td>
-                        <td title="${escapeHtml(item.body || '')}">${truncateText(item.body || '—', 48)}</td>
-                        <td>${escapeHtml(item.postedBy || '—')}</td>
-                        <td>${formatDate(item.date)}</td>
+                        <td title="${escapeHtml(item.message || item.body || '')}">${truncateText(item.message || item.body || '—', 48)}</td>
+                        <td>${escapeHtml(item.facultyId || item.authorId || item.postedBy || 'Admin')}</td>
+                        <td>${formatDate(item.createdAt || item.date)}</td>
                         <td>
                             <div class="row-actions">
-                                <span style="font-size:0.75rem; color:var(--text-muted);">Broadcast only</span>
+                                <button class="action-btn-edit" data-action="edit" data-id="${escapeHtml(id)}" title="Edit Announcement">
+                                    <img src="assets/icons/edit.svg" alt="" width="13" height="13" />
+                                    <span>Edit</span>
+                                </button>
+                                <button class="action-btn-delete" data-action="delete" data-id="${escapeHtml(id)}" title="Delete Announcement">
+                                    <img src="assets/icons/trash.svg" alt="" width="13" height="13" />
+                                    <span>Delete</span>
+                                </button>
                             </div>
                         </td>
                     </tr>
                 `;
+            }
+
 
             default:
                 return '';
@@ -792,25 +812,25 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'enrollment-phases':
                 modalFields.innerHTML = `
                     <div class="form-grid">
-                        <div class="form-group">
-                            <label class="form-label" for="field-phaseId">Phase ID <span class="required">*</span></label>
-                            <input type="text" id="field-phaseId" name="phaseId" class="form-control" value="${escapeHtml(data?.phaseId || '')}" ${isEdit ? 'disabled' : 'required'} placeholder="e.g. PHASE-F26-1" />
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="field-term">Academic Term <span class="required">*</span></label>
-                            <input type="text" id="field-term" name="term" class="form-control" value="${escapeHtml(data?.term || 'Fall 2026')}" required placeholder="e.g. Fall 2026" />
-                        </div>
                         <div class="form-group-full form-group">
                             <label class="form-label" for="field-phaseName">Phase Name <span class="required">*</span></label>
-                            <input type="text" id="field-phaseName" name="phaseName" class="form-control" value="${escapeHtml(data?.phaseName || '')}" required placeholder="e.g. Priority Enrollment Phase 1" />
+                            <input type="text" id="field-phaseName" name="name" class="form-control" value="${escapeHtml(data?.name || data?.phaseName || '')}" required placeholder="e.g. Phase 1 - Final Year Priority" />
                         </div>
                         <div class="form-group">
-                            <label class="form-label" for="field-startDate">Start Date <span class="required">*</span></label>
-                            <input type="date" id="field-startDate" name="startDate" class="form-control" value="${formatInputDate(data?.startDate)}" required />
+                            <label class="form-label" for="field-eligibleGroups">Eligible Groups <span class="required">*</span></label>
+                            <input type="text" id="field-eligibleGroups" name="eligibleGroups" class="form-control" value="${escapeHtml(data?.eligibleGroups || 'All Students')}" required placeholder="e.g. Final Year, 3rd Year" />
                         </div>
                         <div class="form-group">
-                            <label class="form-label" for="field-endDate">End Date <span class="required">*</span></label>
-                            <input type="date" id="field-endDate" name="endDate" class="form-control" value="${formatInputDate(data?.endDate)}" required />
+                            <label class="form-label" for="field-status">Status <span class="required">*</span></label>
+                            <select id="field-status" name="status" class="form-control" required>
+                                <option value="Upcoming" ${data?.status === 'Upcoming' ? 'selected' : ''}>Upcoming</option>
+                                <option value="Active" ${data?.status === 'Active' ? 'selected' : ''}>Active</option>
+                                <option value="Completed" ${data?.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                            </select>
+                        </div>
+                        <div class="form-group-full form-group">
+                            <label class="form-label" for="field-timeline">Timeline / Duration <span class="required">*</span></label>
+                            <input type="text" id="field-timeline" name="timeline" class="form-control" value="${escapeHtml(data?.timeline || 'Aug 1 – Aug 5, 2026')}" required placeholder="e.g. Aug 1 – Aug 5, 2026" />
                         </div>
                     </div>
                 `;
@@ -820,28 +840,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 modalFields.innerHTML = `
                     <div class="form-grid">
                         <div class="form-group">
-                            <label class="form-label" for="field-announcementId">Announcement ID <span class="required">*</span></label>
-                            <input type="text" id="field-announcementId" name="announcementId" class="form-control" value="${escapeHtml(data?.announcementId || '')}" ${isEdit ? 'disabled' : 'required'} placeholder="e.g. ANN-901" />
+                            <label class="form-label" for="field-courseId">Target Course ID <span class="required">*</span></label>
+                            <input type="text" id="field-courseId" name="courseId" class="form-control" value="${escapeHtml(data?.courseId || 'ALL')}" required placeholder="e.g. PC402 or ALL" />
                         </div>
                         <div class="form-group">
-                            <label class="form-label" for="field-postedBy">Posted By <span class="required">*</span></label>
-                            <input type="text" id="field-postedBy" name="postedBy" class="form-control" value="${escapeHtml(data?.postedBy || currentUser.Full_Name || 'Dean Office')}" required />
-                        </div>
-                        <div class="form-group-full form-group">
                             <label class="form-label" for="field-title">Headline / Title <span class="required">*</span></label>
-                            <input type="text" id="field-title" name="title" class="form-control" value="${escapeHtml(data?.title || '')}" required placeholder="e.g. Fall 2026 Enrollment Windows Announced" />
+                            <input type="text" id="field-title" name="title" class="form-control" value="${escapeHtml(data?.title || '')}" required placeholder="e.g. Midterm Examination Schedule" />
                         </div>
                         <div class="form-group-full form-group">
-                            <label class="form-label" for="field-body">Announcement Body <span class="required">*</span></label>
-                            <textarea id="field-body" name="body" class="form-control" rows="4" required placeholder="Enter full announcement notice...">${escapeHtml(data?.body || '')}</textarea>
-                        </div>
-                        <div class="form-group-full form-group">
-                            <label class="form-label" for="field-date">Publication Date <span class="required">*</span></label>
-                            <input type="date" id="field-date" name="date" class="form-control" value="${formatInputDate(data?.date) || new Date().toISOString().split('T')[0]}" required />
+                            <label class="form-label" for="field-message">Announcement Message <span class="required">*</span></label>
+                            <textarea id="field-message" name="message" class="form-control" rows="4" required placeholder="Enter announcement text...">${escapeHtml(data?.message || data?.body || '')}</textarea>
                         </div>
                     </div>
                 `;
                 break;
+
 
             default:
                 modalFields.innerHTML = '';
@@ -849,21 +862,87 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
+     * Normalizes entity form payloads to match backend NestJS DTO validation schemas
+     */
+    function normalizePayloadForBackend(entityKey, raw) {
+        if (entityKey === 'users') {
+            const role = raw.role || raw.Role || 'Student';
+            return {
+                User_ID: raw.userId || raw.User_ID || '',
+                Full_Name: raw.fullName || raw.Full_Name || '',
+                Email: raw.email || raw.Email || '',
+                Password: raw.password || raw.Password || 'password123',
+                Role: role === 'Admin' ? 'Dean' : role,
+                Dept_ID: raw.deptId || raw.Dept_ID || 'CSE'
+            };
+        }
+        if (entityKey === 'courses') {
+            return {
+                courseId: raw.courseId || '',
+                courseName: raw.courseName || '',
+                credits: Number(raw.credits) || 3,
+                courseCapacity: Number(raw.capacity || raw.courseCapacity) || 60,
+                status: raw.status || 'Active',
+                deptId: raw.deptId || 'CSE'
+            };
+        }
+        if (entityKey === 'sections') {
+            return {
+                sectionId: raw.sectionId || '',
+                sectionName: raw.sectionName || (raw.sectionId ? raw.sectionId.split('-').pop() : 'S1'),
+                courseId: raw.courseId || '',
+                termId: raw.termId || raw.term || 'SPRING2026'
+            };
+        }
+        if (entityKey === 'course-slots') {
+            const timeParts = (raw.time || '').split('-');
+            return {
+                sectionId: raw.sectionId || '',
+                facultyId: raw.facultyId || 'F2024001',
+                roomNumber: raw.room || raw.roomNumber || 'G01',
+                dayOfWeek: raw.day || raw.dayOfWeek || 'Monday',
+                startTime: raw.startTime || (timeParts[0] ? timeParts[0].trim() : '08:45'),
+                endTime: raw.endTime || (timeParts[1] ? timeParts[1].trim() : '09:45'),
+                syllabus: null
+            };
+        }
+        if (entityKey === 'enrollment-phases') {
+            return {
+                name: raw.name || raw.phaseName || 'Phase 1 - General Registration',
+                eligibleGroups: raw.eligibleGroups || 'All Students',
+                timeline: raw.timeline || `${raw.startDate || 'Aug 1'} – ${raw.endDate || 'Aug 5, 2026'}`,
+                status: raw.status || 'Upcoming'
+            };
+        }
+        if (entityKey === 'announcements') {
+            return {
+                courseId: raw.courseId || 'ALL',
+                title: raw.title || '',
+                message: raw.body || raw.message || ''
+            };
+        }
+        return raw;
+    }
+
+    /**
      * Submit Form: Handles Create (POST) and Edit (PUT/PATCH)
      */
     crudForm.addEventListener('submit', async (e) => {
+
         e.preventDefault();
         modalErrorAlert.style.display = 'none';
 
         const formData = new FormData(crudForm);
-        const payload = {};
+        const rawPayload = {};
         for (let [key, val] of formData.entries()) {
             if (key === 'credits' || key === 'capacity') {
-                payload[key] = parseInt(val, 10);
+                rawPayload[key] = parseInt(val, 10);
             } else {
-                payload[key] = val;
+                rawPayload[key] = val;
             }
         }
+
+        const payload = normalizePayloadForBackend(currentModalEntity, rawPayload);
 
         try {
             let url = '';
@@ -885,8 +964,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(url, {
                 method: method,
                 headers: headers,
-                body: JSON.stringify(payload),
+                body: JSON.stringify(currentModalMode === 'edit-grade' ? { finalGrade: rawPayload.finalGrade } : payload),
             });
+
 
             if (!response.ok) {
                 const errData = await response.json().catch(() => ({}));
@@ -1038,26 +1118,76 @@ document.addEventListener('DOMContentLoaded', () => {
         { timestamp: '2026-08-26T09:12:00.005Z', level: 'INFO', module: 'SectionsService', message: 'Allocated 6 new lecture slots for Spring 2026 timetable' },
     ];
 
-    let logBuffer = [...MOCK_LOGS];
+    let logBuffer = [];
     let isLiveStreaming = false;
     let liveStreamInterval = null;
     let activeLogLevelFilter = 'ALL';
     let activeLogModuleFilter = 'ALL';
     let activeLogSearchText = '';
 
+    /**
+     * Fetches real logs from backend access, error, and auth log streams
+     */
     async function fetchLogs() {
-        const response = await fetch(`${API_BASE}/super-user/logs?type=access&lines=200`, { headers });
-        if (!response.ok) {
-            throw new Error(`Server returned HTTP ${response.status}`);
-        }
+        try {
+            const [accessRes, errorRes, authRes] = await Promise.all([
+                fetch(`${API_BASE}/super-user/logs?type=access&lines=150`, { headers }).then(r => r.ok ? r.json() : { logs: [] }).catch(() => ({ logs: [] })),
+                fetch(`${API_BASE}/super-user/logs?type=error&lines=150`, { headers }).then(r => r.ok ? r.json() : { logs: [] }).catch(() => ({ logs: [] })),
+                fetch(`${API_BASE}/super-user/logs?type=auth&lines=150`, { headers }).then(r => r.ok ? r.json() : { logs: [] }).catch(() => ({ logs: [] })),
+            ]);
 
-        const data = await response.json();
-        return (data.logs || []).map((message, index) => ({
-            timestamp: new Date(Date.now() - (data.logs.length - index) * 1000).toISOString(),
-            level: message.includes('ERROR') ? 'ERROR' : message.includes('WARN') ? 'WARN' : 'INFO',
-            module: 'ServerLog',
-            message,
-        }));
+            const combined = [
+                ...(accessRes.logs || []),
+                ...(errorRes.logs || []),
+                ...(authRes.logs || [])
+            ].filter(rawLine => !rawLine.includes('/super-user/logs'));
+
+            if (combined.length === 0) {
+                return [];
+            }
+
+
+            const parsed = combined.map(rawLine => {
+                const parts = rawLine.split('|').map(s => s.trim());
+                let timestamp = new Date().toISOString();
+                let level = 'INFO';
+                let module = 'HttpRoute';
+                let message = rawLine;
+
+                if (parts.length >= 2) {
+                    if (!isNaN(Date.parse(parts[0]))) {
+                        timestamp = parts[0];
+                    }
+                    const rawLevel = (parts[1] || '').toUpperCase();
+                    if (rawLevel.includes('ERR')) level = 'ERROR';
+                    else if (rawLevel.includes('WARN')) level = 'WARN';
+                    else if (rawLevel.includes('DEBUG')) level = 'DEBUG';
+                    else level = 'INFO';
+                }
+
+                // Associate module with target domain
+                if (rawLine.includes('/users')) module = 'UsersService';
+                else if (rawLine.includes('/courses')) module = 'CoursesService';
+                else if (rawLine.includes('/sections')) module = 'SectionsService';
+                else if (rawLine.includes('/course-slots')) module = 'CourseSlotsService';
+                else if (rawLine.includes('/registrations')) module = 'RegistrationsService';
+                else if (rawLine.includes('/overrides')) module = 'OverridesService';
+                else if (rawLine.includes('/enrollment-phases')) module = 'EnrollmentPhasesService';
+                else if (rawLine.includes('/announcements')) module = 'AnnouncementsService';
+                else if (rawLine.includes('/auth') || rawLine.includes('login') || rawLine.includes('AuthService')) module = 'AuthService';
+                else if (rawLine.includes('Database') || rawLine.includes('pool')) module = 'DatabaseService';
+                else module = 'SystemService';
+
+                return { timestamp, level, module, message: rawLine };
+            });
+
+            // Sort newest at the bottom
+            parsed.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+            return parsed;
+        } catch (err) {
+            console.error('Error fetching logs from backend:', err);
+            return [];
+        }
     }
 
     const terminalOutput = document.getElementById('terminal-output');
@@ -1135,26 +1265,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     jumpLatestBtn.addEventListener('click', scrollToBottom);
 
-    // Live Streaming Toggle
-    liveToggleBtn.addEventListener('click', () => {
+    // Live Streaming Toggle (Real Live Backend Polling)
+    liveToggleBtn.addEventListener('click', async () => {
         isLiveStreaming = !isLiveStreaming;
 
         if (isLiveStreaming) {
             liveToggleBtn.classList.add('active');
             connectionStatusPill.classList.add('connected');
-            connectionStatusText.textContent = 'Simulating live log stream (3s)';
+            connectionStatusText.textContent = 'Live backend polling active (3s)';
 
-            // Append mock log periodically
-            liveStreamInterval = setInterval(() => {
-                const newEntry = generateMockLogEntry();
-                logBuffer.push(newEntry);
-                if (logBuffer.length > 500) logBuffer.shift(); // Keep buffer bounded
-                renderLogs();
-            }, 2500);
+            logBuffer = await fetchLogs();
+            renderLogs();
+
+            // Poll real backend logs periodically
+            liveStreamInterval = setInterval(async () => {
+                const fresh = await fetchLogs();
+                if (fresh && fresh.length > 0) {
+                    logBuffer = fresh;
+                    renderLogs();
+                }
+            }, 3000);
         } else {
             liveToggleBtn.classList.remove('active');
             connectionStatusPill.classList.remove('connected');
-            connectionStatusText.textContent = 'Log service not configured';
+            connectionStatusText.textContent = 'Live streaming paused';
 
             if (liveStreamInterval) {
                 clearInterval(liveStreamInterval);
@@ -1163,27 +1297,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Generate realistic dynamic logs for live simulation
-    const MOCK_MESSAGES = [
-        { level: 'INFO', module: 'AuthService', message: 'Token refresh issued for student session' },
-        { level: 'DEBUG', module: 'RegistrationsService', message: 'Evaluating prerequisites for enrollment request: pass' },
-        { level: 'INFO', module: 'CoursesService', message: 'Capacity query returned 45 open seats in department' },
-        { level: 'WARN', module: 'SectionsService', message: 'Instructor load factor exceeds 100% threshold for Fall term' },
-        { level: 'INFO', module: 'OverridesService', message: 'Dean reviewed override request ID #REQ-8894' },
-        { level: 'DEBUG', module: 'DatabaseService', message: 'PostgreSQL connection ping successful (0.8ms latency)' },
-        { level: 'INFO', module: 'AnnouncementsService', message: 'Digest emails queued for delivery' },
-        { level: 'ERROR', module: 'CourseSlotsService', message: 'Slot booking rejected: time conflict with instructor schedule' },
-    ];
-
-    function generateMockLogEntry() {
-        const sample = MOCK_MESSAGES[Math.floor(Math.random() * MOCK_MESSAGES.length)];
-        return {
-            timestamp: new Date().toISOString(),
-            level: sample.level,
-            module: sample.module,
-            message: `${sample.message} (id: ${Math.floor(1000 + Math.random() * 9000)})`,
-        };
-    }
 
     // Log Level Filter Pills
     logLevelPills.forEach(pill => {

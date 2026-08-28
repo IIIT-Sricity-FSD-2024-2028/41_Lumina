@@ -1,4 +1,13 @@
 {
     "git.ignoreLimitWarning": true,
-    "liveServer.settings.port": 5502
+    "liveServer.settings.port": 5502,
+    "liveServer.settings.root": "/front-end",
+    "liveServer.settings.ignoreFiles": [
+        ".vscode/**",
+        "**/.git/**",
+        "back-end/**",
+        "**/logs/**",
+        "**/logs/*",
+        "**/node_modules/**"
+    ]
 }

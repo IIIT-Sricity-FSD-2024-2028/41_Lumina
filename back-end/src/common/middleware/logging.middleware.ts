@@ -52,8 +52,14 @@ export class LoggingMiddleware implements NestMiddleware {
       const statusText = this.getStatusText(statusCode);
       const level = statusCode >= 500 ? 'ERROR' : statusCode >= 400 ? 'WARN' : 'INFO';
 
+      // Exclude log reader polling probes to avoid log feedback loops
+      if (originalUrl.startsWith('/super-user/logs') && statusCode < 400) {
+        return;
+      }
+
       // Standard Pipe-Separated (|) Log Format
       const logMessage = `${timestamp} | ${level.padEnd(5)} | ROLE: ${userRole.padEnd(12)} | ${method.padEnd(6)} | ${originalUrl} | ${statusCode} ${statusText} | ${responseTime}ms | IP: ${clientIp} | UA: ${userAgent}`;
+
 
       // 1. Colorized console output based on HTTP Status Code
       if (statusCode >= 500) {
