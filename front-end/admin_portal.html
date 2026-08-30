@@ -227,14 +227,22 @@
         </p>
       </div>
 
-      <!-- Quick Switcher for Evaluation Demonstration -->
-      <div class="admin-spoc-switcher">
-        <label for="spoc-select-eval">Demo Persona:</label>
-        <select id="spoc-select-eval" class="spoc-select" onchange="switchAdminPersona(this.value)">
-          <option value="SPOC-001">Arjun Verma (IIIT Sri City - Enterprise)</option>
-          <option value="SPOC-002">Eswar Prasad (IIT Bombay - Campus)</option>
-          <option value="SPOC-003">Priya Sharma (BITS Pilani - Starter)</option>
-        </select>
+      <!-- Quick Switcher for Evaluation Demonstration & Institute Switching -->
+      <div class="admin-spoc-switcher" style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+        <div>
+          <label for="spoc-select-eval" style="display: block; margin-bottom: 3px; font-size: 0.72rem; color: #94a3b8; font-weight: 700;">SPOC ADMIN:</label>
+          <select id="spoc-select-eval" class="spoc-select" onchange="switchAdminPersona(this.value)">
+            <option value="SPOC-001">Arjun Verma (2 Institutes)</option>
+            <option value="SPOC-002">Eswar Prasad (2 Institutes)</option>
+            <option value="SPOC-003">Priya Sharma (2 Institutes)</option>
+          </select>
+        </div>
+        <div>
+          <label for="institute-select-switch" style="display: block; margin-bottom: 3px; font-size: 0.72rem; color: #38bdf8; font-weight: 700;">SWITCH ACTIVE CLIENT:</label>
+          <select id="institute-select-switch" class="spoc-select" onchange="switchActiveInstitute(this.value)" style="border-color: #38bdf8; font-weight: 700; color: #38bdf8; background: #0f172a;">
+            <option value="INST-IIITS">🏛️ IIIT Sri City (Enterprise)</option>
+          </select>
+        </div>
       </div>
     </div>
 

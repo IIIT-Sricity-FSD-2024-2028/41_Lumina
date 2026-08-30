@@ -23,6 +23,17 @@ export interface AdminDashboardData {
     joinedDate: string;
     status: string;
   };
+  assignedInstitutes: Array<{
+    instituteId: string;
+    name: string;
+    tier: string;
+    deanName: string;
+    deanEmail: string;
+    studentCount: number;
+    annualContractValue: number;
+    joinedDate: string;
+    status: string;
+  }>;
   metrics: {
     openDocketsCount: number;
     resolvedDocketsCount: number;
@@ -49,16 +60,28 @@ export class AdminService {
   ) { }
 
   /**
-   * Retrieves aggregated dashboard context for a specific SPOC Admin
+   * Retrieves aggregated dashboard context for a specific SPOC Admin, optionally scoped to a specific institute
    */
-  getDashboard(spocId: string): AdminDashboardData {
+  getDashboard(spocId: string, instituteId?: string): AdminDashboardData {
     const adminTeam = this.databaseService.adminTeam;
     const spoc = adminTeam.find((a) => a.adminId === spocId) || adminTeam[0];
 
     const institutes = this.databaseService.institutes;
-    const assignedInst = institutes.find((i) => i.instituteId === spoc.assignedInstituteId) || institutes[0];
+    // Find all client institutes assigned to this SPOC
+    const spocInstitutes = institutes.filter((i) => i.spocAdminId === spoc.adminId);
+    const availableInstitutes = spocInstitutes.length > 0 ? spocInstitutes : institutes;
 
-    const spocDockets = this.databaseService.supportDockets.filter((d) => d.assignedSpocId === spoc.adminId || d.instituteId === assignedInst.instituteId);
+    // Resolve active institute: user-specified instituteId OR SPOC assigned institute OR first available
+    const assignedInst =
+      (instituteId ? institutes.find((i) => i.instituteId === instituteId) : null) ||
+      institutes.find((i) => i.instituteId === spoc.assignedInstituteId && (!spocInstitutes.length || spocInstitutes.some(si => si.instituteId === i.instituteId))) ||
+      availableInstitutes[0] ||
+      institutes[0];
+
+    // Filter dockets for this specific institute and SPOC
+    const spocDockets = this.databaseService.supportDockets.filter(
+      (d) => d.instituteId === assignedInst.instituteId || (d.assignedSpocId === spoc.adminId && (!instituteId || d.instituteId === assignedInst.instituteId)),
+    );
     const openDockets = spocDockets.filter((d) => d.status !== 'Resolved');
     const resolvedDockets = spocDockets.filter((d) => d.status === 'Resolved');
 
@@ -86,6 +109,17 @@ export class AdminService {
         joinedDate: assignedInst.joinedDate,
         status: assignedInst.status,
       },
+      assignedInstitutes: availableInstitutes.map((inst) => ({
+        instituteId: inst.instituteId,
+        name: inst.name,
+        tier: inst.tier,
+        deanName: inst.deanName,
+        deanEmail: inst.deanEmail,
+        studentCount: inst.studentCount,
+        annualContractValue: inst.annualContractValue,
+        joinedDate: inst.joinedDate,
+        status: inst.status,
+      })),
       metrics: {
         openDocketsCount: openDockets.length,
         resolvedDocketsCount: resolvedDockets.length,
@@ -99,14 +133,14 @@ export class AdminService {
       systemAlerts: [
         {
           type: 'info',
-          title: 'Enrollment Phase Active',
-          message: 'Priority Window 1 active for Spring 2026 term. 84% course slots allocated.',
-          time: '15m ago',
+          title: `Tenant Active: ${assignedInst.name}`,
+          message: `Priority Window 1 active for Spring 2026 term. ${assignedInst.tier} Tier policies loaded.`,
+          time: '10m ago',
         },
         {
           type: 'warning',
-          title: 'Section Near Capacity',
-          message: 'CS301 Database Systems (Section A) is at 95% capacity.',
+          title: 'Seat License Monitoring',
+          message: `${assignedInst.name} has consumed over 90% of allocated seat capacity.`,
           time: '1h ago',
         },
         {

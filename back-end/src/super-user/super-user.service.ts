@@ -148,17 +148,23 @@ export class SuperUserService {
   onboardInstitute(payload: Partial<ClientInstitute>): ClientInstitute {
     const spoc = this.db.adminTeam.find((a: LuminaAdminSpoc) => a.adminId === payload.spocAdminId) || this.db.adminTeam[0];
 
+    const targetTier = payload.tier || 'Campus';
+    const plan = this.db.saasPlans.find(
+      (p) => p.id.toLowerCase() === targetTier.toLowerCase() || p.name.toLowerCase().includes(targetTier.toLowerCase()),
+    );
+    const calculatedAcv = plan ? plan.annualMonthlyPrice * 12 : 41988;
+
     const newInst: ClientInstitute = {
       instituteId: payload.instituteId || `INST-${Date.now().toString().slice(-4)}`,
       name: payload.name || 'New University Client',
-      tier: payload.tier || 'Campus',
+      tier: targetTier,
       spocAdminId: spoc.adminId,
       spocName: spoc.fullName,
       deanName: payload.deanName || 'Academic Dean',
       deanEmail: payload.deanEmail || 'dean@university.edu',
       studentCount: Number(payload.studentCount) || 1000,
       status: payload.status || 'Active',
-      annualContractValue: payload.tier === 'Starter' ? 17988 : payload.tier === 'Campus' ? 47988 : 107988,
+      annualContractValue: calculatedAcv,
       joinedDate: new Date().toISOString().split('T')[0],
     };
 
@@ -177,8 +183,12 @@ export class SuperUserService {
     const inst = this.db.institutes.find((i: ClientInstitute) => i.instituteId === instituteId);
     if (!inst) throw new NotFoundException(`Institute '${instituteId}' not found.`);
 
+    const plan = this.db.saasPlans.find(
+      (p) => p.id.toLowerCase() === tier.toLowerCase() || p.name.toLowerCase().includes(tier.toLowerCase()),
+    );
+
     inst.tier = tier;
-    inst.annualContractValue = tier === 'Starter' ? 17988 : tier === 'Campus' ? 47988 : 107988;
+    inst.annualContractValue = plan ? plan.annualMonthlyPrice * 12 : (tier === 'Starter' ? 14388 : tier === 'Campus' ? 41988 : 107988);
     return inst;
   }
 

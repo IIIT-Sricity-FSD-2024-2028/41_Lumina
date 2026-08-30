@@ -10,6 +10,7 @@
 
   const API_BASE = 'http://localhost:3000';
   let currentSpocId = 'SPOC-001';
+  let currentInstituteId = null;
   let cachedDashboard = null;
 
   const sessionRaw = localStorage.getItem('Lumina_Session');
@@ -39,18 +40,25 @@
   }
 
   /**
-   * Fetches dashboard data for the active SPOC
+   * Fetches dashboard data for the active SPOC and selected institute
    */
-  async function loadAdminDashboard(spocId) {
+  async function loadAdminDashboard(spocId, instituteId) {
     try {
-      const res = await fetch(`${API_BASE}/admin/dashboard/${spocId}`, { headers });
+      currentSpocId = spocId || currentSpocId;
+      if (instituteId) currentInstituteId = instituteId;
+      
+      const queryParam = currentInstituteId ? `?instituteId=${encodeURIComponent(currentInstituteId)}` : '';
+      const res = await fetch(`${API_BASE}/admin/dashboard/${currentSpocId}${queryParam}`, { headers });
       if (!res.ok) throw new Error('Failed to load admin dashboard');
       const data = await res.json();
       cachedDashboard = data;
+      if (data.assignedInstitute) {
+        currentInstituteId = data.assignedInstitute.instituteId;
+      }
       renderDashboard(data);
     } catch (err) {
       console.warn('Backend unavailable, using localized technical mock data:', err);
-      renderMockDashboard(spocId);
+      renderMockDashboard(currentSpocId, currentInstituteId);
     }
   }
 
@@ -64,10 +72,20 @@
     const spocProfileName = document.getElementById('spoc-profile-name');
     const spocNameBadge = document.getElementById('spoc-name-badge');
     const spocSelectEval = document.getElementById('spoc-select-eval');
+    const instSelectSwitch = document.getElementById('institute-select-switch');
 
     if (spocProfileName) spocProfileName.textContent = data.spoc.fullName;
     if (spocNameBadge) spocNameBadge.textContent = data.spoc.fullName;
     if (spocSelectEval) spocSelectEval.value = data.spoc.adminId;
+
+    // Populate or sync the Active Institute Switcher
+    if (instSelectSwitch && data.assignedInstitutes && data.assignedInstitutes.length > 0) {
+      instSelectSwitch.innerHTML = data.assignedInstitutes.map(inst => {
+        const isSelected = inst.instituteId === data.assignedInstitute.instituteId ? 'selected' : '';
+        return `<option value="${escapeHtml(inst.instituteId)}" ${isSelected}>🏛️ ${escapeHtml(inst.name)} (${escapeHtml(inst.tier)})</option>`;
+      }).join('');
+      instSelectSwitch.value = data.assignedInstitute.instituteId;
+    }
 
     // 2. Tenant Context Banner
     const tenantName = document.getElementById('tenant-name-display');
@@ -87,8 +105,8 @@
     const mSla = document.getElementById('metric-sla-health');
     const mResp = document.getElementById('metric-response-time');
 
-    const totalStudents = data.metrics.totalStudents || 1250;
-    const seatsUsed = data.assignedInstitute.instituteId === 'INST-IIITS' ? 1220 : data.assignedInstitute.instituteId === 'INST-IITB' ? 4450 : 850;
+    const totalStudents = data.assignedInstitute.studentCount || data.metrics.totalStudents || 1250;
+    const seatsUsed = Math.min(totalStudents, Math.round(totalStudents * (data.assignedInstitute.tier === 'Enterprise' ? 0.976 : data.assignedInstitute.tier === 'Campus' ? 0.85 : 0.72)));
 
     if (mStudents) mStudents.textContent = totalStudents.toLocaleString();
     if (mSeatsUsed) mSeatsUsed.textContent = seatsUsed.toLocaleString();
@@ -187,50 +205,69 @@
   }
 
   /**
-   * Localized mock fallback for offline demo
+   * Localized mock fallback for offline demo with multi-institute support
    */
-  function renderMockDashboard(spocId) {
+  function renderMockDashboard(spocId, instituteId) {
     const mockMap = {
       'SPOC-001': {
         spoc: { adminId: 'SPOC-001', fullName: 'Arjun Verma', email: 'arjun.spoc@lumina.edu', phone: '+91 98765 43210', slaHealth: '99.99% SLA (Dedicated)' },
-        assignedInstitute: { instituteId: 'INST-IIITS', name: 'Indian Institute of Information Technology Sri City', tier: 'Enterprise', deanName: 'Dr. K Divyabramham', deanEmail: 'dean@iiits.in', studentCount: 1250 },
-        metrics: { openDocketsCount: 3, resolvedDocketsCount: 1, totalStudents: 1250, avgResponseMinutes: 14, slaUptimePercent: '99.99%' },
-        recentDockets: [
-          { docketId: 'DOC-1001', priority: 'High', category: 'Performance_Latency', subject: 'Registration concurrency spike on section enrollment API', description: 'Peak 350 req/sec reached during Phase 1 opening. Recommended connection pool tuning.', submittedBy: 'it-admin@iiits.in', status: 'Open' },
-          { docketId: 'DOC-1002', priority: 'Medium', category: 'SSO_Integration', subject: 'Google Workspace SAML SSO certificate renewal for @iiits.in', description: 'SSL/SAML signing certificate expires in 14 days.', submittedBy: 'it-admin@iiits.in', status: 'In_Progress' },
-          { docketId: 'DOC-1004', priority: 'Critical', category: 'Seat_Quota_Expansion', subject: 'Tenant license capacity warning: 1,220 / 1,250 seats allocated', description: 'University consumed 97.6% of licensed Enterprise student seats.', submittedBy: 'system-monitor@lumina.internal', status: 'Open' },
-          { docketId: 'DOC-1003', priority: 'Low', category: 'Database_Backup', subject: 'End-of-term database snapshot & cold archival for Fall 2025', description: 'Verify integrity of automated hourly snapshots.', submittedBy: 'dean@iiits.in', status: 'Resolved', resolutionNotes: 'Snapshot SHA-256 verified and encrypted in cold S3 storage.' }
+        assignedInstitutes: [
+          { instituteId: 'INST-IIITS', name: 'Indian Institute of Information Technology Sri City', tier: 'Enterprise', deanName: 'Dr. K Divyabramham', deanEmail: 'dean@iiits.in', studentCount: 1250 },
+          { instituteId: 'INST-NITK', name: 'National Institute of Technology Karnataka', tier: 'Campus', deanName: 'Prof. K. Vidyadhar', deanEmail: 'dean.acad@nitk.edu.in', studentCount: 1800 }
         ],
-        systemAlerts: [
-          { type: 'info', title: 'SSO Gateway Healthy', message: 'SAML IdP response latency steady at 4ms.', time: '10m ago' },
-          { type: 'warning', title: 'Seat Capacity Threshold', message: 'University approaching licensed seat ceiling (97.6%).', time: '1h ago' }
+        recentDockets: [
+          { docketId: 'DOC-1001', instituteId: 'INST-IIITS', priority: 'High', category: 'Performance_Latency', subject: 'Registration concurrency spike on section enrollment API', description: 'Peak 350 req/sec reached during Phase 1 opening. Recommended connection pool tuning.', submittedBy: 'it-admin@iiits.in', status: 'Open' },
+          { docketId: 'DOC-1002', instituteId: 'INST-IIITS', priority: 'Medium', category: 'SSO_Integration', subject: 'Google Workspace SAML SSO certificate renewal for @iiits.in', description: 'SSL/SAML signing certificate expires in 14 days.', submittedBy: 'it-admin@iiits.in', status: 'In_Progress' },
+          { docketId: 'DOC-1004', instituteId: 'INST-IIITS', priority: 'Critical', category: 'Seat_Quota_Expansion', subject: 'Tenant license capacity warning: 1,220 / 1,250 seats allocated', description: 'University consumed 97.6% of licensed Enterprise student seats.', submittedBy: 'system-monitor@lumina.internal', status: 'Open' },
+          { docketId: 'DOC-1003', instituteId: 'INST-IIITS', priority: 'Low', category: 'Database_Backup', subject: 'End-of-term database snapshot & cold archival for Fall 2025', description: 'Verify integrity of automated hourly snapshots.', submittedBy: 'dean@iiits.in', status: 'Resolved', resolutionNotes: 'Snapshot SHA-256 verified and encrypted in cold S3 storage.' }
         ]
       },
       'SPOC-002': {
         spoc: { adminId: 'SPOC-002', fullName: 'Eswar Prasad', email: 'eswar.spoc@lumina.edu', phone: '+91 98765 43211', slaHealth: '99.95% SLA (Portfolio)' },
-        assignedInstitute: { instituteId: 'INST-IITB', name: 'Indian Institute of Technology Bombay', tier: 'Campus', deanName: 'Dr. Himangshu Sarma', deanEmail: 'dean@iitb.ac.in', studentCount: 4800 },
-        metrics: { openDocketsCount: 1, resolvedDocketsCount: 3, totalStudents: 4800, avgResponseMinutes: 18, slaUptimePercent: '99.95%' },
-        recentDockets: [
-          { docketId: 'DOC-2001', priority: 'High', category: 'Data_Migration', subject: 'Batch CSV ingestion validation for 140 new Spring courses', description: 'Dry-run flagged 3 missing prerequisite foreign keys in mechanical stream.', submittedBy: 'it-admin@iitb.ac.in', status: 'Open' }
+        assignedInstitutes: [
+          { instituteId: 'INST-IITB', name: 'Indian Institute of Technology Bombay', tier: 'Enterprise', deanName: 'Prof. Subhasis Chaudhuri', deanEmail: 'dean.acad@iitb.ac.in', studentCount: 3400 },
+          { instituteId: 'INST-IIITH', name: 'International Institute of Information Technology Hyderabad', tier: 'Enterprise', deanName: 'Prof. P. J. Narayanan', deanEmail: 'director@iiit.ac.in', studentCount: 1950 }
         ],
-        systemAlerts: [
-          { type: 'info', title: 'Course Ingestion In Progress', message: '140 new curriculum definitions staged for validation.', time: '35m ago' }
+        recentDockets: [
+          { docketId: 'DOC-1005', instituteId: 'INST-IITB', priority: 'High', category: 'Data_Migration', subject: 'Bulk roster migration failed on row 412 (Malformed roll number)', description: 'Postgraduate batch roster upload encountered duplicate primary key constraint.', submittedBy: 'it-admin@iitb.ac.in', status: 'Open' }
         ]
       },
       'SPOC-003': {
         spoc: { adminId: 'SPOC-003', fullName: 'Priya Sharma', email: 'priya.spoc@lumina.edu', phone: '+91 98765 43212', slaHealth: '99.90% SLA (Standard)' },
-        assignedInstitute: { instituteId: 'INST-BITS', name: 'Birla Institute of Technology and Science, Pilani', tier: 'Starter', deanName: 'Prof. Sudhirkumar Barai', deanEmail: 'dean@pilani.bits-pilani.ac.in', studentCount: 3500 },
-        metrics: { openDocketsCount: 1, resolvedDocketsCount: 0, totalStudents: 3500, avgResponseMinutes: 22, slaUptimePercent: '99.90%' },
-        recentDockets: [
-          { docketId: 'DOC-3001', priority: 'Medium', category: 'SSO_Integration', subject: 'Starter tier LDAP active directory directory synchronization', description: 'Initial 850 accounts verified against campus directory.', submittedBy: 'it-admin@pilani.bits-pilani.ac.in', status: 'In_Progress' }
+        assignedInstitutes: [
+          { instituteId: 'INST-BITS', name: 'Birla Institute of Technology and Science Pilani', tier: 'Campus', deanName: 'Prof. V. Ramgopal Rao', deanEmail: 'dean.wilp@bits-pilani.ac.in', studentCount: 2200 },
+          { instituteId: 'INST-MANIPAL', name: 'Manipal Academy of Higher Education', tier: 'Starter', deanName: 'Dr. Narayana Sabhahit', deanEmail: 'registrar@manipal.edu', studentCount: 950 }
         ],
-        systemAlerts: [
-          { type: 'info', title: 'Starter Plan Restrictions Enforced', message: 'Starter tier basic catalog limits active.', time: '2h ago' }
+        recentDockets: [
+          { docketId: 'DOC-1006', instituteId: 'INST-BITS', priority: 'Medium', category: 'Seat_Quota_Expansion', subject: 'Request expansion of Campus Tier quota by 500 seats', description: 'Pilani & Goa dual campus expansion requires seat expansion.', submittedBy: 'dean@bits-pilani.ac.in', status: 'In_Progress' }
         ]
       }
     };
 
-    renderDashboard(mockMap[spocId] || mockMap['SPOC-001']);
+    const spocData = mockMap[spocId] || mockMap['SPOC-001'];
+    const activeInst = (instituteId ? spocData.assignedInstitutes.find(i => i.instituteId === instituteId) : null) || spocData.assignedInstitutes[0];
+    const filteredDockets = spocData.recentDockets.filter(d => d.instituteId === activeInst.instituteId);
+
+    const payload = {
+      spoc: spocData.spoc,
+      assignedInstitute: activeInst,
+      assignedInstitutes: spocData.assignedInstitutes,
+      metrics: {
+        openDocketsCount: filteredDockets.filter(d => d.status !== 'Resolved').length,
+        resolvedDocketsCount: filteredDockets.filter(d => d.status === 'Resolved').length,
+        totalStudents: activeInst.studentCount,
+        avgResponseMinutes: 14,
+        slaUptimePercent: '99.99%'
+      },
+      recentDockets: filteredDockets,
+      systemAlerts: [
+        { type: 'info', title: `Tenant Active: ${activeInst.name}`, message: `Priority Window 1 active for Spring 2026 term. ${activeInst.tier} Tier policies loaded.`, time: '10m ago' },
+        { type: 'warning', title: 'Seat Capacity Threshold', message: `University approaching licensed seat ceiling.`, time: '1h ago' }
+      ]
+    };
+
+    cachedDashboard = payload;
+    renderDashboard(payload);
   }
 
   // --- Tab Navigation Handlers ---
@@ -294,7 +331,7 @@
 
       if (!res.ok) throw new Error('Failed to resolve docket on server.');
       closeResolveModal();
-      loadAdminDashboard(currentSpocId);
+      loadAdminDashboard(currentSpocId, currentInstituteId);
     } catch {
       // Localized update
       if (cachedDashboard && cachedDashboard.recentDockets) {
@@ -309,10 +346,16 @@
     }
   };
 
-  // --- Evaluation Persona Switcher ---
+  // --- Evaluation Persona & Institute Switchers ---
   window.switchAdminPersona = function (spocId) {
     currentSpocId = spocId;
+    currentInstituteId = null; // Clear to default to this SPOC's primary institute
     loadAdminDashboard(spocId);
+  };
+
+  window.switchActiveInstitute = function (instId) {
+    currentInstituteId = instId;
+    loadAdminDashboard(currentSpocId, instId);
   };
 
   // --- Interactive CSV File Upload & Download Utilities ---

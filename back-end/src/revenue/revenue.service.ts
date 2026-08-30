@@ -154,7 +154,19 @@ export class RevenueService {
     );
 
     const activeTier = this.databaseService.activeInstitutePlan.tier;
-    const mrr = activeTier === 'Starter' ? 1499 : activeTier === 'Campus' ? 3999 : 8999;
+    const plan =
+      this.databaseService.saasPlans.find(
+        (p) =>
+          p.id.toLowerCase() === activeTier.toLowerCase() ||
+          p.name.toLowerCase().includes(activeTier.toLowerCase()),
+      ) || this.databaseService.saasPlans[2];
+
+    const mrr = plan.monthlyPrice;
+    const primaryInst = this.databaseService.institutes[0];
+    const spoc =
+      this.databaseService.adminTeam.find(
+        (a) => a.adminId === primaryInst?.spocAdminId,
+      ) || this.databaseService.adminTeam[0];
 
     return {
       currency: this.CURRENCY,
@@ -170,48 +182,17 @@ export class RevenueService {
       collectionRatePercent: collectionRate,
       activeSaasPlan: {
         tier: activeTier,
-        planName: `Lumina ${activeTier} Tier`,
-        annualRecurringRevenue: mrr * 12,
+        planName: plan.name,
+        annualRecurringRevenue: plan.annualMonthlyPrice * 12,
         monthlyRecurringRevenue: mrr,
         billingCycle: 'Annual (Billed Monthly)',
-        enabledModules: this.getEnabledModulesForTier(activeTier),
-        spocAssigned: 'Arjun Verma (Lumina Institute SPOC)',
+        enabledModules: plan.includedModules,
+        spocAssigned: spoc
+          ? `${spoc.fullName} (Lumina Institute SPOC)`
+          : 'Arjun Verma (Lumina Institute SPOC)',
       },
       departmentBreakdown,
     };
-  }
-
-  private getEnabledModulesForTier(tier: SaasTierLevel): string[] {
-    switch (tier) {
-      case 'Starter':
-        return ['Course Catalog', 'Student Registration', 'Faculty Grading', 'Announcements'];
-      case 'Campus':
-        return [
-          'Course Catalog',
-          'Student Registration',
-          'Faculty Grading',
-          'Announcements',
-          'Assistant Dean 1 (Slot & Timetable Allocation)',
-          'Assistant Dean 2 (Enrollment Phases & Policy Engine)',
-          'Dean Overrides Approval',
-          'Visual Degree Roadmaps',
-        ];
-      case 'Enterprise':
-      default:
-        return [
-          'Course Catalog',
-          'Student Registration',
-          'Faculty Grading',
-          'Announcements',
-          'Assistant Dean 1 (Slot & Timetable Allocation)',
-          'Assistant Dean 2 (Enrollment Phases & Policy Engine)',
-          'Dean Overrides Approval',
-          'Visual Degree Roadmaps',
-          'Super User Root Operations',
-          'Live System Log Streaming & Archival',
-          'Dedicated Lumina Institute Admin (SPOC)',
-        ];
-    }
   }
 
   /**

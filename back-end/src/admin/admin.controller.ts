@@ -23,8 +23,11 @@ export class AdminController {
   @Roles('Lumina_SPOC', 'Admin', 'Super_User', 'Dean')
   @ApiOperation({ summary: 'Get assigned institute operational dashboard for a SPOC Admin' })
   @ApiResponse({ status: 200, description: 'SPOC dashboard metrics and tickets' })
-  getDashboard(@Param('spocId') spocId: string) {
-    return this.adminService.getDashboard(spocId);
+  getDashboard(
+    @Param('spocId') spocId: string,
+    @Query('instituteId') instituteId?: string,
+  ) {
+    return this.adminService.getDashboard(spocId, instituteId);
   }
 
   @Get('dockets')
