@@ -18,3 +18,7 @@ back-end/logs/archive/
 # Uploaded Files
 back-end/uploads/
 uploads/
+
+# Postman collections & generated guides
+*.postman_collection.json
+Lumina_Evaluation_Collection.postman_collection.json

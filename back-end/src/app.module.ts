@@ -1,3 +1,6 @@
+import * as dotenv from 'dotenv';
+dotenv.config();
+
 import {
   Module,
   NestModule,
@@ -26,6 +29,8 @@ import { SecurityMiddleware } from './common/middleware/security.middleware';
 import { LoggingMiddleware } from './common/middleware/logging.middleware';
 import { RouteMiddleware } from './common/middleware/route.middleware';
 
+import { AppController } from './app.controller';
+
 @Module({
   imports: [
     ThrottlerModule.forRoot([
@@ -50,8 +55,7 @@ import { RouteMiddleware } from './common/middleware/route.middleware';
     RevenueModule,
     AdminModule,
   ],
-
-  controllers: [],
+  controllers: [AppController],
   providers: [
     {
       provide: APP_GUARD,

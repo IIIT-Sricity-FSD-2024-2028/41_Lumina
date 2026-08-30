@@ -46,6 +46,8 @@ export class RouteMiddleware implements NestMiddleware {
       (originalUrl.startsWith('/admin/dockets') && method === 'POST') ||
       originalUrl.startsWith('/api') ||
       originalUrl.startsWith('/docs') ||
+      originalUrl.startsWith('/health') ||
+      originalUrl === '/favicon.ico' ||
       originalUrl === '/' ||
       originalUrl === '';
 
