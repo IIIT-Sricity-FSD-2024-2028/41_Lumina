@@ -9,5 +9,6 @@
         "**/logs/**",
         "**/logs/*",
         "**/node_modules/**"
-    ]
+    ],
+    "postman.settings.dotenv-detection-notification-visibility": false
 }
