@@ -72,12 +72,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 isValid = false;
             }
 
-            // Validate Institute ID — must not be empty AND match format
+            // Validate Institute Name — must not be empty
             if (!Validator.isNotEmpty(idInput.value)) {
-                Validator.showError(idInput, "Institute ID is required.");
+                Validator.showError(idInput, "Institute / University name is required.");
                 isValid = false;
-            } else if (!Validator.isInstituteId(idInput.value)) {
-                Validator.showError(idInput, "Invalid ID format (e.g., S2024001).");
+            } else if (idInput.value.trim().length < 2) {
+                Validator.showError(idInput, "Please enter a valid institute name.");
                 isValid = false;
             }
 
@@ -94,6 +94,27 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isValid) {
                 const toast = document.getElementById('contact-toast');
                 const closeBtn = document.getElementById('close-contact-toast');
+                const toastText = document.getElementById('toast-msg-text');
+
+                if (toastText) {
+                    toastText.textContent = "Thank you! Your institutional inquiry has been dispatched to our enterprise team.";
+                }
+
+                // Dispatch docket to backend SPOC operations queue
+                fetch('http://localhost:3000/admin/dockets', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        instituteId: 'INST-INQUIRY',
+                        instituteName: idInput.value.trim(),
+                        submittedBy: nameInput.value.trim(),
+                        category: 'System_Incident',
+                        priority: 'Medium',
+                        subject: `Inbound Institutional Inquiry: ${idInput.value.trim()}`,
+                        description: messageInput.value.trim(),
+                        assignedSpocId: 'SPOC-001',
+                    })
+                }).catch(() => null);
 
                 if (toast) {
                     toast.classList.add('show');
@@ -118,6 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 contactForm.classList.add('form-shake');
                 setTimeout(() => contactForm.classList.remove('form-shake'), 500);
             }
+
         });
     }
 });

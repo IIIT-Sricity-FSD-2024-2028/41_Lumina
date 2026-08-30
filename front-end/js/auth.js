@@ -65,8 +65,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     case 'Assistant_Dean_2': window.location.href = 'Dean2_index.html'; break;
                     case 'Dean': window.location.href = 'dean.html'; break;
                     case 'Super_User': window.location.href = 'super_user.html'; break;
+                    case 'Lumina_SPOC':
+                    case 'Admin': window.location.href = 'admin_portal.html'; break;
                     default: console.error("Unknown role:", sessionData.Role);
                 }
+
 
             } catch (err) {
                 console.error('Login network error:', err);

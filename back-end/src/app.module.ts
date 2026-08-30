@@ -21,6 +21,7 @@ import { DegreeRequirementsModule } from './degree-requirements/degree-requireme
 import { PoliciesModule } from './policies/policies.module';
 import { SuperUserModule } from './super-user/super-user.module';
 import { RevenueModule } from './revenue/revenue.module';
+import { AdminModule } from './admin/admin.module';
 import { SecurityMiddleware } from './common/middleware/security.middleware';
 import { LoggingMiddleware } from './common/middleware/logging.middleware';
 import { RouteMiddleware } from './common/middleware/route.middleware';
@@ -47,7 +48,9 @@ import { RouteMiddleware } from './common/middleware/route.middleware';
     PoliciesModule,
     SuperUserModule,
     RevenueModule,
+    AdminModule,
   ],
+
   controllers: [],
   providers: [
     {

@@ -38,8 +38,16 @@ function loadSharedComponents(activeNavLink) {
     initNavbar();
   });
 
-  loadComponent('footer-placeholder', 'footer.html', null, true);
+  loadComponent('footer-placeholder', 'footer.html', function () {
+    if (!document.getElementById('lumina-bug-modal-script')) {
+      var s = document.createElement('script');
+      s.id = 'lumina-bug-modal-script';
+      s.src = 'js/bug_report_modal.js';
+      document.body.appendChild(s);
+    }
+  }, true);
 }
+
 
 function getLuminaTable(name) {
   // Now reads from session only - user data comes from Lumina_Session

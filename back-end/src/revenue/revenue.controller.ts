@@ -51,7 +51,7 @@ export class RevenueController {
   }
 
   @Get('student/:studentId')
-  @Roles('Student', 'Dean', 'Super_User')
+  @Roles('*')
   @ApiOperation({ summary: 'Get itemized semester tuition billing for a student' })
   @ApiResponse({ status: 200, description: 'Student tuition billing details' })
   getStudentBilling(@Param('studentId') studentId: string) {
@@ -59,12 +59,12 @@ export class RevenueController {
   }
 
   @Post('student/:studentId/pay')
-  @Roles('Student', 'Dean', 'Super_User')
-  @ApiOperation({ summary: 'Simulate tuition payment for a student' })
-  @ApiResponse({ status: 200, description: 'Payment receipt confirmation' })
+  @Roles('*')
+  @ApiOperation({ summary: 'Pay outstanding tuition balance for a student' })
+  @ApiResponse({ status: 200, description: 'Payment receipt and updated ledger status' })
   payStudentTuition(
     @Param('studentId') studentId: string,
-    @Body('amount') amount?: number,
+    @Body('amount') amount: number,
   ) {
     return this.revenueService.payStudentTuition(studentId, amount);
   }

@@ -550,51 +550,62 @@ function loadDashboardCourses() {
   loadStudentAnnouncements();
 }
 
-/* ── Fetch and Display Announcements ── */
+/* ── Fetch and Display Announcements from Database ── */
 async function loadStudentAnnouncements() {
   try {
     var session = localStorage.getItem('Lumina_Session');
-    var role = session ? JSON.parse(session).Role : 'Student';
-    var headers = { 'x-role': role };
+    var user = session ? JSON.parse(session) : null;
+    var role = user ? user.Role : 'Student';
+    var headers = {
+      'Content-Type': 'application/json',
+      ...(user && user.accessToken ? { 'Authorization': `Bearer ${user.accessToken}` } : {}),
+      'x-role': role,
+    };
 
     var res = await fetch('http://localhost:3000/announcements', { headers });
     if (!res.ok) return;
     var allAnns = await res.json();
 
-    var enrolledIds = getEnrolledFromDB().map(function(c) { return c.id; });
-    
-    // Filter announcements for enrolled courses, sort by newest first (descending ID)
-    var myAnns = allAnns.filter(function(a) { return enrolledIds.includes(a.courseId); });
-    myAnns.sort(function(a, b) { return b.announcementId - a.announcementId; });
+    if (!Array.isArray(allAnns)) return;
 
     var listEl = document.getElementById('announcementsList');
     var emptyBox = document.getElementById('annEmptyBox');
 
     if (!listEl) return;
 
+    // Sort newest first
+    var myAnns = allAnns.slice();
+    myAnns.sort(function (a, b) {
+      var dateA = new Date(a.createdAt || 0).getTime();
+      var dateB = new Date(b.createdAt || 0).getTime();
+      return (dateB - dateA) || ((b.announcementId || 0) - (a.announcementId || 0));
+    });
+
     if (myAnns.length === 0) {
       if (emptyBox) emptyBox.style.display = 'flex';
-      Array.from(listEl.querySelectorAll('.ann-item')).forEach(function(el) { el.remove(); });
+      Array.from(listEl.querySelectorAll('.ann-item')).forEach(function (el) { el.remove(); });
     } else {
       if (emptyBox) emptyBox.style.display = 'none';
-      
-      Array.from(listEl.querySelectorAll('.ann-item')).forEach(function(el) { el.remove(); });
+      Array.from(listEl.querySelectorAll('.ann-item')).forEach(function (el) { el.remove(); });
 
-      myAnns.slice(0, 5).forEach(function(ann) {
+      myAnns.slice(0, 5).forEach(function (ann) {
         var div = document.createElement('div');
         div.className = 'ann-item';
         div.style.cssText = 'padding: 12px 0; border-bottom: 1px solid #f1f5f9; text-align: left;';
-        
+
         var dateObj = new Date(ann.createdAt);
-        var dateStr = !isNaN(dateObj) ? dateObj.toLocaleDateString() : 'Just now';
-        
-        div.innerHTML = 
-          '<div style="display:flex; justify-content:space-between; margin-bottom:6px;">' +
-            '<span style="font-size:10px; font-weight:700; color:#6366f1; background:#e0e7ff; padding:2px 6px; border-radius:4px;">' + ann.courseId + '</span>' +
-            '<span style="font-size:11px; color:#94a3b8;">' + dateStr + '</span>' +
+        var dateStr = !isNaN(dateObj) ? dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'Recently';
+        var badgeLabel = ann.courseId || 'Campus Alert';
+        var author = ann.authorName || (ann.facultyId ? `Prof. ${ann.facultyId}` : '');
+        var authorLabel = author ? ' &bull; ' + author : '';
+
+        div.innerHTML =
+          '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">' +
+          '<span style="font-size:10px; font-weight:700; color:#6366f1; background:#e0e7ff; padding:2px 6px; border-radius:4px;">' + badgeLabel + '</span>' +
+          '<span style="font-size:11px; color:#94a3b8;">' + dateStr + authorLabel + '</span>' +
           '</div>' +
-          '<div style="font-weight:600; font-size:13px; color:#1e293b; margin-bottom:4px;">' + ann.title + '</div>' +
-          '<div style="font-size:12.5px; color:#64748b; line-height:1.4;">' + ann.message + '</div>';
+          '<div style="font-weight:600; font-size:13px; color:#1e293b; margin-bottom:4px;">' + (ann.title || 'Course Announcement') + '</div>' +
+          '<div style="font-size:12.5px; color:#64748b; line-height:1.4;">' + (ann.message || '') + '</div>';
         listEl.appendChild(div);
       });
     }
@@ -602,6 +613,7 @@ async function loadStudentAnnouncements() {
     console.error("Error loading student announcements", err);
   }
 }
+
 
 /* ── Next Class card from slot data ── */
 function populateNextClass(enrolled) {

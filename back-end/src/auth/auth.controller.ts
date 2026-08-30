@@ -25,9 +25,11 @@ export class AuthController {
   })
   @ApiResponse({ status: 201, description: 'Login successful. Returns session object.' })
   @ApiResponse({ status: 401, description: 'Invalid credentials.' })
-  login(@Body() body: { User_ID: string; Password: string }, @Req() req: Request) {
+  login(@Body() body: { User_ID?: string; Password?: string; userId?: string; password?: string }, @Req() req: Request) {
     const rawIp = req.ip || req.socket.remoteAddress || '127.0.0.1';
     const clientIp = rawIp.replace(/^.*:/, '') || '127.0.0.1';
-    return this.authService.login(body.User_ID, body.Password, clientIp);
+    const userId = body.User_ID || body.userId || '';
+    const password = body.Password || body.password || '';
+    return this.authService.login(userId, password, clientIp);
   }
 }

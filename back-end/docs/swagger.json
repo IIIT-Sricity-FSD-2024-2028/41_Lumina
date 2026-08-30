@@ -1830,12 +1830,120 @@
         ],
         "responses": {
           "200": {
-            "description": "Payment receipt confirmation"
+            "description": "Payment receipt and updated ledger status"
           }
         },
-        "summary": "Simulate tuition payment for a student",
+        "summary": "Pay outstanding tuition balance for a student",
         "tags": [
           "Revenue & Billing"
+        ]
+      }
+    },
+    "/admin/dashboard/{spocId}": {
+      "get": {
+        "operationId": "AdminController_getDashboard",
+        "parameters": [
+          {
+            "name": "spocId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "SPOC dashboard metrics and tickets"
+          }
+        },
+        "summary": "Get assigned institute operational dashboard for a SPOC Admin",
+        "tags": [
+          "Lumina Admin Team & SPOC Operations"
+        ]
+      }
+    },
+    "/admin/dockets": {
+      "get": {
+        "operationId": "AdminController_getDockets",
+        "parameters": [
+          {
+            "name": "spocId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "instituteId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of support dockets"
+          }
+        },
+        "summary": "Get support dockets and registration exception queue",
+        "tags": [
+          "Lumina Admin Team & SPOC Operations"
+        ]
+      },
+      "post": {
+        "operationId": "AdminController_createDocket",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Created support docket"
+          }
+        },
+        "summary": "Submit a new support ticket or administrative docket",
+        "tags": [
+          "Lumina Admin Team & SPOC Operations"
+        ]
+      }
+    },
+    "/admin/dockets/{id}/status": {
+      "patch": {
+        "operationId": "AdminController_updateDocketStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Updated docket"
+          }
+        },
+        "summary": "Update docket status and resolution notes",
+        "tags": [
+          "Lumina Admin Team & SPOC Operations"
+        ]
+      }
+    },
+    "/admin/bulk-import/courses": {
+      "post": {
+        "operationId": "AdminController_bulkImportCourses",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Bulk course ingestion result"
+          }
+        },
+        "summary": "Bulk ingest courses for the assigned institute",
+        "tags": [
+          "Lumina Admin Team & SPOC Operations"
         ]
       }
     }

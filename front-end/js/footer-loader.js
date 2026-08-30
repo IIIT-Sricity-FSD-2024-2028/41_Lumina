@@ -25,8 +25,17 @@
     .then(function (html) {
       // Replace the placeholder element entirely with the fetched content
       target.outerHTML = html;
+
+      // Ensure bug_report_modal.js is loaded
+      if (!document.getElementById('lumina-bug-modal-script')) {
+        var s = document.createElement('script');
+        s.id = 'lumina-bug-modal-script';
+        s.src = 'js/bug_report_modal.js';
+        document.body.appendChild(s);
+      }
     })
     .catch(function (err) {
       console.warn('Footer loader: could not fetch footer.html', err);
     });
 })();
+

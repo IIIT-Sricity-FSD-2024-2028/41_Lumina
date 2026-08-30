@@ -10,7 +10,84 @@ export type UserRole =
   | 'Assistant_Dean_1'
   | 'Assistant_Dean_2'
   | 'Dean'
-  | 'Super_User';
+  | 'Super_User'
+  | 'Lumina_SPOC'
+  | 'Admin';
+
+export interface SupportDocket {
+  docketId: string;
+  instituteId: string;
+  instituteName: string;
+  submittedBy: string;
+  category: 'SSO_Integration' | 'Data_Migration' | 'Performance_Latency' | 'Seat_Quota_Expansion' | 'Database_Backup' | 'System_Incident';
+  priority: 'Low' | 'Medium' | 'High' | 'Critical';
+  subject: string;
+  description: string;
+  status: 'Open' | 'In_Progress' | 'Resolved';
+  assignedSpocId: string;
+  createdAt: string;
+  resolvedAt?: string;
+  resolutionNotes?: string;
+}
+
+export interface LuminaAdminSpoc {
+  adminId: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  assignedInstituteId: string;
+  assignedInstituteName: string;
+  role: 'Lumina_SPOC';
+  status: 'Active' | 'On Leave';
+  slaHealth: string;
+  activeDockets: number;
+}
+
+export interface ClientInstitute {
+  instituteId: string;
+  name: string;
+  tier: 'Starter' | 'Campus' | 'Enterprise';
+  spocAdminId: string;
+  spocName: string;
+  deanName: string;
+  deanEmail: string;
+  studentCount: number;
+  status: 'Active' | 'Onboarding' | 'Trial';
+  annualContractValue: number;
+  joinedDate: string;
+}
+
+export interface SaasPlanDefinition {
+  id: string;
+  name: string;
+  tagline: string;
+  monthlyPrice: number;
+  annualMonthlyPrice: number;
+  studentCapacity: string;
+  includedModules: string[];
+  restrictedModules: string[];
+  popular: boolean;
+}
+
+export interface ActivePlanState {
+  tier: 'Starter' | 'Campus' | 'Enterprise';
+  billingCycle: 'monthly' | 'annual';
+  status: 'Active' | 'Trial' | 'Past_Due';
+  activatedAt: string;
+  renewalDate: string;
+  autoRenew: boolean;
+}
+
+export interface PaymentRecord {
+  amountPaid: number;
+  paymentDate: string;
+  status: 'Cleared' | 'Pending';
+}
+
+
+
+
+
 
 
 /** Course lifecycle status */

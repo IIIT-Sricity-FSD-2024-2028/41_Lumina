@@ -43,10 +43,12 @@ export class RouteMiddleware implements NestMiddleware {
       originalUrl.startsWith('/auth/login') ||
       originalUrl.startsWith('/revenue/plans') ||
       originalUrl.startsWith('/revenue/tier') ||
+      (originalUrl.startsWith('/admin/dockets') && method === 'POST') ||
       originalUrl.startsWith('/api') ||
       originalUrl.startsWith('/docs') ||
       originalUrl === '/' ||
       originalUrl === '';
+
 
 
 

@@ -319,15 +319,20 @@ document.addEventListener('DOMContentLoaded', () => {
             const collectedEl = document.getElementById('revenue-total-collected');
             const barEl = document.getElementById('revenue-bar');
             const textEl = document.getElementById('revenue-collection-text');
+            const tierEl = document.getElementById('revenue-saas-tier');
+            const mrrEl = document.getElementById('revenue-saas-mrr');
 
             if (billedEl) billedEl.textContent = `$${rev.totalGrossRevenue.toLocaleString()}`;
             if (collectedEl) collectedEl.textContent = `$${rev.totalFeesCollected.toLocaleString()} (${rev.collectionRatePercent}%)`;
             if (barEl) barEl.style.width = `${Math.min(100, rev.collectionRatePercent)}%`;
             if (textEl) textEl.textContent = `${rev.totalCreditsEnrolled} Enrolled Credits across ${rev.totalStudentsEnrolled} Students`;
+            if (tierEl) tierEl.textContent = `${rev.activeTier || 'Enterprise'} Tier`;
+            if (mrrEl) mrrEl.textContent = `$${(rev.saasMrr || 8999).toLocaleString()} / mo (ARR: $${((rev.saasMrr || 8999) * 12).toLocaleString()})`;
         } catch (err) {
             console.warn('Revenue metrics unavailable:', err);
         }
     }
+
 
     // --- 7. FETCH DATA FROM BACKEND & RENDER ---
     async function loadDashboard() {

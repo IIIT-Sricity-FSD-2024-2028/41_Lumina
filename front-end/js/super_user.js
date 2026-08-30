@@ -1768,19 +1768,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (Array.isArray(data) && data.length > 0) cachedAdminTeam = data;
             }
 
-            // Update stats
+            // Update stats dynamically across both Overview tab and Client Institutes tab
             const totalArr = cachedInstitutes.reduce((sum, i) => sum + (i.annualContractValue || 0), 0);
             const totalStudents = cachedInstitutes.reduce((sum, i) => sum + (i.studentCount || 0), 0);
 
-            const countEl = document.getElementById('stat-inst-count');
-            const spocEl = document.getElementById('stat-spoc-count');
-            const arrEl = document.getElementById('stat-saas-arr');
-            const studEl = document.getElementById('stat-inst-students');
+            ['stat-inst-count', 'overview-inst-count'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = cachedInstitutes.length;
+            });
+            ['stat-spoc-count', 'overview-spoc-count'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = cachedAdminTeam.length;
+            });
+            ['stat-saas-arr', 'overview-arr'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = `$${totalArr.toLocaleString()}`;
+            });
+            ['stat-inst-students', 'overview-students'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = totalStudents.toLocaleString();
+            });
 
-            if (countEl) countEl.textContent = cachedInstitutes.length;
-            if (spocEl) spocEl.textContent = cachedAdminTeam.length;
-            if (arrEl) arrEl.textContent = `$${totalArr.toLocaleString()}`;
-            if (studEl) studEl.textContent = totalStudents.toLocaleString();
 
             renderInstitutesTable();
             renderSpocRoster();

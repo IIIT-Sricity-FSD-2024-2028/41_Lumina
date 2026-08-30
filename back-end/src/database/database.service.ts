@@ -3,7 +3,8 @@ import {
   User, Student, Department, CourseCatalog, DegreeRequirement,
   CoursePrerequisite, AcademicTerm, Section, CourseSlot, Registration,
   OverrideRequest, AcademicRoadmap, Announcement, EnrollmentPhase,
-  PolicySettings, PolicyChangeLog,
+  PolicySettings, PolicyChangeLog, ClientInstitute, LuminaAdminSpoc,
+  SupportDocket, SaasPlanDefinition, ActivePlanState, PaymentRecord,
 } from './interfaces';
 
 @Injectable()
@@ -23,6 +24,30 @@ export class DatabaseService implements OnModuleInit {
   academicRoadmaps: AcademicRoadmap[] = [];
   announcements: Announcement[] = [];
   enrollmentPhases: EnrollmentPhase[] = [];
+  institutes: ClientInstitute[] = [];
+  adminTeam: LuminaAdminSpoc[] = [];
+  supportDockets: SupportDocket[] = [];
+  saasPlans: SaasPlanDefinition[] = [];
+  activeInstitutePlan: ActivePlanState = {
+    tier: 'Enterprise',
+    billingCycle: 'annual',
+    status: 'Active',
+    activatedAt: '2025-08-01T00:00:00Z',
+    renewalDate: '2026-08-01T00:00:00Z',
+    autoRenew: true,
+  };
+  studentPaymentLedger: Record<string, PaymentRecord> = {
+    'S2024001': {
+      amountPaid: 2150,
+      paymentDate: '2026-08-15T10:00:00Z',
+      status: 'Pending',
+    },
+    'S2024002': {
+      amountPaid: 2150,
+      paymentDate: '2026-08-18T14:30:00Z',
+      status: 'Cleared',
+    },
+  };
   policySettings: PolicySettings = {
     status: 'Validated',
     isLocked: false,
@@ -44,6 +69,7 @@ export class DatabaseService implements OnModuleInit {
     endDate: '2026-08-30T17:00',
   };
   policyChangeLogs: PolicyChangeLog[] = [];
+
 
   onModuleInit(): void {
     this.seed();
@@ -87,10 +113,15 @@ export class DatabaseService implements OnModuleInit {
       { userId: 'F2024004', fullName: 'Dr. Sreeja S R', email: 'sreeja.sr@lumina.iiits.in', password: 'password123', role: 'Faculty', deptId: 'CSE' },
       { userId: 'F2024005', fullName: 'Dr. R Selvi', email: 'r.selvi@lumina.iiits.in', password: 'password123', role: 'Faculty', deptId: 'ECE' },
       { userId: 'A1_2024001', fullName: 'Ravi Kumar', email: 'admin1@lumina.iiits.in', password: 'password123', role: 'Assistant_Dean_1', deptId: 'CSE' },
-      { userId: 'A2_2024001', fullName: 'Priya Sharma', email: 'admin2@lumina.iiits.in', password: 'password123', role: 'Assistant_Dean_2', deptId: 'CSE' },
+      { userId: 'A2_2024001', fullName: 'Suresh Reddy', email: 'admin2@lumina.iiits.in', password: 'password123', role: 'Assistant_Dean_2', deptId: 'CSE' },
       { userId: 'D2024001', fullName: 'Super Dean', email: 'dean@lumina.iiits.in', password: 'password123', role: 'Dean', deptId: 'CSE' },
+
       { userId: 'SU2024001', fullName: 'System Administrator', email: 'superuser@lumina.iiits.in', password: 'password123', role: 'Super_User', deptId: 'CSE' },
+      { userId: 'SPOC-001', fullName: 'Arjun Verma', email: 'arjun.spoc@lumina.edu', password: 'password123', role: 'Lumina_SPOC', deptId: 'INST-IIITS' },
+      { userId: 'SPOC-002', fullName: 'Eswar Prasad', email: 'eswar.spoc@lumina.edu', password: 'password123', role: 'Lumina_SPOC', deptId: 'INST-IITB' },
+      { userId: 'SPOC-003', fullName: 'Priya Sharma', email: 'priya.spoc@lumina.edu', password: 'password123', role: 'Lumina_SPOC', deptId: 'INST-BITS' },
     ];
+
 
 
     this.students = [
@@ -160,15 +191,15 @@ export class DatabaseService implements OnModuleInit {
     ];
 
     this.coursePrerequisites = [
-      { targetCourseId: 'PC201',  requiredCourseId: 'IC101' },
-      { targetCourseId: 'PC302',  requiredCourseId: 'PC201' },
-      { targetCourseId: 'IC203',  requiredCourseId: 'IC104' },
-      { targetCourseId: 'PC303',  requiredCourseId: 'IC203' },
-      { targetCourseId: 'IC201',  requiredCourseId: 'IC102' },
-      { targetCourseId: 'PC501',  requiredCourseId: 'PC402' },
-      { targetCourseId: 'PC601',  requiredCourseId: 'PC501' },
-      { targetCourseId: 'PE503',  requiredCourseId: 'PC403' },
-      { targetCourseId: 'PE504',  requiredCourseId: 'PE503' },
+      { targetCourseId: 'PC201', requiredCourseId: 'IC101' },
+      { targetCourseId: 'PC302', requiredCourseId: 'PC201' },
+      { targetCourseId: 'IC203', requiredCourseId: 'IC104' },
+      { targetCourseId: 'PC303', requiredCourseId: 'IC203' },
+      { targetCourseId: 'IC201', requiredCourseId: 'IC102' },
+      { targetCourseId: 'PC501', requiredCourseId: 'PC402' },
+      { targetCourseId: 'PC601', requiredCourseId: 'PC501' },
+      { targetCourseId: 'PE503', requiredCourseId: 'PC403' },
+      { targetCourseId: 'PE504', requiredCourseId: 'PE503' },
     ];
 
     this.degreeRequirements = [
@@ -402,5 +433,276 @@ export class DatabaseService implements OnModuleInit {
       { id: 1, message: 'Spring 2026 Academic Term Policies Validated and Locked', by: 'Assistant Dean 2', createdAt: new Date().toISOString() },
       { id: 2, message: 'Prerequisite Enforcement enabled for all undergraduate batches', by: 'Assistant Dean 2', createdAt: new Date().toISOString() },
     ];
+
+    this.adminTeam = [
+      {
+        adminId: 'SPOC-001',
+        fullName: 'Arjun Verma',
+        email: 'arjun.spoc@lumina.edu',
+        phone: '+91 98765 43210',
+        assignedInstituteId: 'INST-IIITS',
+        assignedInstituteName: 'IIIT Sri City',
+        role: 'Lumina_SPOC',
+        status: 'Active',
+        slaHealth: '99.99% SLA (Healthy)',
+        activeDockets: 2,
+      },
+      {
+        adminId: 'SPOC-002',
+        fullName: 'Eswar Prasad',
+        email: 'eswar.spoc@lumina.edu',
+        phone: '+91 98765 43211',
+        assignedInstituteId: 'INST-IITB',
+        assignedInstituteName: 'IIT Bombay',
+        role: 'Lumina_SPOC',
+        status: 'Active',
+        slaHealth: '99.95% SLA (Healthy)',
+        activeDockets: 4,
+      },
+      {
+        adminId: 'SPOC-003',
+        fullName: 'Priya Sharma',
+        email: 'priya.spoc@lumina.edu',
+        phone: '+91 98765 43212',
+        assignedInstituteId: 'INST-BITS',
+        assignedInstituteName: 'BITS Pilani',
+        role: 'Lumina_SPOC',
+        status: 'Active',
+        slaHealth: '99.90% SLA (Healthy)',
+        activeDockets: 1,
+      },
+    ];
+
+    this.institutes = [
+      {
+        instituteId: 'INST-IIITS',
+        name: 'Indian Institute of Information Technology Sri City',
+        tier: 'Enterprise',
+        spocAdminId: 'SPOC-001',
+        spocName: 'Arjun Verma',
+        deanName: 'Dr. K Divyabramham',
+        deanEmail: 'dean@iiits.in',
+        studentCount: 1250,
+        status: 'Active',
+        annualContractValue: 107988,
+        joinedDate: '2024-06-01',
+      },
+      {
+        instituteId: 'INST-IITB',
+        name: 'Indian Institute of Technology Bombay',
+        tier: 'Enterprise',
+        spocAdminId: 'SPOC-002',
+        spocName: 'Eswar Prasad',
+        deanName: 'Prof. Subhasis Chaudhuri',
+        deanEmail: 'dean.acad@iitb.ac.in',
+        studentCount: 3400,
+        status: 'Active',
+        annualContractValue: 107988,
+        joinedDate: '2024-08-15',
+      },
+      {
+        instituteId: 'INST-BITS',
+        name: 'Birla Institute of Technology and Science Pilani',
+        tier: 'Campus',
+        spocAdminId: 'SPOC-003',
+        spocName: 'Priya Sharma',
+        deanName: 'Prof. V. Ramgopal Rao',
+        deanEmail: 'dean.wilp@bits-pilani.ac.in',
+        studentCount: 2200,
+        status: 'Active',
+        annualContractValue: 41988,
+        joinedDate: '2024-11-10',
+      },
+      {
+        instituteId: 'INST-NITK',
+        name: 'National Institute of Technology Karnataka',
+        tier: 'Campus',
+        spocAdminId: 'SPOC-001',
+        spocName: 'Arjun Verma',
+        deanName: 'Prof. K. Vidyadhar',
+        deanEmail: 'dean.acad@nitk.edu.in',
+        studentCount: 1800,
+        status: 'Onboarding',
+        annualContractValue: 41988,
+        joinedDate: '2025-01-10',
+      },
+      {
+        instituteId: 'INST-IIITH',
+        name: 'International Institute of Information Technology Hyderabad',
+        tier: 'Enterprise',
+        spocAdminId: 'SPOC-002',
+        spocName: 'Eswar Prasad',
+        deanName: 'Prof. P. J. Narayanan',
+        deanEmail: 'director@iiit.ac.in',
+        studentCount: 1950,
+        status: 'Active',
+        annualContractValue: 107988,
+        joinedDate: '2025-02-01',
+      },
+      {
+        instituteId: 'INST-MANIPAL',
+        name: 'Manipal Academy of Higher Education',
+        tier: 'Starter',
+        spocAdminId: 'SPOC-003',
+        spocName: 'Priya Sharma',
+        deanName: 'Dr. Narayana Sabhahit',
+        deanEmail: 'registrar@manipal.edu',
+        studentCount: 950,
+        status: 'Trial',
+        annualContractValue: 14388,
+        joinedDate: '2025-03-01',
+      },
+    ];
+
+    this.supportDockets = [
+      {
+        docketId: 'DOC-1001',
+        instituteId: 'INST-IIITS',
+        instituteName: 'IIIT Sri City',
+        submittedBy: 'Dr. K Divyabramham (Dean)',
+        category: 'Performance_Latency',
+        priority: 'High',
+        subject: 'Registration concurrency spike on section enrollment API',
+        description: 'During Priority Phase 1 opening, burst traffic reached 350 req/sec causing elevated DB connection pool latency (180ms). Connection pool resizing recommended.',
+        status: 'Open',
+        assignedSpocId: 'SPOC-001',
+        createdAt: new Date(Date.now() - 1000 * 60 * 35).toISOString(),
+      },
+      {
+        docketId: 'DOC-1002',
+        instituteId: 'INST-IIITS',
+        instituteName: 'IIIT Sri City',
+        submittedBy: 'Dean’s Office (IIIT Sri City)',
+        category: 'SSO_Integration',
+        priority: 'Medium',
+        subject: 'Google Workspace SAML SSO certificate renewal for @iiits.in',
+        description: 'University SSL/SAML signing certificate expires in 14 days. Need SPOC verification of metadata endpoint before rotation.',
+        status: 'In_Progress',
+        assignedSpocId: 'SPOC-001',
+        createdAt: new Date(Date.now() - 1000 * 60 * 150).toISOString(),
+      },
+      {
+        docketId: 'DOC-1003',
+        instituteId: 'INST-IIITS',
+        instituteName: 'IIIT Sri City',
+        submittedBy: 'Dr. K Divyabramham (Dean)',
+        category: 'Database_Backup',
+        priority: 'Low',
+        subject: 'End-of-term database snapshot & cold archival for Fall 2025',
+        description: 'Verify integrity of automated hourly snapshots before upcoming term rollover.',
+        status: 'Resolved',
+        assignedSpocId: 'SPOC-001',
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
+        resolvedAt: new Date(Date.now() - 1000 * 60 * 60 * 18).toISOString(),
+        resolutionNotes: 'Snapshot SHA-256 checksum verified. Cold storage archive stored in encrypted S3 bucket.',
+      },
+      {
+        docketId: 'DOC-1004',
+        instituteId: 'INST-IIITS',
+        instituteName: 'IIIT Sri City',
+        submittedBy: 'Lumina Sentinel Daemon',
+        category: 'Seat_Quota_Expansion',
+        priority: 'Critical',
+        subject: 'Tenant license capacity warning: 1,220 / 1,250 seats allocated',
+        description: 'University has consumed 97.6% of licensed Enterprise student seats. Threshold alert triggered.',
+        status: 'Open',
+        assignedSpocId: 'SPOC-001',
+        createdAt: new Date(Date.now() - 1000 * 60 * 75).toISOString(),
+      },
+      {
+        docketId: 'DOC-1005',
+        instituteId: 'INST-IITB',
+        instituteName: 'IIT Bombay',
+        submittedBy: 'Academic Registrar (IITB)',
+        category: 'Data_Migration',
+        priority: 'High',
+        subject: 'Bulk roster migration failed on row 412 (Malformed roll number)',
+        description: 'Postgraduate M.Tech batch roster upload encountered duplicate primary key constraint on student roll numbers.',
+        status: 'Open',
+        assignedSpocId: 'SPOC-002',
+        createdAt: new Date(Date.now() - 1000 * 60 * 200).toISOString(),
+      },
+      {
+        docketId: 'DOC-1006',
+        instituteId: 'INST-BITS',
+        instituteName: 'BITS Pilani',
+        submittedBy: 'Dr. V. Ramgopal Rao (Dean)',
+        category: 'Seat_Quota_Expansion',
+        priority: 'Medium',
+        subject: 'Request expansion of Campus Tier quota by 500 seats',
+        description: 'Pilani & Goa dual campus expansion requires seat expansion to accommodate elective registrations.',
+        status: 'In_Progress',
+        assignedSpocId: 'SPOC-003',
+        createdAt: new Date(Date.now() - 1000 * 60 * 420).toISOString(),
+      },
+    ];
+
+    this.saasPlans = [
+      {
+        id: 'starter',
+        name: 'Starter College',
+        tagline: 'Basic academic catalog & enrollment for regional colleges',
+        monthlyPrice: 1499,
+        annualMonthlyPrice: 1199,
+        studentCapacity: 'Up to 2,500 students',
+        includedModules: [
+          'Course Catalog & Prerequisite Validation',
+          'Student & Faculty Dashboards',
+          'Course Section Registration & Rosters',
+          'Faculty Grade Entry & Transcripts',
+          'Departmental Announcements',
+        ],
+        restrictedModules: [
+          'Assistant Dean Role Delegation',
+          'Timetable Conflict Detection',
+          'Dynamic Policy Engine',
+          'Dean Override Pipeline',
+          'Super User Console & Logs',
+        ],
+        popular: false,
+      },
+      {
+        id: 'campus',
+        name: 'University Campus',
+        tagline: 'Full governance, timetable scheduling & policy administration',
+        monthlyPrice: 3999,
+        annualMonthlyPrice: 3199,
+        studentCapacity: 'Up to 15,000 students',
+        includedModules: [
+          'All Starter Modules Included',
+          'Assistant Dean 1: Slot & Timetable Allocation',
+          'Assistant Dean 2: Enrollment Phases & Policy Engine',
+          'Dean: Override Approval Pipeline',
+          'Multi-Term Visual Degree Roadmaps',
+          'Syllabus PDF Upload via Multer',
+        ],
+        restrictedModules: [
+          'Super User Root Operations',
+          'Live System Log Streaming',
+          'Dedicated Institute SPOC',
+        ],
+        popular: true,
+      },
+      {
+        id: 'enterprise',
+        name: 'Multi-Campus Enterprise',
+        tagline: 'Complete Lumina suite with Super User console & dedicated SPOC',
+        monthlyPrice: 8999,
+        annualMonthlyPrice: 7199,
+        studentCapacity: 'Unlimited Students & Campuses',
+        includedModules: [
+          'All University Campus Modules Included',
+          'Super User Root Entity CRUD',
+          'Live Multi-Stream System Logs (Access, Error, Auth)',
+          'Automated Log Archival & Maintenance',
+          'Dedicated Lumina Institute Admin (SPOC)',
+          'Institutional Revenue & Billing Analytics',
+        ],
+        restrictedModules: [],
+        popular: false,
+      },
+    ];
   }
 }
+
+

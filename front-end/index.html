@@ -555,6 +555,22 @@
         });
         localStorage.setItem('Lumina_Onboard_Dockets', JSON.stringify(existingDockets));
 
+        // Dispatch onboarding docket to backend SPOC operations queue
+        fetch('http://localhost:3000/admin/dockets', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            instituteId: `INST-${Date.now().toString().slice(-4)}`,
+            instituteName: instName,
+            submittedBy: `${repNameInput.value.trim()} (${document.getElementById('onboard-email').value.trim()})`,
+            category: 'Data_Migration',
+            priority: 'High',
+            subject: `Inbound University Onboarding: ${instName} (${plan})`,
+            description: `Target SaaS Tier: ${plan}. Estimated Students: ${document.getElementById('onboard-students').value.trim()}. Representative: ${repNameInput.value.trim()}.`,
+            assignedSpocId: 'SPOC-001',
+          })
+        }).catch(() => null);
+
         closeOnboardingModal();
         document.getElementById('onboard-form').reset();
 
@@ -565,5 +581,6 @@
         setTimeout(() => toast.classList.remove('show'), 5000);
       }
     </script>
+
   </body>
 </html>

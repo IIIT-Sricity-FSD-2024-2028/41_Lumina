@@ -13,8 +13,9 @@ export class AuthService {
 
   login(userId: string, password: string, clientIp = '127.0.0.1') {
     const user = this.db.users.find(
-      (u) => u.userId === userId && u.password === password,
+      (u) => (u.userId.toLowerCase() === (userId || '').toLowerCase() || u.email.toLowerCase() === (userId || '').toLowerCase()) && u.password === password,
     );
+
 
     if (!user) {
       // Record failed authentication attempt in logs/auth.log

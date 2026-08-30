@@ -8,12 +8,13 @@ var API_BASE = 'http://localhost:3000';
 /* ── SESSION & HEADERS ── */
 var sessionData = localStorage.getItem('Lumina_Session');
 var currentUser = sessionData ? JSON.parse(sessionData) : null;
-var CURRENT_STUDENT_ID = currentUser ? currentUser.User_ID : 'S2024002';
+var CURRENT_STUDENT_ID = (currentUser && currentUser.User_ID && currentUser.User_ID.startsWith('S')) ? currentUser.User_ID : 'S2024001';
 
 var headers = {
   'Content-Type': 'application/json',
-  'x-role': currentUser ? currentUser.Role : 'Student',
+  'x-role': 'Student',
 };
+
 
 /* ── IN-MEMORY DATA (populated from API) ── */
 var courses = [];
@@ -546,11 +547,32 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
       }
     }
+
+    if (studentCourseItems.length === 0) {
+      try {
+        var fallbackRes = await fetch(API_BASE + '/courses', { headers: { 'x-role': 'Student' } });
+        if (fallbackRes.ok) {
+          var allC = await fallbackRes.json();
+          courses = allC;
+          studentCourseItems = allC.map(function (c) {
+            return {
+              course: c,
+              sections: [{ sectionId: c.courseId + '-S1', sectionName: 'S1', courseId: c.courseId, termId: 'SPRING2026' }],
+              courseType: 'Institute Core'
+            };
+          });
+          currentSemester = 4;
+          activeTermName = 'Spring 2026';
+        }
+      } catch (_) {}
+    }
+
     if (results[1].ok) registrations = await results[1].json();
     if (results[2] && results[2].ok) overrides = await results[2].json();
   } catch (err) {
     console.error('Failed to fetch data from backend:', err);
   }
+
 
   updateStaticPageCopy();
   setupFilters();
