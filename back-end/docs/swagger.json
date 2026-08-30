@@ -1628,6 +1628,216 @@
           "SuperUser"
         ]
       }
+    },
+    "/super-user/admin-team": {
+      "get": {
+        "operationId": "SuperUserController_getAdminTeam",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Lumina staff & SPOC roster"
+          }
+        },
+        "summary": "Get Lumina Admin Team / Institute SPOCs (Super User only)",
+        "tags": [
+          "SuperUser"
+        ]
+      },
+      "post": {
+        "operationId": "SuperUserController_addAdminSpoc",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "New Admin SPOC created"
+          }
+        },
+        "summary": "Add a new Lumina Admin / SPOC to the internal staff",
+        "tags": [
+          "SuperUser"
+        ]
+      }
+    },
+    "/super-user/institutes": {
+      "get": {
+        "operationId": "SuperUserController_getInstitutes",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Client universities directory"
+          }
+        },
+        "summary": "Get all onboarded client institutions",
+        "tags": [
+          "SuperUser"
+        ]
+      },
+      "post": {
+        "operationId": "SuperUserController_onboardInstitute",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "University tenant provisioned"
+          }
+        },
+        "summary": "Onboard a new university client tenant",
+        "tags": [
+          "SuperUser"
+        ]
+      }
+    },
+    "/super-user/institutes/{id}/tier": {
+      "patch": {
+        "operationId": "SuperUserController_updateTier",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Plan tier updated"
+          }
+        },
+        "summary": "Update an institute subscription plan tier",
+        "tags": [
+          "SuperUser"
+        ]
+      }
+    },
+    "/super-user/institutes/{id}/assign-spoc": {
+      "post": {
+        "operationId": "SuperUserController_assignSpoc",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "SPOC assigned successfully"
+          }
+        },
+        "summary": "Assign or reassign a Lumina SPOC to a client institute",
+        "tags": [
+          "SuperUser"
+        ]
+      }
+    },
+    "/revenue/summary": {
+      "get": {
+        "operationId": "RevenueController_getRevenueSummary",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Institutional revenue summary"
+          }
+        },
+        "summary": "Get institutional revenue, tuition collections, and SaaS metrics",
+        "tags": [
+          "Revenue & Billing"
+        ]
+      }
+    },
+    "/revenue/plans": {
+      "get": {
+        "operationId": "RevenueController_getSaasPlans",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "SaaS licensing plans"
+          }
+        },
+        "summary": "Get public B2B SaaS pricing & subscription tiers",
+        "tags": [
+          "Revenue & Billing"
+        ]
+      }
+    },
+    "/revenue/tier": {
+      "get": {
+        "operationId": "RevenueController_getActiveTier",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Active SaaS tier configuration"
+          }
+        },
+        "summary": "Get current active SaaS tier and enabled modules",
+        "tags": [
+          "Revenue & Billing"
+        ]
+      },
+      "post": {
+        "operationId": "RevenueController_setActiveTier",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Updated active SaaS tier"
+          }
+        },
+        "summary": "Update active SaaS tier for the institution",
+        "tags": [
+          "Revenue & Billing"
+        ]
+      }
+    },
+    "/revenue/student/{studentId}": {
+      "get": {
+        "operationId": "RevenueController_getStudentBilling",
+        "parameters": [
+          {
+            "name": "studentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Student tuition billing details"
+          }
+        },
+        "summary": "Get itemized semester tuition billing for a student",
+        "tags": [
+          "Revenue & Billing"
+        ]
+      }
+    },
+    "/revenue/student/{studentId}/pay": {
+      "post": {
+        "operationId": "RevenueController_payStudentTuition",
+        "parameters": [
+          {
+            "name": "studentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payment receipt confirmation"
+          }
+        },
+        "summary": "Simulate tuition payment for a student",
+        "tags": [
+          "Revenue & Billing"
+        ]
+      }
     }
   },
   "info": {

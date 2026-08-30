@@ -20,6 +20,7 @@ import { EnrollmentPhasesModule } from './enrollment-phases/enrollment-phases.mo
 import { DegreeRequirementsModule } from './degree-requirements/degree-requirements.module';
 import { PoliciesModule } from './policies/policies.module';
 import { SuperUserModule } from './super-user/super-user.module';
+import { RevenueModule } from './revenue/revenue.module';
 import { SecurityMiddleware } from './common/middleware/security.middleware';
 import { LoggingMiddleware } from './common/middleware/logging.middleware';
 import { RouteMiddleware } from './common/middleware/route.middleware';
@@ -45,6 +46,7 @@ import { RouteMiddleware } from './common/middleware/route.middleware';
     DegreeRequirementsModule,
     PoliciesModule,
     SuperUserModule,
+    RevenueModule,
   ],
   controllers: [],
   providers: [

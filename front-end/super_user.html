@@ -15,8 +15,8 @@
 </head>
 <body>
 
-  <!-- Top Global Header -->
-  <header id="main-header">
+  <!-- Top Global Header (matches Dean2_index.html structure) -->
+  <header>
     <div class="logo-container">
       <div class="logo-icon">
         <img src="assets/icons/logo.svg" alt="Lumina Logo" width="20" height="20">
@@ -24,16 +24,14 @@
       Lumina
     </div>
 
-    <nav class="main-nav console-tab-nav" aria-label="Console Navigation">
-      <button class="nav-tab-btn active" id="tab-btn-overview" data-tab="overview">
-        <img src="assets/icons/database.svg" alt="" width="18" height="18" class="tab-icon" />
-        <span>Overview</span>
-      </button>
-      <button class="nav-tab-btn" id="tab-btn-logs" data-tab="logs">
-        <img src="assets/icons/terminal.svg" alt="" width="18" height="18" class="tab-icon" />
-        <span>System Logs</span>
-      </button>
+    <nav class="main-nav">
+      <a href="#" class="active" id="tab-btn-overview" data-tab="overview">Overview</a>
+      <a href="#" id="tab-btn-institutes" data-tab="institutes">Client Institutes</a>
+      <a href="#" id="tab-btn-spocs" data-tab="spocs">SPOC Staff</a>
+      <a href="#" id="tab-btn-queue" data-tab="queue">Onboarding Queue</a>
+      <a href="#" id="tab-btn-logs" data-tab="logs">System Logs</a>
     </nav>
+
 
     <div class="user-controls" id="user-session-container">
       <div class="user-info">
@@ -43,12 +41,13 @@
         </div>
         <img src="assets/icons/shield.svg" alt="Super User" class="avatar">
       </div>
-      <button class="btn btn-outline btn-sm logout-btn sign-out" id="logout-btn" title="Sign out of Lumina">
-        <img src="assets/icons/log-out.svg" alt="" width="16" height="16" />
-        <span>Sign Out</span>
-      </button>
+      <a href="login.html" class="sign-out" id="logout-btn">
+        Sign Out
+        <img src="assets/icons/logout.svg" alt="Logout" width="16" height="16" style="vertical-align: middle; margin-left: 5px;">
+      </a>
     </div>
   </header>
+
 
   <!-- Main Content Container -->
   <main class="app-container" id="main-content">
@@ -57,8 +56,30 @@
     <!-- TAB 1: OVERVIEW (Full CRUD Data Management)              -->
     <!-- ======================================================== -->
     <section class="tab-pane active" id="overview-tab" aria-labelledby="tab-btn-overview">
-      
-      
+
+      <!-- Platform Metrics Row (Dean2 card style) -->
+      <div class="grid-4" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+        <div class="card" style="margin-bottom: 0;">
+          <div class="card-title">Client Universities</div>
+          <div class="card-value" id="overview-inst-count">3</div>
+          <p class="subtext">Active SaaS tenants</p>
+        </div>
+        <div class="card" style="margin-bottom: 0;">
+          <div class="card-title">SPOC Staff</div>
+          <div class="card-value" id="overview-spoc-count">3</div>
+          <p class="subtext">Institute account managers</p>
+        </div>
+        <div class="card" style="margin-bottom: 0;">
+          <div class="card-title">Annual Recurring Revenue</div>
+          <div class="card-value" id="overview-arr">$173,964</div>
+          <p class="subtext">$14,497 monthly MRR</p>
+        </div>
+        <div class="card" style="margin-bottom: 0;">
+          <div class="card-title">Campus Students</div>
+          <div class="card-value" id="overview-students">6,900</div>
+          <p class="subtext">Enrolled across all tenants</p>
+        </div>
+      </div>
 
       <!-- Entity Switcher Strip -->
       <div class="entity-selector-wrapper" id="entity-selector-section">
@@ -201,9 +222,110 @@
     </section>
 
     <!-- ======================================================== -->
-    <!-- TAB 2: SYSTEM LOGS (Live Log Console)                    -->
+    <!-- TAB 2: CLIENT INSTITUTES                                  -->
+    <!-- ======================================================== -->
+    <section class="tab-pane" id="institutes-tab" aria-labelledby="tab-btn-institutes" style="display: none;">
+
+      <div class="dash-card">
+        <div class="card-header-flex" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 16px;">
+          <div>
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: #0f172a; margin: 0 0 4px 0;">Client Universities & SaaS Subscription Matrix</h3>
+            <p style="font-size: 0.85rem; color: #64748b; margin: 0;">Multi-college tenant directory, assigned Lumina SPOCs, and active license tiers.</p>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openOnboardModalSuperUser()">
+            <span>+ Onboard New College</span>
+          </button>
+        </div>
+
+        <div class="table-scroll-container">
+          <table class="data-table" id="institutes-table">
+            <thead>
+              <tr>
+                <th>INSTITUTE NAME & ID</th>
+                <th>SUBSCRIPTION TIER</th>
+                <th>ASSIGNED LUMINA SPOC</th>
+                <th>DEAN / PRIMARY CONTACT</th>
+                <th>ENROLLED STUDENTS</th>
+                <th>ANNUAL CONTRACT</th>
+                <th>SLA STATUS</th>
+                <th>ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody id="institutes-table-body">
+              <!-- Dynamically rendered -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- TAB 3: SPOC STAFF DIRECTORY                               -->
+    <!-- ======================================================== -->
+    <section class="tab-pane" id="spocs-tab" aria-labelledby="tab-btn-spocs" style="display: none;">
+
+      <div class="dash-card">
+        <div class="card-header-flex" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 16px;">
+          <div>
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: #0f172a; margin: 0 0 4px 0;">Lumina Operations & SPOC Staff Roster</h3>
+            <p style="font-size: 0.85rem; color: #64748b; margin: 0;">Internal operations personnel managing university SLAs and tenant configurations.</p>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openEmploySpocModal()">
+            <span>+ Employ New SPOC</span>
+          </button>
+        </div>
+
+        <div id="spoc-cards-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
+          <!-- Dynamically rendered SPOC cards -->
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- TAB 4: ONBOARDING QUEUE                                   -->
+    <!-- ======================================================== -->
+    <section class="tab-pane" id="queue-tab" aria-labelledby="tab-btn-queue" style="display: none;">
+
+      <div class="dash-card">
+        <div class="card-header-flex" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 16px;">
+          <div>
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: #0f172a; margin: 0 0 4px 0;">Inbound University Onboarding Queue</h3>
+            <p style="font-size: 0.85rem; color: #64748b; margin: 0;">Trial and onboarding dockets submitted from the public landing page.</p>
+          </div>
+        </div>
+
+        <div class="table-scroll-container">
+          <table class="data-table" id="dockets-table">
+            <thead>
+              <tr>
+                <th>INSTITUTE NAME</th>
+                <th>TARGET SAAS PLAN</th>
+                <th>REPRESENTATIVE & EMAIL</th>
+                <th>STUDENTS</th>
+                <th>SUBMITTED DATE</th>
+                <th>ACTION</th>
+              </tr>
+            </thead>
+            <tbody id="dockets-table-body">
+              <!-- Dynamically populated from localStorage Lumina_Onboard_Dockets -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+
+
+
+
+    <!-- ======================================================== -->
+    <!-- TAB 3: SYSTEM LOGS (Live Log Console)                    -->
     <!-- ======================================================== -->
     <section class="tab-pane" id="logs-tab" aria-labelledby="tab-btn-logs" style="display: none;">
+
       <div class="dash-card terminal-card" id="terminal-card">
         
         <!-- Terminal Header & Status Strip -->
@@ -404,7 +526,164 @@
     </div>
   </div>
 
+  <!-- ======================================================== -->
+  <!-- MODAL: REASSIGN LUMINA SPOC                              -->
+  <!-- ======================================================== -->
+  <div class="modal-backdrop" id="spoc-modal-backdrop" style="display: none;" aria-hidden="true" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <img src="assets/icons/shield.svg" alt="" width="20" height="20" />
+          <h3 class="modal-title">Assign Dedicated Lumina SPOC</h3>
+        </div>
+        <button type="button" class="modal-close-btn" onclick="closeSpocModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.875rem; color: #64748b; margin-bottom: 16px;">
+          Select a Lumina operations administrator to act as the primary Single Point of Contact (SPOC) for <strong id="spoc-modal-inst-name">IIIT Sri City</strong>.
+        </p>
+        <input type="hidden" id="spoc-modal-inst-id" />
+        <div class="form-group">
+          <label class="form-label" for="spoc-select-dropdown">SELECT LUMINA ADMIN SPOC</label>
+          <select id="spoc-select-dropdown" class="form-control">
+            <!-- Dynamically populated -->
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeSpocModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="confirmSpocAssignment()">Assign SPOC</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: CHANGE SUBSCRIPTION PLAN TIER                     -->
+  <!-- ======================================================== -->
+  <div class="modal-backdrop" id="tier-modal-backdrop" style="display: none;" aria-hidden="true" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <img src="assets/icons/layers.svg" alt="" width="20" height="20" />
+          <h3 class="modal-title">Modify SaaS Subscription Tier</h3>
+        </div>
+        <button type="button" class="modal-close-btn" onclick="closeTierModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.875rem; color: #64748b; margin-bottom: 16px;">
+          Update licensing package and active features for <strong id="tier-modal-inst-name">Institute</strong>.
+        </p>
+        <input type="hidden" id="tier-modal-inst-id" />
+        <div class="form-group">
+          <label class="form-label" for="tier-select-dropdown">SELECT SUBSCRIPTION TIER</label>
+          <select id="tier-select-dropdown" class="form-control">
+            <option value="Starter">Starter College Tier ($1,499/mo - Up to 2.5k Students)</option>
+            <option value="Campus">University Campus Tier ($3,999/mo - Up to 15k Students)</option>
+            <option value="Enterprise">Multi-Campus Enterprise Tier ($8,999/mo - Unlimited)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeTierModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="confirmTierUpdate()">Update Tier</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: EMPLOY NEW LUMINA SPOC                            -->
+  <!-- ======================================================== -->
+  <div class="modal-backdrop" id="employ-modal-backdrop" style="display: none;" aria-hidden="true" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <img src="assets/icons/users.svg" alt="" width="20" height="20" />
+          <h3 class="modal-title">Employ New Lumina Admin SPOC</h3>
+        </div>
+        <button type="button" class="modal-close-btn" onclick="closeEmploySpocModal()">&times;</button>
+      </div>
+      <form id="employ-spoc-form" onsubmit="submitEmploySpoc(event)">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="employ-spoc-name">STAFF FULL NAME</label>
+            <input type="text" id="employ-spoc-name" class="form-control" placeholder="e.g. Vikramaditya Sen" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="employ-spoc-email">LUMINA CORPORATE EMAIL</label>
+            <input type="email" id="employ-spoc-email" class="form-control" placeholder="vikram.spoc@lumina.edu" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="employ-spoc-phone">CONTACT PHONE</label>
+            <input type="text" id="employ-spoc-phone" class="form-control" placeholder="+91 98765 11223" required />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeEmploySpocModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Employ & Add to Staff</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: ONBOARD NEW COLLEGE TENANT (SUPER USER)           -->
+  <!-- ======================================================== -->
+  <div class="modal-backdrop" id="onboard-modal-backdrop" style="display: none;" aria-hidden="true" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <img src="assets/icons/layers.svg" alt="" width="20" height="20" />
+          <h3 class="modal-title">Onboard New Client University</h3>
+        </div>
+        <button type="button" class="modal-close-btn" onclick="closeOnboardModalSuperUser()">&times;</button>
+      </div>
+      <form id="super-onboard-form" onsubmit="submitSuperUserOnboard(event)">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="onboard-name-input">INSTITUTE FULL NAME</label>
+            <input type="text" id="onboard-name-input" class="form-control" placeholder="e.g. Birla Institute of Technology" required />
+          </div>
+          <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+              <label class="form-label" for="onboard-dean-input">DEAN / REGISTRAR</label>
+              <input type="text" id="onboard-dean-input" class="form-control" placeholder="Dr. S. K. Gupta" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="onboard-students-input">STUDENT COUNT</label>
+              <input type="number" id="onboard-students-input" class="form-control" placeholder="3500" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="onboard-email-input">INSTITUTIONAL EMAIL</label>
+            <input type="email" id="onboard-email-input" class="form-control" placeholder="dean@bit.edu" required />
+          </div>
+          <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+              <label class="form-label" for="onboard-tier-select">SAAS TIER</label>
+              <select id="onboard-tier-select" class="form-control">
+                <option value="Campus">University Campus</option>
+                <option value="Enterprise">Multi-Campus Enterprise</option>
+                <option value="Starter">Starter College</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="onboard-spoc-select">ASSIGN SPOC</label>
+              <select id="onboard-spoc-select" class="form-control">
+                <!-- Populated dynamically -->
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeOnboardModalSuperUser()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Provision Tenant & Assign SPOC</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Toast Notification Container -->
+
   <div class="toast-container" id="toast-container" aria-live="polite"></div>
 
   <div id="footer-placeholder"></div>

@@ -41,10 +41,14 @@ export class RouteMiddleware implements NestMiddleware {
     // Check if the route is exempted / public
     const isPublicRoute =
       originalUrl.startsWith('/auth/login') ||
+      originalUrl.startsWith('/revenue/plans') ||
+      originalUrl.startsWith('/revenue/tier') ||
       originalUrl.startsWith('/api') ||
       originalUrl.startsWith('/docs') ||
       originalUrl === '/' ||
       originalUrl === '';
+
+
 
     // Enforce 403 Forbidden at router level for protected routes missing credentials
     if (!isPublicRoute && !roleHeader && !authHeader) {

@@ -308,7 +308,28 @@ document.addEventListener('DOMContentLoaded', () => {
         clearTimeout(importToastTimeout);
     });
 
-    // --- 6. FETCH DATA FROM BACKEND & RENDER ---
+    // --- 6. FETCH REVENUE DATA FROM BACKEND & RENDER ---
+    async function renderRevenueMetrics() {
+        try {
+            const res = await fetch(`${API_BASE}/revenue/summary`, { headers });
+            if (!res.ok) return;
+            const rev = await res.json();
+
+            const billedEl = document.getElementById('revenue-total-billed');
+            const collectedEl = document.getElementById('revenue-total-collected');
+            const barEl = document.getElementById('revenue-bar');
+            const textEl = document.getElementById('revenue-collection-text');
+
+            if (billedEl) billedEl.textContent = `$${rev.totalGrossRevenue.toLocaleString()}`;
+            if (collectedEl) collectedEl.textContent = `$${rev.totalFeesCollected.toLocaleString()} (${rev.collectionRatePercent}%)`;
+            if (barEl) barEl.style.width = `${Math.min(100, rev.collectionRatePercent)}%`;
+            if (textEl) textEl.textContent = `${rev.totalCreditsEnrolled} Enrolled Credits across ${rev.totalStudentsEnrolled} Students`;
+        } catch (err) {
+            console.warn('Revenue metrics unavailable:', err);
+        }
+    }
+
+    // --- 7. FETCH DATA FROM BACKEND & RENDER ---
     async function loadDashboard() {
         try {
             const [usersRes, coursesRes, registrationsRes] = await Promise.all([
@@ -333,6 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderAssistantDeans();
         renderStats();
         renderTable();
+        renderRevenueMetrics();
     }
 
     // Kick off data loading (non-blocking — UI is already interactive)

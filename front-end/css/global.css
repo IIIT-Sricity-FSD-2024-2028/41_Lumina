@@ -36,6 +36,18 @@ body {
   line-height: 1.5;
 }
 
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+main,
+.app-container,
+.container {
+  flex: 1 0 auto;
+}
+
+
 a {
   text-decoration: none;
   color: inherit;

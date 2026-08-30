@@ -17,7 +17,8 @@
       </div>
       <nav class="main-nav" aria-label="Main navigation">
         <a href="#">Home</a>
-        <a href="course.html">Courses</a>
+        <a href="#features">Features</a>
+        <a href="#pricing">Pricing & Plans</a>
         <a href="#about">About</a>
         <a href="#contact">Contact Us</a>
       </nav>
@@ -28,11 +29,11 @@
 
     <main>
       <section class="hero-section">
-        <div class="status-badge">REGISTRATION ACTIVE FOR FALL 2026</div>
-        <h1 class="hero-title">Streamlining Academic<br />Progress.</h1>
+        <div class="status-badge">ENTERPRISE ACADEMIC SAAS PLATFORM</div>
+        <h1 class="hero-title">Intelligent Academic<br />Planning & Enrollment.</h1>
         <p class="hero-subtitle">
-          Plan your roadmap, enroll with confidence, and explore the complete<br />academic
-          catalog with our intelligent planning system.
+          Empowering universities with multi-term visual roadmaps, collision-free timetable allocation,<br />
+          dynamic policy governance, and seamless student registration.
         </p>
         <div class="hero-actions">
           <button
@@ -43,14 +44,15 @@
           </button>
           <button
             class="btn-outline"
-            onclick="window.location.href = 'course.html'"
+            onclick="window.location.href = '#pricing'"
           >
-            Browse Courses
+            Explore SaaS Plans
           </button>
         </div>
       </section>
 
-      <section class="features-section">
+      <section id="features" class="features-section">
+
         <h2 class="section-title">Take Control of Your Academic Journey</h2>
         <p class="section-subtitle">
           Advanced tools designed for student success and clarity.
@@ -93,6 +95,95 @@
         </div>
       </section>
 
+      <!-- ======================================================== -->
+      <!-- PRICING & REVENUE MODEL SECTION                          -->
+      <!-- ======================================================== -->
+      <section id="pricing" class="pricing-section">
+        <h2 class="section-title">Institutional Licensing & Pricing</h2>
+        <p class="section-subtitle">
+          Flexible, scalable SaaS tiers engineered for universities and multi-campus institutes.
+        </p>
+
+        <div class="pricing-toggle-wrapper">
+          <button class="pricing-toggle-btn active" id="btn-monthly" onclick="setBillingCycle('monthly')">Monthly Billing</button>
+          <button class="pricing-toggle-btn" id="btn-annual" onclick="setBillingCycle('annual')">
+            Annual Billing <span class="discount-badge">Save 20%</span>
+          </button>
+        </div>
+
+        <div class="pricing-grid">
+          <!-- Tier 1: Starter College -->
+          <article class="pricing-card">
+            <div class="pricing-card-header">
+              <h3>Starter College</h3>
+              <p class="pricing-tagline">Core course catalog & enrollment for regional colleges.</p>
+            </div>
+            <div class="price-display">
+              <span class="price-currency">$</span>
+              <span class="price-amount" id="price-starter">1,499</span>
+              <span class="price-period">/ month</span>
+            </div>
+            <div class="capacity-badge">👥 Up to 2,500 Enrolled Students</div>
+            <ul class="pricing-features-list">
+              <li>Course Catalog & Prerequisite Engine</li>
+              <li>Student Course Registration & Rosters</li>
+              <li>Faculty Grade Entry & Submission</li>
+              <li>Departmental Course Announcements</li>
+              <li>Student Tuition Ledger & Fee Status</li>
+            </ul>
+            <button class="pricing-cta-btn" onclick="openOnboardingModal('Starter College', 1499, 2500)">Get Starter College Plan</button>
+          </article>
+
+          <!-- Tier 2: University Campus (Featured) -->
+          <article class="pricing-card featured">
+            <div class="featured-pill">Most Popular for Universities</div>
+            <div class="pricing-card-header">
+              <h3>University Campus</h3>
+              <p class="pricing-tagline">Full academic governance, timetable scheduling & policy administration.</p>
+            </div>
+            <div class="price-display">
+              <span class="price-currency">$</span>
+              <span class="price-amount" id="price-campus">3,999</span>
+              <span class="price-period">/ month</span>
+            </div>
+            <div class="capacity-badge">👥 Up to 15,000 Enrolled Students</div>
+            <ul class="pricing-features-list">
+              <li>Everything in Starter College, plus:</li>
+              <li>Assistant Dean 1: Slot & Room Timetable Allocator</li>
+              <li>Assistant Dean 2: Enrollment Phases & Policy Engine</li>
+              <li>Dean: Override Request Approval Pipeline</li>
+              <li>Multi-Term Visual Degree Roadmaps</li>
+              <li>Syllabus PDF Upload via Multer</li>
+            </ul>
+            <button class="pricing-cta-btn" onclick="openOnboardingModal('University Campus Tier', 3999, 15000)">Get University Campus Plan</button>
+          </article>
+
+          <!-- Tier 3: Multi-Campus Enterprise -->
+          <article class="pricing-card">
+            <div class="pricing-card-header">
+              <h3>Multi-Campus Enterprise</h3>
+              <p class="pricing-tagline">Full Lumina platform suite with Super User console & dedicated SPOC.</p>
+            </div>
+            <div class="price-display">
+              <span class="price-currency">$</span>
+              <span class="price-amount" id="price-enterprise">8,999</span>
+              <span class="price-period">/ month</span>
+            </div>
+            <div class="capacity-badge">👥 Unlimited Students & Campuses</div>
+            <ul class="pricing-features-list">
+              <li>All University Campus Modules Included</li>
+              <li>Super User Root Entity CRUD (8 Datasets)</li>
+              <li>Live Multi-Stream System Logs (Access, Error, Auth)</li>
+              <li>Automated Log Archival & Maintenance</li>
+              <li>Dedicated Lumina Admin Team (Institute SPOC)</li>
+              <li>Institutional Revenue & Tuition Collection Analytics</li>
+            </ul>
+            <button class="pricing-cta-btn" onclick="openOnboardingModal('Multi-Campus Enterprise Tier', 8999, 0)">Get Enterprise Deployment</button>
+          </article>
+        </div>
+      </section>
+
+
       <section id="about" class="about-section">
         <div class="about-container">
           <h1>About Lumina</h1>
@@ -132,8 +223,7 @@
         <div class="contact-info">
           <h1>Get in Touch</h1>
           <p>
-            Have questions about the planning system? Our technical support team
-            is here to assist you with any inquiries.
+            Have questions about institutional onboarding, subscription plans, or custom academic integrations? Our enterprise team is here to assist.
           </p>
 
           <div class="contact-methods">
@@ -144,8 +234,8 @@
                 class="contact-icon"
               />
               <div>
-                <strong>System Administrator Office</strong>
-                <p>Academic Block A, 3rd Floor, IIIT Sri City</p>
+                <strong>Platform Headquarters</strong>
+                <p>Lumina EdTech Suite, Cyber Gateway, Hi-Tech City</p>
               </div>
             </div>
             <div class="contact-method">
@@ -155,10 +245,10 @@
                 class="contact-icon"
               />
               <div>
-                <strong>Support Email</strong>
+                <strong>Institutional Inquiries</strong>
                 <br />
-                <a href="mailto:support@lumina.iiits.in"
-                  >support@lumina.iiits.in</a
+                <a href="mailto:contact@lumina-platform.com"
+                  >contact@lumina-platform.com</a
                 >
               </div>
             </div>
@@ -169,13 +259,14 @@
                 class="contact-icon"
               />
               <div>
-                <strong>Technical Help Desk</strong>
+                <strong>Enterprise Help Desk</strong>
                 <br />
-                <a href="tel:+9108576244400">+91 08576 244 400</a>
+                <a href="tel:+918045678900">+91 (080) 4567 8900</a>
               </div>
             </div>
           </div>
         </div>
+
 
         <form id="main-contact-form" class="contact-form">
           <div class="form-row">
@@ -184,17 +275,17 @@
               <input
                 type="text"
                 id="contact-name"
-                placeholder="John Doe"
+                placeholder="Dr. Arvind Sharma"
                 class="form-input"
                 required
               />
             </div>
             <div class="form-group">
-              <label>INSTITUTIONAL ID</label>
+              <label>INSTITUTE / UNIVERSITY NAME</label>
               <input
                 type="text"
                 id="contact-id"
-                placeholder="S20230010xxx"
+                placeholder="e.g. National Institute of Technology"
                 class="form-input"
                 required
               />
@@ -204,7 +295,7 @@
             <label>MESSAGE</label>
             <textarea
               id="contact-message"
-              placeholder="How can we help you?"
+              placeholder="Tell us about your university requirements, enrollment size, or questions..."
               class="form-input"
               rows="4"
               required
@@ -219,7 +310,57 @@
           </button>
         </form>
       </section>
+
     </main>
+
+    <!-- ======================================================== -->
+    <!-- INSTITUTIONAL ONBOARDING & TRIAL MODAL                   -->
+    <!-- ======================================================== -->
+    <div id="onboard-modal" class="onboard-modal-backdrop">
+      <div class="onboard-modal-box">
+        <div class="onboard-modal-header">
+          <h3 id="onboard-modal-title">🏛️ Request Institutional Onboarding</h3>
+          <button type="button" class="onboard-modal-close" onclick="closeOnboardingModal()">&times;</button>
+        </div>
+        <form id="onboard-form" novalidate onsubmit="submitOnboardingRequest(event)" class="onboard-modal-body">
+          <div class="onboard-plan-badge">
+            <span class="onboard-plan-title" id="onboard-selected-plan">University Campus Tier</span>
+            <span class="onboard-plan-price" id="onboard-selected-price">$3,999 / mo</span>
+          </div>
+
+          <div class="form-group">
+            <label style="font-size: 0.8rem; font-weight: 700; color: #475569;">INSTITUTE / UNIVERSITY NAME</label>
+            <input type="text" id="onboard-inst-name" placeholder="e.g. Indian Institute of Information Technology" class="form-input" oninput="clearFieldError('onboard-inst-name-error')" />
+            <div id="onboard-inst-name-error" style="color: #b91c1c; font-size: 0.75rem; font-weight: 600; margin-top: 4px; display: none;"></div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label style="font-size: 0.8rem; font-weight: 700; color: #475569;">DEAN / REGISTRAR NAME</label>
+              <input type="text" id="onboard-rep-name" placeholder="Dr. Rajesh Sharma" class="form-input" oninput="clearFieldError('onboard-rep-name-error')" />
+              <div id="onboard-rep-name-error" style="color: #b91c1c; font-size: 0.75rem; font-weight: 600; margin-top: 4px; display: none;"></div>
+            </div>
+            <div class="form-group">
+              <label style="font-size: 0.8rem; font-weight: 700; color: #475569;">ESTIMATED STUDENTS</label>
+              <input type="number" id="onboard-students" placeholder="e.g. 2500" class="form-input" oninput="validateStudentCapacity()" />
+              <small id="student-capacity-hint" style="font-size: 0.75rem; color: #64748b; margin-top: 4px; display: block;">👥 Capacity: Up to 15,000</small>
+              <div id="student-capacity-error" style="color: #b91c1c; font-size: 0.75rem; font-weight: 600; margin-top: 4px; display: none;"></div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label style="font-size: 0.8rem; font-weight: 700; color: #475569;">OFFICIAL INSTITUTIONAL EMAIL</label>
+            <input type="email" id="onboard-email" placeholder="dean.academic@university.ac.in" class="form-input" oninput="clearFieldError('onboard-email-error')" />
+            <div id="onboard-email-error" style="color: #b91c1c; font-size: 0.75rem; font-weight: 600; margin-top: 4px; display: none;"></div>
+          </div>
+
+
+          <button type="submit" id="onboard-submit-btn" class="btn-primary" style="width: 100%; justify-content: center; padding: 14px; font-weight: 700; margin-top: 8px;">
+            Submit Onboarding Docket to Lumina SPOC Team
+          </button>
+        </form>
+      </div>
+    </div>
 
     <div id="footer-placeholder"></div>
 
@@ -229,9 +370,200 @@
           <polyline points="20 6 9 17 4 12"></polyline>
         </svg>
       </div>
-      <span class="toast-message-text">Message Sent</span>
+      <span class="toast-message-text" id="toast-msg-text">Message Sent</span>
       <button type="button" id="close-contact-toast" class="toast-close-btn">&times;</button>
-    </div>    <script src="js/validation.js"></script>
+    </div>
+
+    <script src="js/validation.js"></script>
     <script src="js/footer-loader.js"></script>
+    <script>
+      let currentPlanMaxCapacity = 0;
+
+      function setBillingCycle(cycle) {
+        const monthlyBtn = document.getElementById('btn-monthly');
+        const annualBtn = document.getElementById('btn-annual');
+        const starterEl = document.getElementById('price-starter');
+        const campusEl = document.getElementById('price-campus');
+        const enterpriseEl = document.getElementById('price-enterprise');
+
+        if (cycle === 'annual') {
+          monthlyBtn.classList.remove('active');
+          annualBtn.classList.add('active');
+          starterEl.textContent = '1,199';
+          campusEl.textContent = '3,199';
+          enterpriseEl.textContent = '7,199';
+        } else {
+          annualBtn.classList.remove('active');
+          monthlyBtn.classList.add('active');
+          starterEl.textContent = '1,499';
+          campusEl.textContent = '3,999';
+          enterpriseEl.textContent = '8,999';
+        }
+      }
+
+      function clearFieldError(errorId) {
+        const el = document.getElementById(errorId);
+        if (el) el.style.display = 'none';
+      }
+
+      function openOnboardingModal(planName, price, maxCapacity) {
+        currentPlanMaxCapacity = maxCapacity;
+        const modal = document.getElementById('onboard-modal');
+        const titleEl = document.getElementById('onboard-modal-title');
+        const submitBtn = document.getElementById('onboard-submit-btn');
+        const hintEl = document.getElementById('student-capacity-hint');
+        const studentInput = document.getElementById('onboard-students');
+
+        // Reset errors and inputs
+        ['student-capacity-error', 'onboard-email-error', 'onboard-inst-name-error', 'onboard-rep-name-error'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.style.display = 'none';
+        });
+
+        document.getElementById('onboard-form').reset();
+        document.getElementById('onboard-selected-plan').textContent = planName;
+        document.getElementById('onboard-selected-price').textContent = `$${price.toLocaleString()} / mo`;
+
+        if (maxCapacity === 2500) {
+          titleEl.textContent = '🏛️ Request Starter College Onboarding';
+          submitBtn.textContent = 'Submit Starter Onboarding Request';
+          hintEl.textContent = '👥 Plan Capacity: Up to 2,500 students';
+          studentInput.placeholder = 'e.g. 1,500 (Max 2,500)';
+          studentInput.max = '2500';
+          studentInput.min = '1';
+        } else if (maxCapacity === 15000) {
+          titleEl.textContent = '🏛️ Request University Campus Onboarding';
+          submitBtn.textContent = 'Submit Campus Onboarding Request';
+          hintEl.textContent = '👥 Plan Capacity: Up to 15,000 students';
+          studentInput.placeholder = 'e.g. 6,000 (Max 15,000)';
+          studentInput.max = '15000';
+          studentInput.min = '1';
+        } else {
+          titleEl.textContent = '🏛️ Request Enterprise Deployment & SPOC';
+          submitBtn.textContent = 'Request Dedicated SPOC & Enterprise Setup';
+          hintEl.textContent = '👥 Plan Capacity: Unlimited students & multi-campus';
+          studentInput.placeholder = 'e.g. 25,000 (Unlimited)';
+          studentInput.removeAttribute('max');
+          studentInput.min = '1';
+        }
+
+        modal.classList.add('show');
+      }
+
+      function validateStudentCapacity() {
+        const studentInput = document.getElementById('onboard-students');
+        const errorEl = document.getElementById('student-capacity-error');
+        const rawVal = studentInput.value.trim();
+
+        if (!rawVal) {
+          errorEl.textContent = '⚠️ Please enter estimated student enrollment.';
+          errorEl.style.display = 'block';
+          return false;
+        }
+
+        const val = parseInt(rawVal, 10);
+        if (isNaN(val) || val <= 0) {
+          errorEl.textContent = '⚠️ Please enter a valid positive number of students.';
+          errorEl.style.display = 'block';
+          return false;
+        }
+
+        if (currentPlanMaxCapacity > 0 && val > currentPlanMaxCapacity) {
+          errorEl.textContent = `⚠️ Exceeds plan limit! ${document.getElementById('onboard-selected-plan').textContent} supports up to ${currentPlanMaxCapacity.toLocaleString()} students. For higher enrollment, select a higher tier.`;
+          errorEl.style.display = 'block';
+          return false;
+        } else {
+          errorEl.style.display = 'none';
+          return true;
+        }
+      }
+
+      function validateEmail() {
+        const emailInput = document.getElementById('onboard-email');
+        const errorEl = document.getElementById('onboard-email-error');
+        const val = emailInput.value.trim();
+
+        if (!val) {
+          errorEl.textContent = '⚠️ Institutional email address is required.';
+          errorEl.style.display = 'block';
+          return false;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(val)) {
+          errorEl.textContent = '⚠️ Please enter a valid institutional email format (e.g., dean.academic@university.ac.in).';
+          errorEl.style.display = 'block';
+          return false;
+        }
+
+        errorEl.style.display = 'none';
+        return true;
+      }
+
+      function closeOnboardingModal() {
+        const modal = document.getElementById('onboard-modal');
+        modal.classList.remove('show');
+      }
+
+      function submitOnboardingRequest(e) {
+        e.preventDefault();
+
+        const instNameInput = document.getElementById('onboard-inst-name');
+        const repNameInput = document.getElementById('onboard-rep-name');
+        const instError = document.getElementById('onboard-inst-name-error');
+        const repError = document.getElementById('onboard-rep-name-error');
+
+        let isValid = true;
+
+        if (!instNameInput.value.trim()) {
+          instError.textContent = '⚠️ Please enter the institute / university name.';
+          instError.style.display = 'block';
+          isValid = false;
+        } else {
+          instError.style.display = 'none';
+        }
+
+        if (!repNameInput.value.trim()) {
+          repError.textContent = '⚠️ Please enter the dean or registrar name.';
+          repError.style.display = 'block';
+          isValid = false;
+        } else {
+          repError.style.display = 'none';
+        }
+
+        const isStudentsValid = validateStudentCapacity();
+        const isEmailValid = validateEmail();
+
+        if (!isValid || !isStudentsValid || !isEmailValid) {
+          return;
+        }
+
+        const instName = instNameInput.value.trim();
+        const plan = document.getElementById('onboard-selected-plan').textContent;
+
+        // Save docket to localStorage for Super User operations
+        const existingDockets = JSON.parse(localStorage.getItem('Lumina_Onboard_Dockets') || '[]');
+        existingDockets.push({
+          id: `DOCK-${Date.now()}`,
+          instituteName: instName,
+          repName: repNameInput.value.trim(),
+          email: document.getElementById('onboard-email').value.trim(),
+          students: document.getElementById('onboard-students').value.trim(),
+          plan: plan,
+          status: 'Pending SPOC Assignment',
+          submittedAt: new Date().toISOString()
+        });
+        localStorage.setItem('Lumina_Onboard_Dockets', JSON.stringify(existingDockets));
+
+        closeOnboardingModal();
+        document.getElementById('onboard-form').reset();
+
+        const toast = document.getElementById('contact-toast');
+        const toastText = document.getElementById('toast-msg-text');
+        toastText.textContent = `Onboarding docket for ${instName} submitted! A Lumina SPOC will be assigned.`;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 5000);
+      }
+    </script>
   </body>
 </html>

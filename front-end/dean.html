@@ -109,7 +109,34 @@
         </div>
 
         <div class="dash-card">
+          <div class="card-header-flex">
+            <h3 class="card-title">💰 Semester Revenue & Tuition</h3>
+            <span class="text-xs text-muted" style="background: #dcfce7; color: #166534; padding: 2px 6px; border-radius: 4px; font-weight: 700;">LIVE METRICS</span>
+          </div>
+          <div class="stat-block">
+            <div class="stat-text-row">
+              <span class="stat-name">Total Tuition Billed</span>
+              <span class="stat-value" id="revenue-total-billed" style="color: #0284c7;">$0</span>
+            </div>
+            <div class="stat-text-row" style="margin-top: 8px;">
+              <span class="stat-name">Tuition Collected</span>
+              <span class="stat-value" id="revenue-total-collected" style="color: #16a34a;">$0</span>
+            </div>
+            <div class="progress-track" style="margin-top: 8px;"><div class="progress-fill" id="revenue-bar" style="width: 0%; background: #16a34a;"></div></div>
+            <p class="stat-subtext" id="revenue-collection-text" style="margin-top: 6px;">Loading revenue streams...</p>
+          </div>
+          <div class="stat-block" style="margin-top: 12px; padding-top: 10px; border-top: 1px dashed #e2e8f0;">
+            <div class="stat-text-row">
+              <span class="stat-name">SaaS License Tier</span>
+              <span class="stat-value" id="revenue-saas-tier" style="font-size: 0.85rem; font-weight: 700;">Campus Enterprise</span>
+            </div>
+            <p class="stat-subtext" id="revenue-saas-mrr">$3,999 / mo (ARR: $47,988)</p>
+          </div>
+        </div>
+
+        <div class="dash-card">
           <h3 class="card-title">⏱ Critical Audit Logs</h3>
+
           <ul class="audit-list">
             <li class="audit-item active">
               <span class="audit-dot blue"></span>

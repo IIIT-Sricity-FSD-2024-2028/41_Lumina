@@ -235,6 +235,36 @@
           <span class="gpa-number">8.9 / 10.0</span>
         </div>
       </div>
+
+      <!-- CARD 6: Semester Tuition & Financial Clearance -->
+      <div class="card" id="tuitionCard">
+        <div class="card-title">
+          <span>💳</span>
+          <h2>Semester Tuition & Fees</h2>
+        </div>
+
+        <div class="acad-info-block" style="margin-top: 10px;">
+          <div class="acad-info-row">
+            <span class="acad-label">Enrolled Credits:</span>
+            <span class="acad-val" id="tuitionCredits">--</span>
+          </div>
+          <div class="acad-info-row">
+            <span class="acad-label">Tuition Due:</span>
+            <span class="acad-val" id="tuitionAmountDue" style="font-weight: 700; color: #0284c7;">--</span>
+          </div>
+          <div class="acad-info-row">
+            <span class="acad-label">Financial Status:</span>
+            <span class="acad-val" id="tuitionStatusBadge">
+              <span style="background: #f1f5f9; color: #475569; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 0.78rem;">Loading...</span>
+            </span>
+          </div>
+        </div>
+
+        <div style="margin-top: 18px; display: flex; gap: 8px;">
+          <button class="dark-btn" id="openTuitionModalBtn" style="width: 100%; justify-content: center; font-size: 0.85rem;" onclick="openTuitionModal()">View Breakdown & Pay</button>
+        </div>
+      </div>
+    </div><!-- end bottom-row -->
   </main><!-- end main-content -->
 
 
@@ -542,11 +572,166 @@
   </div>
 
 
+  <!-- ==============================
+       POPUP: Tuition Breakdown & Payment
+  ============================== -->
+  <div class="popup-bg" id="tuitionModal">
+    <div class="popup" style="max-width: 540px;">
+      <div class="popup-header">
+        <h2>Semester Tuition Breakdown</h2>
+        <button class="close-btn" onclick="closePopup('tuitionModal')">✕</button>
+      </div>
+      <div class="popup-body">
+        <div id="tuitionBreakdownContent" style="display: flex; flex-direction: column; gap: 8px;">
+          <!-- Injected dynamically -->
+        </div>
+        <div style="margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 16px; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-size: 0.78rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Outstanding Balance</div>
+            <div id="modalBalanceDue" style="font-size: 1.4rem; font-weight: 800; color: #0f172a;">$0</div>
+          </div>
+          <button id="payTuitionBtn" class="dark-btn" style="background: #0284c7; color: #ffffff; padding: 10px 20px; font-weight: 600;" onclick="submitTuitionPayment()">
+            Pay with Student Account
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="js/student_loader.js"></script>
   <script src="js/student_App.js"></script>
   <script>
     // Tell the loader which page is active so the right nav link is highlighted
     loadSharedComponents('student_index.html');
+
+    let currentStudentBilling = null;
+
+    async function loadTuitionData() {
+      try {
+        const session = localStorage.getItem('Lumina_Session');
+        const user = session ? JSON.parse(session) : null;
+        const studentId = user?.User_ID || 'S2024001';
+        const headers = {
+          'Content-Type': 'application/json',
+          ...(user?.accessToken ? { 'Authorization': `Bearer ${user.accessToken}` } : {}),
+          'x-role': user?.Role || 'Student',
+        };
+
+        const res = await fetch(`http://localhost:3000/revenue/student/${studentId}`, { headers });
+        if (!res.ok) return;
+        currentStudentBilling = await res.json();
+
+        const creditsEl = document.getElementById('tuitionCredits');
+        const amountEl = document.getElementById('tuitionAmountDue');
+        const statusEl = document.getElementById('tuitionStatusBadge');
+
+        if (creditsEl) creditsEl.textContent = `${currentStudentBilling.totalCredits} Credits (${currentStudentBilling.totalEnrolledCourses} Courses)`;
+        if (amountEl) {
+          amountEl.textContent = currentStudentBilling.balanceDue === 0 ? '$0 (Cleared)' : `$${currentStudentBilling.balanceDue.toLocaleString()}`;
+          if (currentStudentBilling.balanceDue === 0) amountEl.style.color = '#15803d';
+        }
+        if (statusEl) {
+          if (currentStudentBilling.paymentStatus === 'Cleared') {
+            statusEl.innerHTML = '<span style="background: #dcfce7; color: #15803d; padding: 3px 10px; border-radius: 4px; font-weight: 700; font-size: 0.8rem;">✓ CLEARED</span>';
+          } else {
+            statusEl.innerHTML = '<span style="background: #fef3c7; color: #b45309; padding: 3px 10px; border-radius: 4px; font-weight: 700; font-size: 0.8rem;">⏳ PAYMENT DUE</span>';
+          }
+        }
+      } catch (err) {
+        console.warn('Could not load tuition billing:', err);
+      }
+    }
+
+    function openTuitionModal() {
+      if (!currentStudentBilling) return;
+      const modal = document.getElementById('tuitionModal');
+      const content = document.getElementById('tuitionBreakdownContent');
+      const balanceDueEl = document.getElementById('modalBalanceDue');
+      const payBtn = document.getElementById('payTuitionBtn');
+
+      let html = `
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600; color: #475569; margin-bottom: 6px;">
+            <span>Base Tuition Rate</span>
+            <span>$250 / Credit Hour</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600; color: #475569;">
+            <span>Campus & Tech Fee</span>
+            <span>$150 / Semester</span>
+          </div>
+        </div>
+        <div style="font-size: 0.85rem; font-weight: 700; color: #1e293b; margin-bottom: 6px;">Enrolled Courses:</div>
+      `;
+
+      if (currentStudentBilling.itemizedCourses.length === 0) {
+        html += `<div style="font-size: 0.85rem; color: #64748b;">No active course registrations found.</div>`;
+      } else {
+        currentStudentBilling.itemizedCourses.forEach(c => {
+          html += `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 0.88rem;">
+              <div>
+                <strong>${c.courseId}</strong>: ${c.courseName}
+                <div style="font-size: 0.78rem; color: #64748b;">${c.credits} Credits</div>
+              </div>
+              <span style="font-weight: 700; color: #0f172a;">$${c.cost.toLocaleString()}</span>
+            </div>
+          `;
+        });
+      }
+
+      content.innerHTML = html;
+      balanceDueEl.textContent = `$${currentStudentBilling.balanceDue.toLocaleString()}`;
+
+      if (currentStudentBilling.balanceDue === 0) {
+        payBtn.textContent = '✓ Tuition Fully Cleared';
+        payBtn.style.background = '#15803d';
+        payBtn.disabled = true;
+      } else {
+        payBtn.textContent = `Pay $${currentStudentBilling.balanceDue.toLocaleString()}`;
+        payBtn.style.background = '#0284c7';
+        payBtn.disabled = false;
+      }
+
+      modal.classList.add('show');
+    }
+
+    async function submitTuitionPayment() {
+      const payBtn = document.getElementById('payTuitionBtn');
+      payBtn.textContent = 'Processing Payment...';
+      payBtn.disabled = true;
+
+      try {
+        const session = localStorage.getItem('Lumina_Session');
+        const user = session ? JSON.parse(session) : null;
+        const studentId = user?.User_ID || 'S2024001';
+        const headers = {
+          'Content-Type': 'application/json',
+          ...(user?.accessToken ? { 'Authorization': `Bearer ${user.accessToken}` } : {}),
+          'x-role': user?.Role || 'Student',
+        };
+
+        const res = await fetch(`http://localhost:3000/revenue/student/${studentId}/pay`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ amount: currentStudentBilling.balanceDue }),
+        });
+
+        if (res.ok) {
+          const toast = document.getElementById('toast');
+          if (toast) {
+            toast.textContent = '✅ Tuition Payment Cleared Successfully!';
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 4000);
+          }
+          closePopup('tuitionModal');
+          await loadTuitionData();
+        }
+      } catch (err) {
+        alert('Payment failed: ' + err.message);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadTuitionData);
   </script>
 
 </body>

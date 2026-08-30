@@ -203,9 +203,26 @@
   <div class="toast" id="toast">✅ PDF downloaded successfully!</div>
 
   <script src="js/student_loader.js"></script>
+  <script src="js/tier-guard.js"></script>
   <script src="js/student_Roadmap.js"></script>
   <script>
     loadSharedComponents('student_Roadmap.html');
+    document.addEventListener('DOMContentLoaded', function () {
+      if (window.LuminaTierGuard && !window.LuminaTierGuard.hasAccess('Campus')) {
+        window.LuminaTierGuard.enforceFeatureGate({
+          containerId: 'planView',
+          requiredTier: 'Campus',
+          featureName: 'Personalized Academic Roadmap',
+          featureDescription: 'Multi-semester degree progress forecasting, electives planner, and PDF roadmap export require the Campus Plan.',
+          perks: [
+            'Automated degree completion requirement tracking',
+            'Dynamic prerequisite chain pathfinding',
+            'Custom semester course load balancing',
+            'Exportable high-resolution academic roadmaps'
+          ]
+        });
+      }
+    });
   </script>
 </body>
 </html>

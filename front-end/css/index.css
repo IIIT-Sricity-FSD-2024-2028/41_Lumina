@@ -280,3 +280,301 @@
 .toast-close-btn:hover {
     color: #ffffff;
 }
+
+/* ==========================================================================
+   PRICING & REVENUE MODEL STYLES
+   ========================================================================== */
+.pricing-section {
+  padding: 80px 20px;
+  background-color: var(--surface-white);
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  text-align: center;
+}
+
+.pricing-toggle-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: #f1f5f9;
+  padding: 6px 10px;
+  border-radius: 40px;
+  margin: 28px auto 48px;
+  border: 1px solid #e2e8f0;
+}
+
+.pricing-toggle-btn {
+  background: transparent;
+  border: none;
+  padding: 8px 18px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pricing-toggle-btn.active {
+  background: var(--surface-white);
+  color: var(--primary-dark);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.discount-badge {
+  background: #10b981;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 32px;
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.pricing-card {
+  background: var(--surface-white);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 36px 32px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.pricing-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 30px -6px rgba(0, 0, 0, 0.1);
+}
+
+.pricing-card.featured {
+  border: 2px solid #4f46e5;
+  box-shadow: 0 16px 32px -4px rgba(79, 70, 229, 0.22);
+}
+
+.featured-pill {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  padding: 4px 16px;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
+}
+
+
+
+.pricing-card-header h3 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin-bottom: 6px;
+}
+
+.pricing-tagline {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  min-height: 40px;
+}
+
+.price-display {
+  margin: 24px 0;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.price-currency {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+}
+
+.price-amount {
+  font-size: 2.8rem;
+  font-weight: 800;
+  color: var(--primary-dark);
+  line-height: 1;
+}
+
+.price-period {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.capacity-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 24px;
+}
+
+.pricing-features-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 32px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pricing-features-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.92rem;
+  color: #334155;
+  line-height: 1.4;
+}
+
+.pricing-features-list li::before {
+  content: '✓';
+  color: #059669;
+  font-weight: 800;
+  font-size: 1rem;
+}
+
+.pricing-cta-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.pricing-card.featured .pricing-cta-btn {
+  background: #4f46e5;
+  color: #ffffff;
+}
+
+.pricing-card.featured .pricing-cta-btn:hover {
+  background: #4338ca;
+}
+
+
+
+.pricing-card:not(.featured) .pricing-cta-btn:hover {
+  background: #e2e8f0;
+}
+
+/* --- Institutional Onboarding Modal Styles --- */
+.onboard-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s;
+  padding: 20px;
+}
+
+.onboard-modal-backdrop.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.onboard-modal-box {
+  background: #ffffff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 520px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  transform: translateY(20px);
+  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  overflow: hidden;
+}
+
+.onboard-modal-backdrop.show .onboard-modal-box {
+  transform: translateY(0);
+}
+
+.onboard-modal-header {
+  padding: 20px 24px;
+  background: #0f172a;
+  color: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.onboard-modal-header h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.onboard-modal-close {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.4rem;
+  cursor: pointer;
+  padding: 0;
+}
+
+.onboard-modal-close:hover {
+  color: #ffffff;
+}
+
+.onboard-modal-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.onboard-plan-badge {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  padding: 10px 16px;
+  border-radius: 8px;
+}
+
+.onboard-plan-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #166534;
+}
+
+.onboard-plan-price {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #15803d;
+}

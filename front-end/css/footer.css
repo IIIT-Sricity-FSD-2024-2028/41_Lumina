@@ -5,6 +5,23 @@
 
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
+html,
+body {
+  min-height: 100vh;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+main,
+.app-container,
+.dashboard-main,
+.container {
+  flex: 1 0 auto;
+}
+
 .site-footer {
   background-color: #0d1b2a; /* Primary dark color */
   color: #ffffff;
@@ -14,6 +31,7 @@
   width: 100%;
   box-sizing: border-box;
 }
+
 
 .site-footer .logo-group {
   display: flex;

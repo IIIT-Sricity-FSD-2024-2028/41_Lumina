@@ -941,14 +941,43 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (path.includes('Dean2_enrollment.html')) {
         initEnrollmentPage();
     } else if (path.includes('Dean2_overrides.html')) {
+        if (window.LuminaTierGuard && !window.LuminaTierGuard.hasAccess('Campus')) {
+            window.LuminaTierGuard.enforceFeatureGate({
+                containerId: 'main-container',
+                requiredTier: 'Campus',
+                featureName: 'Override Requests & Interventions',
+                featureDescription: 'Automated override queue processing, prerequisites waiver interventions, and batch student approval workflows require the Campus Plan.',
+                perks: [
+                    'Automated prerequisites conflict waiver processing',
+                    'One-click batch approval / rejection workflows',
+                    'Live student transcript & reason inspection',
+                    'Direct audit logging of dean intervention notes'
+                ]
+            });
+            return;
+        }
         initOverridesPage();
     } else if (path.includes('Dean2_gradesheets-detail.html')) {
         initGradesheetsDetailPage();
     } else if (path.includes('Dean2_gradesheets.html')) {
         initGradesheetsPage();
     } else if (path.includes('Dean2_analytics.html')) {
-        // Analytics is static, nothing to init
+        if (window.LuminaTierGuard && !window.LuminaTierGuard.hasAccess('Campus')) {
+            window.LuminaTierGuard.enforceFeatureGate({
+                containerId: 'main-container',
+                requiredTier: 'Campus',
+                featureName: 'Enrollment Analytics & Projections',
+                featureDescription: 'Predictive course demand analytics, cross-department registration rates, and capacity heatmaps require the Campus Plan.',
+                perks: [
+                    'Predictive enrollment velocity & department fill rates',
+                    'Historical multi-term enrollment comparison charts',
+                    'Seat deficit warnings & section expansion forecasting'
+                ]
+            });
+            return;
+        }
     } else {
         initDashboardPage();
     }
 });
+

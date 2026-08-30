@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = 'login.html';
         return;
     }
-    
+
     if (!currentUser || currentUser.Role !== 'Super_User') {
         window.location.href = 'login.html';
         return;
@@ -42,17 +42,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (userRoleEl) userRoleEl.textContent = `Role: ${currentUser.Role} (${currentUser.Dept_ID || 'General'})`;
 
     // Logout Action
-    document.getElementById('logout-btn').addEventListener('click', () => {
+    document.getElementById('logout-btn').addEventListener('click', (e) => {
+        e.preventDefault();
         localStorage.removeItem('Lumina_Session');
         window.location.href = 'login.html';
     });
+
 
     // =========================================================================
     // --- 2. ENTITY DATA STORE & SCHEMAS ---
     // =========================================================================
     let currentActiveTab = 'overview';
     let currentSelectedEntity = 'users';
-    
+
     // Cached Entity Datasets (all records returned camelCase from backend)
     const entityCache = {
         users: [],
@@ -240,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const data = await response.json();
             entityCache[entityKey] = Array.isArray(data) ? data : [];
-            
+
             renderTable(entityKey);
             updateStatStrip();
         } catch (err) {
@@ -975,7 +977,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             showToast(`Successfully ${currentModalMode === 'create' ? 'created' : 'updated'} record.`, 'success');
             closeModal();
-            
+
             // Re-call entity data loader to refresh UI
             await loadEntityData(currentModalEntity);
         } catch (err) {
@@ -1101,7 +1103,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================================================================
     // --- 7. SYSTEM LOGS TAB (Live Monospace Console Engine) ---
     // =========================================================================
-    
+
     // Structured mock logs covering real Lumina services
     const MOCK_LOGS = [
         { timestamp: '2026-08-26T09:00:01.120Z', level: 'INFO', module: 'DatabaseService', message: 'Database pool initialized (PostgreSQL cluster connected, latency 1.4ms)' },
@@ -1449,28 +1451,54 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 9. TAB SWITCHER & ENTITY CHIPS NAVIGATION ---
     // =========================================================================
     const tabBtnOverview = document.getElementById('tab-btn-overview');
+    const tabBtnInstitutes = document.getElementById('tab-btn-institutes');
+    const tabBtnSpocs = document.getElementById('tab-btn-spocs');
+    const tabBtnQueue = document.getElementById('tab-btn-queue');
     const tabBtnLogs = document.getElementById('tab-btn-logs');
+
     const tabPaneOverview = document.getElementById('overview-tab');
+    const tabPaneInstitutes = document.getElementById('institutes-tab');
+    const tabPaneSpocs = document.getElementById('spocs-tab');
+    const tabPaneQueue = document.getElementById('queue-tab');
     const tabPaneLogs = document.getElementById('logs-tab');
+
+    const allTabBtns = [tabBtnOverview, tabBtnInstitutes, tabBtnSpocs, tabBtnQueue, tabBtnLogs];
+    const allTabPanes = [tabPaneOverview, tabPaneInstitutes, tabPaneSpocs, tabPaneQueue, tabPaneLogs];
 
     function switchTab(tabKey) {
         currentActiveTab = tabKey;
+        allTabBtns.forEach(b => b && b.classList.remove('active'));
+        allTabPanes.forEach(p => p && (p.style.display = 'none'));
+
         if (tabKey === 'overview') {
-            tabBtnOverview.classList.add('active');
-            tabBtnLogs.classList.remove('active');
-            tabPaneOverview.style.display = 'block';
-            tabPaneLogs.style.display = 'none';
+            if (tabBtnOverview) tabBtnOverview.classList.add('active');
+            if (tabPaneOverview) tabPaneOverview.style.display = 'block';
+        } else if (tabKey === 'institutes') {
+            if (tabBtnInstitutes) tabBtnInstitutes.classList.add('active');
+            if (tabPaneInstitutes) tabPaneInstitutes.style.display = 'block';
+            loadInstitutesAndSpocs();
+        } else if (tabKey === 'spocs') {
+            if (tabBtnSpocs) tabBtnSpocs.classList.add('active');
+            if (tabPaneSpocs) tabPaneSpocs.style.display = 'block';
+            loadInstitutesAndSpocs();
+        } else if (tabKey === 'queue') {
+            if (tabBtnQueue) tabBtnQueue.classList.add('active');
+            if (tabPaneQueue) tabPaneQueue.style.display = 'block';
+            renderOnboardingDockets();
         } else if (tabKey === 'logs') {
-            tabBtnOverview.classList.remove('active');
-            tabBtnLogs.classList.add('active');
-            tabPaneOverview.style.display = 'none';
-            tabPaneLogs.style.display = 'block';
+            if (tabBtnLogs) tabBtnLogs.classList.add('active');
+            if (tabPaneLogs) tabPaneLogs.style.display = 'block';
             renderLogs();
         }
     }
 
-    tabBtnOverview.addEventListener('click', () => switchTab('overview'));
-    tabBtnLogs.addEventListener('click', () => switchTab('logs'));
+    allTabBtns.forEach(btn => {
+        if (btn) btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            switchTab(btn.dataset.tab);
+        });
+    });
+
 
     // Entity Chips Click Handlers
     const entityChips = document.querySelectorAll('.entity-chip:not(:disabled)');
@@ -1483,7 +1511,7 @@ document.addEventListener('DOMContentLoaded', () => {
             chip.classList.add('active');
 
             currentSelectedEntity = entityKey;
-            
+
             // Populate filter select options for selected entity
             populateFilterOptions(entityKey);
 
@@ -1546,7 +1574,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const toast = document.createElement('div');
         toast.className = `toast toast-${type}`;
-        
+
         let iconSrc = 'assets/icons/check.svg';
         if (type === 'error') iconSrc = 'assets/icons/alert-triangle.svg';
 
@@ -1646,11 +1674,478 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================================
-    // --- 12. INITIALIZATION ---
+    // --- 13. MULTI-COLLEGE SAAS OPERATIONS & SPOC MANAGEMENT ---
+    // =========================================================================
+    const DEFAULT_INSTITUTES = [
+        {
+            instituteId: 'INST-IIITS',
+            name: 'Indian Institute of Information Technology Sri City',
+            tier: 'Enterprise',
+            spocAdminId: 'SPOC-001',
+            spocName: 'Arjun Verma',
+            deanName: 'Dr. K Divyabramham',
+            deanEmail: 'dean@iiits.in',
+            studentCount: 1250,
+            status: 'Active',
+            annualContractValue: 107988,
+        },
+        {
+            instituteId: 'INST-IITB',
+            name: 'Indian Institute of Technology Bombay',
+            tier: 'Campus',
+            spocAdminId: 'SPOC-002',
+            spocName: 'Eswar Prasad',
+            deanName: 'Dr. Himangshu Sarma',
+            deanEmail: 'dean@iitb.ac.in',
+            studentCount: 4800,
+            status: 'Active',
+            annualContractValue: 47988,
+        },
+        {
+            instituteId: 'INST-BITS',
+            name: 'Birla Institute of Technology and Science, Pilani',
+            tier: 'Starter',
+            spocAdminId: 'SPOC-003',
+            spocName: 'Priya Sharma',
+            deanName: 'Prof. Sudhirkumar Barai',
+            deanEmail: 'dean@pilani.bits-pilani.ac.in',
+            studentCount: 3500,
+            status: 'Active',
+            annualContractValue: 17988,
+        },
+    ];
+
+    const DEFAULT_ADMIN_TEAM = [
+        {
+            adminId: 'SPOC-001',
+            fullName: 'Arjun Verma',
+            email: 'arjun.spoc@lumina.edu',
+            phone: '+91 98765 43210',
+            assignedInstituteId: 'INST-IIITS',
+            assignedInstituteName: 'IIIT Sri City',
+            status: 'Active',
+            slaHealth: '99.99% SLA (Dedicated)',
+        },
+        {
+            adminId: 'SPOC-002',
+            fullName: 'Eswar Prasad',
+            email: 'eswar.spoc@lumina.edu',
+            phone: '+91 98765 43211',
+            assignedInstituteId: 'INST-IITB',
+            assignedInstituteName: 'IIT Bombay',
+            status: 'Active',
+            slaHealth: '99.95% SLA (Portfolio)',
+        },
+        {
+            adminId: 'SPOC-003',
+            fullName: 'Priya Sharma',
+            email: 'priya.spoc@lumina.edu',
+            phone: '+91 98765 43212',
+            assignedInstituteId: 'INST-BITS',
+            assignedInstituteName: 'BITS Pilani',
+            status: 'Active',
+            slaHealth: '99.90% SLA (Standard)',
+        },
+    ];
+
+
+    let cachedInstitutes = [...DEFAULT_INSTITUTES];
+    let cachedAdminTeam = [...DEFAULT_ADMIN_TEAM];
+
+    async function loadInstitutesAndSpocs() {
+        try {
+            const [instRes, teamRes] = await Promise.all([
+                fetch(`${API_BASE}/super-user/institutes`, { headers }).catch(() => null),
+                fetch(`${API_BASE}/super-user/admin-team`, { headers }).catch(() => null)
+            ]);
+
+            if (instRes && instRes.ok) {
+                const data = await instRes.json();
+                if (Array.isArray(data) && data.length > 0) cachedInstitutes = data;
+            }
+            if (teamRes && teamRes.ok) {
+                const data = await teamRes.json();
+                if (Array.isArray(data) && data.length > 0) cachedAdminTeam = data;
+            }
+
+            // Update stats
+            const totalArr = cachedInstitutes.reduce((sum, i) => sum + (i.annualContractValue || 0), 0);
+            const totalStudents = cachedInstitutes.reduce((sum, i) => sum + (i.studentCount || 0), 0);
+
+            const countEl = document.getElementById('stat-inst-count');
+            const spocEl = document.getElementById('stat-spoc-count');
+            const arrEl = document.getElementById('stat-saas-arr');
+            const studEl = document.getElementById('stat-inst-students');
+
+            if (countEl) countEl.textContent = cachedInstitutes.length;
+            if (spocEl) spocEl.textContent = cachedAdminTeam.length;
+            if (arrEl) arrEl.textContent = `$${totalArr.toLocaleString()}`;
+            if (studEl) studEl.textContent = totalStudents.toLocaleString();
+
+            renderInstitutesTable();
+            renderSpocRoster();
+            renderOnboardingDockets();
+        } catch (error) {
+            console.error('Failed to load institutes and SPOCs:', error);
+            renderInstitutesTable();
+            renderSpocRoster();
+            renderOnboardingDockets();
+        }
+    }
+
+
+    // Sub-Tab Switcher for Tenancy & Operations Domain
+    window.switchTenancySubTab = function (subtab) {
+        const subtabs = ['institutes', 'staff', 'queue'];
+        subtabs.forEach(tab => {
+            const btn = document.getElementById(`subtab-btn-${tab}`);
+            const pane = document.getElementById(`pane-tenancy-${tab}`);
+            if (btn) {
+                if (tab === subtab) btn.classList.add('active');
+                else btn.classList.remove('active');
+            }
+            if (pane) {
+                pane.style.display = (tab === subtab) ? 'block' : 'none';
+            }
+        });
+    };
+
+    function getTierBadgeClass(tier) {
+        if (tier === 'Enterprise') return 'badge-active';
+        if (tier === 'Campus') return 'badge-completed';
+        return 'badge-pending';
+    }
+
+    function renderInstitutesTable() {
+        const tbody = document.getElementById('institutes-table-body');
+        if (!tbody) return;
+
+        const badgeInst = document.getElementById('subtab-badge-inst');
+        if (badgeInst) badgeInst.textContent = cachedInstitutes.length;
+
+        if (cachedInstitutes.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #94a3b8; padding: 32px;">No client universities found.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = cachedInstitutes.map(inst => `
+            <tr>
+                <td>
+                    <div style="font-weight: 700; color: #0f172a; font-size: 0.92rem;">${escapeHtml(inst.name)}</div>
+                    <code style="font-size: 0.72rem; color: #64748b; font-family: monospace;">${escapeHtml(inst.instituteId)}</code>
+                </td>
+                <td>
+                    <span class="status-badge ${getTierBadgeClass(inst.tier)}">${escapeHtml(inst.tier)} Tier</span>
+                </td>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <img src="assets/icons/shield.svg" alt="" width="14" height="14" style="opacity: 0.65;" />
+                        <span style="font-weight: 600; color: #0f172a;">${escapeHtml(inst.spocName)}</span>
+                    </div>
+                </td>
+                <td>
+                    <div style="font-weight: 600; color: #334155;">${escapeHtml(inst.deanName)}</div>
+                    <a href="mailto:${escapeHtml(inst.deanEmail)}" style="font-size: 0.78rem; color: #0284c7;">${escapeHtml(inst.deanEmail)}</a>
+                </td>
+                <td>
+                    <span style="font-weight: 700; color: #0f172a;">${inst.studentCount.toLocaleString()}</span>
+                </td>
+                <td>
+                    <span style="font-weight: 700; color: #166534;">$${(inst.annualContractValue || 0).toLocaleString()} / yr</span>
+                </td>
+                <td>
+                    <span class="status-badge badge-active" style="display: inline-flex; align-items: center; gap: 5px;">
+                        <span style="width: 6px; height: 6px; border-radius: 50%; background: #16a34a; display: inline-block;"></span>
+                        99.99% SLA
+                    </span>
+                </td>
+                <td>
+                    <div style="display: flex; gap: 6px;">
+                        <button class="btn btn-outline btn-xs" onclick="openReassignSpocModal('${escapeHtml(inst.instituteId)}', '${escapeHtml(inst.name)}', '${escapeHtml(inst.spocAdminId)}')">
+                            Reassign SPOC
+                        </button>
+                        <button class="btn btn-outline btn-xs" onclick="openChangeTierModal('${escapeHtml(inst.instituteId)}', '${escapeHtml(inst.name)}', '${escapeHtml(inst.tier)}')">
+                            Change Tier
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function renderSpocRoster() {
+        const grid = document.getElementById('spoc-cards-grid');
+        if (!grid) return;
+
+        const badgeStaff = document.getElementById('subtab-badge-staff');
+        if (badgeStaff) badgeStaff.textContent = cachedAdminTeam.length;
+
+        if (cachedAdminTeam.length === 0) {
+            grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #94a3b8; padding: 32px;">No Lumina SPOCs currently employed.</div>`;
+            return;
+        }
+
+        grid.innerHTML = cachedAdminTeam.map(spoc => {
+            const initials = spoc.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+            return `
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: transform 0.15s ease, box-shadow 0.15s ease;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 42px; height: 42px; border-radius: 50%; background: #f1f5f9; border: 1px solid #cbd5e1; color: #0f172a; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.95rem; letter-spacing: 0.5px;">
+                            ${initials}
+                        </div>
+                        <div>
+                            <div style="font-weight: 700; color: #0f172a; font-size: 1rem;">${escapeHtml(spoc.fullName)}</div>
+                            <code style="font-size: 0.75rem; color: #64748b; font-family: monospace;">${escapeHtml(spoc.adminId)}</code>
+                        </div>
+                    </div>
+                    <span class="status-badge badge-active">${escapeHtml(spoc.status)}</span>
+                </div>
+
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px;">
+                    <div style="color: #64748b; font-size: 0.72rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 4px;">Assigned University Tenant</div>
+                    <div style="font-weight: 700; color: #0f172a; font-size: 0.9rem; display: flex; align-items: center; gap: 6px;">
+                        <img src="assets/icons/layers.svg" alt="" width="14" height="14" style="opacity: 0.7;" />
+                        <span>${escapeHtml(spoc.assignedInstituteName)}</span>
+                    </div>
+                </div>
+
+                <div style="font-size: 0.82rem; color: #475569; display: flex; flex-direction: column; gap: 6px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <img src="assets/icons/mail.svg" alt="" width="14" height="14" style="opacity: 0.6;" />
+                        <a href="mailto:${escapeHtml(spoc.email)}" style="color: #0284c7; text-decoration: none;">${escapeHtml(spoc.email)}</a>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <img src="assets/icons/telephone.svg" alt="" width="14" height="14" style="opacity: 0.6;" />
+                        <span>${escapeHtml(spoc.phone)}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                        <span class="status-badge badge-active" style="padding: 3px 10px; font-size: 0.75rem;">${escapeHtml(spoc.slaHealth)}</span>
+                    </div>
+                </div>
+            </div>
+            `;
+        }).join('');
+    }
+
+    function renderOnboardingDockets() {
+        const tbody = document.getElementById('dockets-table-body');
+        if (!tbody) return;
+
+        const dockets = JSON.parse(localStorage.getItem('Lumina_Onboard_Dockets') || '[]');
+        const badgeQueue = document.getElementById('subtab-badge-queue');
+        if (badgeQueue) badgeQueue.textContent = dockets.length;
+
+        if (dockets.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #94a3b8; padding: 32px;">No pending inbound onboarding requests in queue.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = dockets.map(docket => `
+            <tr>
+                <td>
+                    <div style="font-weight: 700; color: #0f172a; font-size: 0.92rem;">${escapeHtml(docket.instituteName)}</div>
+                </td>
+                <td>
+                    <span class="status-badge badge-pending">${escapeHtml(docket.plan)}</span>
+                </td>
+                <td>
+                    <div style="font-weight: 600; color: #334155;">${escapeHtml(docket.repName)}</div>
+                    <div style="font-size: 0.78rem; color: #64748b;">${escapeHtml(docket.email)}</div>
+                </td>
+                <td>
+                    <span style="font-weight: 700; color: #0f172a;">${Number(docket.students || 0).toLocaleString()}</span>
+                </td>
+                <td>
+                    <span style="font-size: 0.8rem; color: #64748b;">${new Date(docket.submittedAt).toLocaleDateString()}</span>
+                </td>
+                <td>
+                    <button class="btn btn-primary btn-xs" onclick="onboardFromDocket('${escapeHtml(docket.id)}')">
+                        Assign SPOC & Onboard
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+
+    // Modal Control Functions (Exposed to window for HTML onclicks)
+    window.openReassignSpocModal = function (instId, instName, currentSpocId) {
+        document.getElementById('spoc-modal-inst-id').value = instId;
+        document.getElementById('spoc-modal-inst-name').textContent = instName;
+
+        const select = document.getElementById('spoc-select-dropdown');
+        select.innerHTML = cachedAdminTeam.map(spoc => `
+            <option value="${spoc.adminId}" ${spoc.adminId === currentSpocId ? 'selected' : ''}>
+                ${spoc.fullName} (${spoc.adminId}) — Currently: ${spoc.assignedInstituteName}
+            </option>
+        `).join('');
+
+        document.getElementById('spoc-modal-backdrop').style.display = 'flex';
+    };
+
+    window.closeSpocModal = function () {
+        document.getElementById('spoc-modal-backdrop').style.display = 'none';
+    };
+
+    window.confirmSpocAssignment = async function () {
+        const instId = document.getElementById('spoc-modal-inst-id').value;
+        const spocAdminId = document.getElementById('spoc-select-dropdown').value;
+
+        try {
+            const res = await fetch(`${API_BASE}/super-user/institutes/${instId}/assign-spoc`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ spocAdminId })
+            });
+
+            if (!res.ok) throw new Error('Failed to reassign SPOC.');
+            const data = await res.json();
+            showToast(data.message || 'SPOC assigned successfully!', 'success');
+            closeSpocModal();
+            loadInstitutesAndSpocs();
+        } catch (error) {
+            showToast(error.message, 'error');
+        }
+    };
+
+    window.openChangeTierModal = function (instId, instName, currentTier) {
+        document.getElementById('tier-modal-inst-id').value = instId;
+        document.getElementById('tier-modal-inst-name').textContent = instName;
+        document.getElementById('tier-select-dropdown').value = currentTier;
+        document.getElementById('tier-modal-backdrop').style.display = 'flex';
+    };
+
+    window.closeTierModal = function () {
+        document.getElementById('tier-modal-backdrop').style.display = 'none';
+    };
+
+    window.confirmTierUpdate = async function () {
+        const instId = document.getElementById('tier-modal-inst-id').value;
+        const tier = document.getElementById('tier-select-dropdown').value;
+
+        try {
+            const res = await fetch(`${API_BASE}/super-user/institutes/${instId}/tier`, {
+                method: 'PATCH',
+                headers,
+                body: JSON.stringify({ tier })
+            });
+
+            if (!res.ok) throw new Error('Failed to update tier.');
+
+            // Sync active tier globally for all role dashboards
+            localStorage.setItem('Lumina_Active_Tier', tier);
+            fetch(`${API_BASE}/revenue/tier`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ tier })
+            }).catch(() => null);
+
+            showToast(`Updated ${instId} to ${tier} Tier!`, 'success');
+            closeTierModal();
+            loadInstitutesAndSpocs();
+        } catch (error) {
+            showToast(error.message, 'error');
+        }
+    };
+
+
+    window.openEmploySpocModal = function () {
+        document.getElementById('employ-spoc-form').reset();
+        document.getElementById('employ-modal-backdrop').style.display = 'flex';
+    };
+
+    window.closeEmploySpocModal = function () {
+        document.getElementById('employ-modal-backdrop').style.display = 'none';
+    };
+
+    window.submitEmploySpoc = async function (e) {
+        e.preventDefault();
+        const payload = {
+            fullName: document.getElementById('employ-spoc-name').value,
+            email: document.getElementById('employ-spoc-email').value,
+            phone: document.getElementById('employ-spoc-phone').value,
+        };
+
+        try {
+            const res = await fetch(`${API_BASE}/super-user/admin-team`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) throw new Error('Failed to employ SPOC.');
+            showToast(`Employed ${payload.fullName} to Lumina Admin Staff!`, 'success');
+            closeEmploySpocModal();
+            loadInstitutesAndSpocs();
+        } catch (error) {
+            showToast(error.message, 'error');
+        }
+    };
+
+    window.openOnboardModalSuperUser = function () {
+        document.getElementById('super-onboard-form').reset();
+        const spocSelect = document.getElementById('onboard-spoc-select');
+        spocSelect.innerHTML = cachedAdminTeam.map(spoc => `
+            <option value="${spoc.adminId}">${spoc.fullName} (${spoc.adminId})</option>
+        `).join('');
+        document.getElementById('onboard-modal-backdrop').style.display = 'flex';
+    };
+
+    window.closeOnboardModalSuperUser = function () {
+        document.getElementById('onboard-modal-backdrop').style.display = 'none';
+    };
+
+    window.submitSuperUserOnboard = async function (e) {
+        e.preventDefault();
+        const payload = {
+            name: document.getElementById('onboard-name-input').value,
+            deanName: document.getElementById('onboard-dean-input').value,
+            deanEmail: document.getElementById('onboard-email-input').value,
+            studentCount: Number(document.getElementById('onboard-students-input').value),
+            tier: document.getElementById('onboard-tier-select').value,
+            spocAdminId: document.getElementById('onboard-spoc-select').value,
+        };
+
+        try {
+            const res = await fetch(`${API_BASE}/super-user/institutes`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) throw new Error('Failed to onboard institute.');
+            showToast(`Onboarded ${payload.name} on ${payload.tier} Tier!`, 'success');
+            closeOnboardModalSuperUser();
+            loadInstitutesAndSpocs();
+        } catch (error) {
+            showToast(error.message, 'error');
+        }
+    };
+
+    window.onboardFromDocket = function (docketId) {
+        const dockets = JSON.parse(localStorage.getItem('Lumina_Onboard_Dockets') || '[]');
+        const docket = dockets.find(d => d.id === docketId);
+        if (!docket) return;
+
+        openOnboardModalSuperUser();
+        document.getElementById('onboard-name-input').value = docket.instituteName;
+        document.getElementById('onboard-dean-input').value = docket.repName;
+        document.getElementById('onboard-email-input').value = docket.email;
+        document.getElementById('onboard-students-input').value = docket.students;
+
+        // Remove from pending dockets
+        const remaining = dockets.filter(d => d.id !== docketId);
+        localStorage.setItem('Lumina_Onboard_Dockets', JSON.stringify(remaining));
+        renderOnboardingDockets();
+    };
+
+    // =========================================================================
+    // --- 14. INITIALIZATION ---
     // =========================================================================
     async function initPage() {
         populateFilterOptions('users');
-        
+
         // Initial data fetch: Load default entity (Users)
         await loadEntityData('users');
 
@@ -1659,6 +2154,7 @@ document.addEventListener('DOMContentLoaded', () => {
             fetch(`${API_BASE}/courses`, { headers }).then(r => r.ok ? r.json() : []).then(d => { entityCache.courses = Array.isArray(d) ? d : []; }),
             fetch(`${API_BASE}/registrations`, { headers }).then(r => r.ok ? r.json() : []).then(d => { entityCache.registrations = Array.isArray(d) ? d : []; }),
             fetch(`${API_BASE}/overrides`, { headers }).then(r => r.ok ? r.json() : []).then(d => { entityCache.overrides = Array.isArray(d) ? d : []; }),
+            loadInstitutesAndSpocs(),
         ]).then(() => {
             updateStatStrip();
         });
@@ -1675,3 +2171,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initPage();
 });
+
