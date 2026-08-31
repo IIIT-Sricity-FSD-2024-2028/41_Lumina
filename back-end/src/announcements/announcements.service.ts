@@ -11,7 +11,7 @@ export class AnnouncementsService {
     return this.db.announcements;
   }
 
-  create(facultyId: string, data: CreateAnnouncementDto): Announcement {
+  create(facultyId: string, data: CreateAnnouncementDto, file?: Express.Multer.File): Announcement {
     const maxId = this.db.announcements.reduce((max, a) => Math.max(max, a.announcementId), 0);
     const newAnnouncement: Announcement = {
       announcementId: maxId + 1,
@@ -19,11 +19,15 @@ export class AnnouncementsService {
       courseId: data.courseId,
       title: data.title,
       message: data.message,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      attachmentUrl: file ? `/uploads/${file.filename}` : null,
+      attachmentName: file ? file.originalname : null,
+      fileSize: file ? file.size : null,
     };
     this.db.announcements.unshift(newAnnouncement);
     return newAnnouncement;
   }
+
 
   update(id: number, data: UpdateAnnouncementDto): Announcement {
     const idx = this.db.announcements.findIndex(a => a.announcementId === id);

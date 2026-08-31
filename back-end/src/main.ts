@@ -72,8 +72,16 @@ async function bootstrap() {
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-role'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-role', 'x-user-id', 'Accept', 'Origin', 'X-Requested-With'],
   });
+
+  // ── Static Asset Serving for File Uploads ──────────────────
+  const uploadsDir = path.resolve(process.cwd(), 'uploads');
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+  const express = require('express');
+  app.use('/uploads', express.static(uploadsDir));
 
   // ── Swagger / OpenAPI Configuration ────────────────────────
   const config = new DocumentBuilder()

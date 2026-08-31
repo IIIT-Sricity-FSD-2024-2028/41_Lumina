@@ -803,7 +803,7 @@
         ]
       },
       "post": {
-        "description": "Creates a new announcement. Faculty and Dean only.",
+        "description": "Creates a new announcement with Multer file upload middleware validation. Faculty and Dean only.",
         "operationId": "AnnouncementsController_create",
         "parameters": [
           {
@@ -827,6 +827,11 @@
         "requestBody": {
           "required": true,
           "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAnnouncementDto"
+              }
+            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateAnnouncementDto"
@@ -839,10 +844,10 @@
             "description": "Announcement created."
           },
           "400": {
-            "description": "Validation error."
+            "description": "Validation or file upload error."
           }
         },
-        "summary": "Create an announcement",
+        "summary": "Create an announcement with optional file attachment",
         "tags": [
           "Announcements"
         ]

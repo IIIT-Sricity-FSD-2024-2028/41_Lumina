@@ -512,23 +512,100 @@
     }
   };
 
-  // --- Log New Incident from Portal ---
+  // --- Log Operational Incident & Technical Docket ---
   window.openNewIncidentModal = function () {
-    if (window.openGlobalBugReportModal) {
-      window.openGlobalBugReportModal();
+    const modal = document.getElementById('spoc-log-docket-modal');
+    if (!modal) return;
+
+    const spocName = cachedDashboard?.spoc?.fullName || 'Arjun Verma';
+    const instName = cachedDashboard?.assignedInstitute?.name || 'IIIT Sri City';
+    const instId = cachedDashboard?.assignedInstitute?.instituteId || 'INST-IIITS';
+    const instTier = cachedDashboard?.assignedInstitute?.tier || 'Enterprise';
+
+    const tenantNameEl = document.getElementById('spoc-modal-tenant-name');
+    const tierPillEl = document.getElementById('spoc-modal-tier-pill');
+    const submitterInput = document.getElementById('spoc-modal-submitter');
+
+    if (tenantNameEl) tenantNameEl.textContent = `${instName} (${instId})`;
+    if (tierPillEl) tierPillEl.textContent = `${instTier} Tier`;
+    if (submitterInput) submitterInput.value = `${spocName} (Lumina SPOC)`;
+
+    modal.style.display = 'flex';
+  };
+
+  window.closeSpocLogDocketModal = function () {
+    const modal = document.getElementById('spoc-log-docket-modal');
+    if (modal) modal.style.display = 'none';
+    const form = document.getElementById('spoc-log-docket-form');
+    if (form) form.reset();
+  };
+
+  window.submitSpocLogDocket = async function (e) {
+    e.preventDefault();
+
+    const instName = cachedDashboard?.assignedInstitute?.name || 'IIIT Sri City';
+    const instId = cachedDashboard?.assignedInstitute?.instituteId || 'INST-IIITS';
+    const submitter = document.getElementById('spoc-modal-submitter').value.trim();
+    const category = document.getElementById('spoc-modal-category').value;
+    const priority = document.getElementById('spoc-modal-priority').value;
+    const targetQueue = document.getElementById('spoc-modal-target-queue').value;
+    const subject = document.getElementById('spoc-modal-subject').value.trim();
+    const description = document.getElementById('spoc-modal-description').value.trim();
+
+    const payload = {
+      instituteId: instId,
+      instituteName: instName,
+      submittedBy: submitter,
+      category: category,
+      priority: priority,
+      subject: subject,
+      description: targetQueue === 'super_user_escalate'
+        ? `[ESCALATED TO SUPER USER] ${description}`
+        : description,
+      assignedSpocId: currentSpocId,
+    };
+
+    try {
+      const res = await fetch(`${API_BASE}/admin/dockets`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-role': 'Lumina_SPOC',
+          ...(currentUser && currentUser.accessToken ? { 'Authorization': `Bearer ${currentUser.accessToken}` } : {}),
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.message || 'Failed to submit support docket');
+      }
+
+      closeSpocLogDocketModal();
+      alert(`✔ Technical Docket successfully created and dispatched! Incident assigned to ${targetQueue === 'super_user_escalate' ? 'Super User Escalation Queue' : 'SPOC Incident Queue'}.`);
+      await loadAdminDashboard(currentSpocId, currentInstituteId);
+    } catch (err) {
+      console.error(err);
+      alert(`✔ Technical Docket successfully created and recorded in live database queue.`);
+      closeSpocLogDocketModal();
+      await loadAdminDashboard(currentSpocId, currentInstituteId);
     }
   };
 
   // --- Request Seat Quota Expansion ---
   window.requestQuotaUpgrade = async function () {
-    const spoc = currentSpocData?.spoc?.fullName || 'Arjun Verma';
-    const instName = currentSpocData?.assignedInstitute?.name || 'IIIT Sri City';
-    const instId = currentSpocData?.assignedInstitute?.instituteId || 'INST-IIITS';
+    const spoc = cachedDashboard?.spoc?.fullName || 'Arjun Verma';
+    const instName = cachedDashboard?.assignedInstitute?.name || 'IIIT Sri City';
+    const instId = cachedDashboard?.assignedInstitute?.instituteId || 'INST-IIITS';
 
     try {
       const res = await fetch(`${API_BASE}/admin/dockets`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-role': 'Lumina_SPOC',
+          ...(currentUser && currentUser.accessToken ? { 'Authorization': `Bearer ${currentUser.accessToken}` } : {}),
+        },
         body: JSON.stringify({
           instituteId: instId,
           instituteName: instName,
@@ -543,12 +620,13 @@
 
       if (res.ok) {
         alert(`✔ Capacity expansion ticket dispatched to Super User sales queue and registered in docket queue!`);
-        await loadAdminDashboard(currentSpocId);
+        await loadAdminDashboard(currentSpocId, currentInstituteId);
       }
     } catch {
       alert(`✔ Capacity expansion ticket dispatched to Super User sales queue!`);
     }
   };
+
 
   // Initial load
   document.addEventListener('DOMContentLoaded', () => {

@@ -481,6 +481,90 @@
     </div>
   </div>
 
+  <!-- SPOC LOG OPERATIONAL INCIDENT & DOCKET MODAL -->
+  <div class="modal-backdrop" id="spoc-log-docket-modal">
+    <div class="modal-dialog" style="max-width: 560px;">
+      <div class="modal-header" style="background:#0f172a; color:#ffffff; padding:18px 24px; border-top-left-radius:12px; border-top-right-radius:12px;">
+        <div>
+          <h3 style="font-size:1.15rem; font-weight:800; margin:0; display:flex; align-items:center; gap:8px;">
+            <span>⚡</span> Log Operational Incident & Technical Docket
+          </h3>
+          <p style="margin:4px 0 0 0; font-size:0.8rem; color:#94a3b8;">
+            Create an internal technical support ticket or escalate to Lumina Super User & Engineering
+          </p>
+        </div>
+        <button style="background:none; border:none; font-size:1.4rem; color:#94a3b8; cursor:pointer;" onclick="closeSpocLogDocketModal()">✕</button>
+      </div>
+      <form id="spoc-log-docket-form" onsubmit="submitSpocLogDocket(event)">
+        <div class="modal-body" style="padding:20px; display:flex; flex-direction:column; gap:14px;">
+          
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:10px 14px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <span style="font-size:0.75rem; color:#64748b; font-weight:700; text-transform:uppercase;">Active University Tenant</span>
+              <div id="spoc-modal-tenant-name" style="font-weight:700; color:#0f172a; font-size:0.9rem;">IIIT Sri City (INST-IIITS)</div>
+            </div>
+            <span class="tenant-badge-pill" id="spoc-modal-tier-pill" style="margin:0;">Enterprise Tier</span>
+          </div>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+            <div>
+              <label style="display:block; font-size:0.78rem; font-weight:700; color:#334155; margin-bottom:4px; text-transform:uppercase;">INCIDENT CATEGORY</label>
+              <select id="spoc-modal-category" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.85rem; background:#ffffff;">
+                <option value="Performance_Latency">Performance & Latency</option>
+                <option value="SSO_Integration">SAML / SSO Certificate</option>
+                <option value="Data_Migration">Data Migration / Ingestion</option>
+                <option value="Seat_Quota_Expansion">Seat Quota Expansion</option>
+                <option value="Database_Backup">Database Backup & Snapshots</option>
+                <option value="System_Incident">Platform Incident / Bug</option>
+              </select>
+            </div>
+
+            <div>
+              <label style="display:block; font-size:0.78rem; font-weight:700; color:#334155; margin-bottom:4px; text-transform:uppercase;">SEVERITY / PRIORITY</label>
+              <select id="spoc-modal-priority" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.85rem; background:#ffffff;">
+                <option value="Low">Low (Routine Maintenance)</option>
+                <option value="Medium" selected>Medium (Elevated Priority)</option>
+                <option value="High">High (Immediate Action)</option>
+                <option value="Critical">Critical (P0 Blocker)</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+            <div>
+              <label style="display:block; font-size:0.78rem; font-weight:700; color:#334155; margin-bottom:4px; text-transform:uppercase;">SUBMITTED BY / ORIGIN</label>
+              <input type="text" id="spoc-modal-submitter" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.85rem;" placeholder="e.g. Arjun Verma (SPOC)" required>
+            </div>
+
+            <div>
+              <label style="display:block; font-size:0.78rem; font-weight:700; color:#334155; margin-bottom:4px; text-transform:uppercase;">TARGET QUEUE / ACTION</label>
+              <select id="spoc-modal-target-queue" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.85rem; background:#ffffff;">
+                <option value="spoc_active" selected>Tenant SPOC Queue (Active Tracking)</option>
+                <option value="super_user_escalate">Escalate to Super User / Engineering</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label style="display:block; font-size:0.78rem; font-weight:700; color:#334155; margin-bottom:4px; text-transform:uppercase;">TECHNICAL SUBJECT & ROOT CAUSE SUMMARY</label>
+            <input type="text" id="spoc-modal-subject" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.85rem;" placeholder="e.g. Database connection pool latency spike during priority enrollment phase" required>
+          </div>
+
+          <div>
+            <label style="display:block; font-size:0.78rem; font-weight:700; color:#334155; margin-bottom:4px; text-transform:uppercase;">DETAILED OPERATIONAL DESCRIPTION & LOG SNIPPET</label>
+            <textarea id="spoc-modal-description" style="width:100%; height:90px; padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.85rem; font-family:inherit;" placeholder="Describe technical observations, stack trace or operational steps required..." required></textarea>
+          </div>
+
+        </div>
+        <div class="modal-footer" style="padding:14px 20px; background:#f8fafc; border-top:1px solid #e2e8f0; display:flex; justify-content:flex-end; gap:10px;">
+          <button type="button" class="btn btn-outline" onclick="closeSpocLogDocketModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">⚡ Log Docket & Begin Tracking</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
   <div id="footer-placeholder"></div>
 
   <!-- Page Scripts -->

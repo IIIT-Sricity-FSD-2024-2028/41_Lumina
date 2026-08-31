@@ -599,13 +599,25 @@ async function loadStudentAnnouncements() {
         var author = ann.authorName || (ann.facultyId ? `Prof. ${ann.facultyId}` : '');
         var authorLabel = author ? ' &bull; ' + author : '';
 
+        var attachmentHtml = "";
+        if (ann.attachmentUrl || ann.attachmentName) {
+          var attachName = ann.attachmentName || "Attached Document";
+          var attachUrl = ann.attachmentUrl ? (ann.attachmentUrl.startsWith('http') ? ann.attachmentUrl : ('http://localhost:3000' + ann.attachmentUrl)) : '#';
+          attachmentHtml = '<div style="margin-top:6px;">' +
+            '<a href="' + attachUrl + '" target="_blank" style="display:inline-flex; align-items:center; gap:4px; background:#f1f5f9; border:1px solid #cbd5e1; padding:3px 8px; border-radius:4px; font-size:11px; color:#2563eb; text-decoration:none; font-weight:600;">' +
+            '📎 ' + attachName +
+            '</a>' +
+            '</div>';
+        }
+
         div.innerHTML =
           '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">' +
           '<span style="font-size:10px; font-weight:700; color:#6366f1; background:#e0e7ff; padding:2px 6px; border-radius:4px;">' + badgeLabel + '</span>' +
           '<span style="font-size:11px; color:#94a3b8;">' + dateStr + authorLabel + '</span>' +
           '</div>' +
           '<div style="font-weight:600; font-size:13px; color:#1e293b; margin-bottom:4px;">' + (ann.title || 'Course Announcement') + '</div>' +
-          '<div style="font-size:12.5px; color:#64748b; line-height:1.4;">' + (ann.message || '') + '</div>';
+          '<div style="font-size:12.5px; color:#64748b; line-height:1.4;">' + (ann.message || '') + '</div>' +
+          attachmentHtml;
         listEl.appendChild(div);
       });
     }
@@ -613,6 +625,7 @@ async function loadStudentAnnouncements() {
     console.error("Error loading student announcements", err);
   }
 }
+
 
 
 /* ── Next Class card from slot data ── */

@@ -211,7 +211,11 @@ export interface Announcement {
   title: string;
   message: string;
   createdAt: string;
+  attachmentUrl?: string | null;
+  attachmentName?: string | null;
+  fileSize?: number | null;
 }
+
 
 export interface EnrollmentPhase {
   id: number;

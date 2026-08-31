@@ -1,8 +1,10 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Headers, ParseIntPipe } from '@nestjs/common';
-import { ApiTags, ApiHeader, ApiOperation, ApiResponse, ApiBody, ApiParam } from '@nestjs/swagger';
+import { Controller, Get, Post, Put, Delete, Body, Param, Headers, ParseIntPipe, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { ApiTags, ApiHeader, ApiOperation, ApiResponse, ApiBody, ApiParam, ApiConsumes } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { AnnouncementsService } from './announcements.service';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CreateAnnouncementDto, UpdateAnnouncementDto } from '../common/dto';
+import { multerUploadOptions } from '../course-slots/file-upload.config';
 
 @ApiTags('Announcements')
 @ApiHeader({ name: 'x-role', required: true, description: 'Role of the requesting user' })
@@ -20,18 +22,22 @@ export class AnnouncementsController {
 
   @Post()
   @Roles('Faculty', 'Dean')
-  @ApiOperation({ summary: 'Create an announcement', description: 'Creates a new announcement. Faculty and Dean only.' })
+  @UseInterceptors(FileInterceptor('file', multerUploadOptions))
+  @ApiConsumes('multipart/form-data', 'application/json')
+  @ApiOperation({ summary: 'Create an announcement with optional file attachment', description: 'Creates a new announcement with Multer file upload middleware validation. Faculty and Dean only.' })
   @ApiBody({ type: CreateAnnouncementDto })
   @ApiResponse({ status: 201, description: 'Announcement created.' })
-  @ApiResponse({ status: 400, description: 'Validation error.' })
+  @ApiResponse({ status: 400, description: 'Validation or file upload error.' })
   create(
     @Headers('x-user-id') userId: string,
     @Body() dto: CreateAnnouncementDto,
+    @UploadedFile() file?: Express.Multer.File,
   ) {
     // Note: fallback to mock facultyId if header isn't passed
     const facultyId = userId || 'F2024001'; 
-    return this.announcementsService.create(facultyId, dto);
+    return this.announcementsService.create(facultyId, dto, file);
   }
+
 
   @Put(':id')
   @Roles('Faculty', 'Dean')

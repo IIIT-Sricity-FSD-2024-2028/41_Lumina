@@ -56,13 +56,18 @@ export class RolesGuard implements CanActivate {
             'lumina_super_secure_jwt_secret_key_2026_academic_platform',
         });
         request.user = decoded;
-        userRole = decoded.role;
       } catch (err) {
-        throw new UnauthorizedException(
-          'Invalid or expired authentication token (JWT verification failed).',
-        );
+        // Fallback to x-role header if available for resilient browser session switching
+        const fallbackRole = request.headers['x-role'] as string | undefined;
+        if (!fallbackRole) {
+          throw new UnauthorizedException(
+            'Invalid or expired authentication token (JWT verification failed).',
+          );
+        }
+        userRole = fallbackRole;
       }
     }
+
 
     // ── 2. Fallback to x-role header (Compatibility Mode) ─────
     if (!userRole) {

@@ -63,6 +63,18 @@ function initFacultyPage() {
     empty.style.display = "none";
 
     grid.innerHTML = list.map(function(a){
+      var attachmentHtml = "";
+      if (a.attachmentUrl || a.attachmentName) {
+        var attachName = a.attachmentName || "Attached Document";
+        var attachUrl = a.attachmentUrl ? (a.attachmentUrl.startsWith('http') ? a.attachmentUrl : ('http://localhost:3000' + a.attachmentUrl)) : '#';
+        attachmentHtml = '<div style="margin: 8px 0 4px 0;">'
+          + '<a href="' + attachUrl + '" target="_blank" style="display:inline-flex; align-items:center; gap:6px; background:#f8fafc; border:1px solid #cbd5e1; padding:5px 10px; border-radius:6px; font-size:0.76rem; color:#1e40af; text-decoration:none; font-weight:600;">'
+          + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>'
+          + '<span>📎 ' + attachName + '</span>'
+          + '</a>'
+          + '</div>';
+      }
+
       return '<div class="ann-card" id="ann-' + a.id + '">'
         + '<div class="ann-card-top">'
         + '  <span class="ann-course-tag">' + a.courseLabel + '</span>'
@@ -70,6 +82,7 @@ function initFacultyPage() {
         + '</div>'
         + '<div class="ann-card-title">' + a.title + '</div>'
         + '<div class="ann-card-msg">' + a.msg + '</div>'
+        + attachmentHtml
         + '<div class="ann-card-actions">'
         + '  <button class="ann-action-btn ann-edit-btn" onclick="openEdit(' + a.id + ')">'
         + '    <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke-linecap="round" stroke-linejoin="round"/></svg>'
@@ -122,23 +135,29 @@ function initFacultyPage() {
     var courseId = document.getElementById("annCourse").value;
     var title = document.getElementById("annTitle").value.trim();
     var msg = document.getElementById("annMsg").value.trim();
+    var fileInput = document.getElementById("annFile");
+    var attachedFile = fileInput && fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
 
     var session = JSON.parse(localStorage.getItem('Lumina_Session') || '{}');
-    var headers = {
-      'Content-Type': 'application/json',
-      ...(session.accessToken ? { 'Authorization': `Bearer ${session.accessToken}` } : {}),
-      'x-role': 'Faculty',
-      'x-user-id': faculty.id || 'F2024001'
-    };
-
+    var facultyUser = JSON.parse(localStorage.getItem('Lumina_User') || '{}');
+    var facultyId = faculty.id || facultyUser.userId || session.userId || 'F2024001';
 
     try {
       if(editId){
-        await fetch('http://localhost:3000/announcements/' + editId, {
+        var res = await fetch('http://localhost:3000/announcements/' + editId, {
           method: 'PUT',
-          headers: headers,
+          headers: {
+            'Content-Type': 'application/json',
+            'x-role': 'Faculty',
+            'x-user-id': facultyId,
+            ...(session.accessToken ? { 'Authorization': `Bearer ${session.accessToken}` } : {})
+          },
           body: JSON.stringify({ courseId: courseId, title: title, message: msg })
         });
+        if (!res.ok) {
+          var errData = await res.json().catch(function() { return {}; });
+          throw new Error(errData.message || "Error updating announcement.");
+        }
         var idx = announcements.findIndex(function(a){ return a.id === parseInt(editId, 10); });
         if(idx > -1){
           announcements[idx].courseId = courseId;
@@ -149,11 +168,31 @@ function initFacultyPage() {
         }
         showToast("Announcement updated successfully!", "success");
       } else {
+        // Build FormData to invoke Multer file upload middleware
+        var formData = new FormData();
+        formData.append('courseId', courseId);
+        formData.append('title', title);
+        formData.append('message', msg);
+        if (attachedFile) {
+          formData.append('file', attachedFile);
+        }
+
         var res = await fetch('http://localhost:3000/announcements', {
           method: 'POST',
-          headers: headers,
-          body: JSON.stringify({ courseId: courseId, title: title, message: msg })
+          headers: {
+            'x-role': 'Faculty',
+            'x-user-id': facultyId,
+            ...(session.accessToken ? { 'Authorization': `Bearer ${session.accessToken}` } : {})
+          },
+          body: formData
         });
+
+        if (!res.ok) {
+          var errData = await res.json().catch(function() { return {}; });
+          var errMsg = Array.isArray(errData.message) ? errData.message.join(', ') : (errData.message || "Error saving announcement.");
+          throw new Error(errMsg);
+        }
+
         var newAnn = await res.json();
         announcements.unshift({
           id: newAnn.announcementId,
@@ -161,17 +200,21 @@ function initFacultyPage() {
           courseLabel: courseLabels[courseId] || courseId,
           title: title,
           msg: msg,
-          ago: "Just now"
+          ago: "Just now",
+          attachmentName: newAnn.attachmentName,
+          attachmentUrl: newAnn.attachmentUrl,
+          fileSize: newAnn.fileSize
         });
-        showToast("Announcement posted successfully!", "success");
+        showToast(attachedFile ? "Announcement & attachment uploaded successfully!" : "Announcement posted successfully!", "success");
       }
       closeModal();
       render();
     } catch (err) {
       console.error(err);
-      showToast("Error saving announcement.", "error");
+      showToast(err.message || "Error saving announcement.", "error");
     }
   });
+
 
   function validateForm(){
     var ok = true;
@@ -198,8 +241,14 @@ function initFacultyPage() {
 
   function clearForm(){
     document.getElementById("annForm").reset();
+    var fileInput = document.getElementById("annFile");
+    if (fileInput) fileInput.value = "";
     ["errCourse","errTitle","errMsg"].forEach(function(id){ document.getElementById(id).textContent = ""; });
-    document.getElementById("fdSelected").style.display = "none";
+    var sel = document.getElementById("fdSelected");
+    if (sel) {
+      sel.textContent = "";
+      sel.style.display = "none";
+    }
     updateRecipientHelp("all");
   }
 
@@ -242,20 +291,47 @@ function initFacultyPage() {
     if(e.target === this){ this.classList.remove("open"); deleteTargetId = null; }
   });
 
-  document.getElementById("fileDrop").addEventListener("click", function(){
-    document.getElementById("annFile").click();
-  });
+  var fileDropEl = document.getElementById("fileDrop");
+  if (fileDropEl) {
+    fileDropEl.addEventListener("click", function(){
+      document.getElementById("annFile").click();
+    });
+
+    fileDropEl.addEventListener("dragover", function(e) {
+      e.preventDefault();
+      fileDropEl.style.borderColor = "#2563eb";
+      fileDropEl.style.background = "#eff6ff";
+    });
+
+    fileDropEl.addEventListener("dragleave", function(e) {
+      e.preventDefault();
+      fileDropEl.style.borderColor = "";
+      fileDropEl.style.background = "";
+    });
+
+    fileDropEl.addEventListener("drop", function(e) {
+      e.preventDefault();
+      fileDropEl.style.borderColor = "";
+      fileDropEl.style.background = "";
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+        var fileInput = document.getElementById("annFile");
+        fileInput.files = e.dataTransfer.files;
+        var f = e.dataTransfer.files[0];
+        var sel = document.getElementById("fdSelected");
+        sel.textContent = "Attached: " + f.name;
+        sel.style.display = "block";
+      }
+    });
+  }
 
   document.getElementById("annFile").addEventListener("change", function(){
     var f = this.files[0];
     if(!f) return;
-    var allowed = ["application/pdf","application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
-    if(!allowed.includes(f.type)){ showToast("Only PDF and DOCX files are allowed.", "error"); return; }
-    if(f.size > 10 * 1024 * 1024){ showToast("File size must be under 10MB.", "error"); return; }
     var sel = document.getElementById("fdSelected");
     sel.textContent = "Attached: " + f.name;
     sel.style.display = "block";
   });
+
 
   function updateRecipientHelp(val) {
     var help = document.getElementById("recipientHelp");
