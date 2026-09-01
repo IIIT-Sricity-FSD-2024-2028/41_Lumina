@@ -34,6 +34,31 @@
     </header>
 
     <main class="dashboard-main">
+      <!-- 60-Day Read-Only Grace Period Institutional Banner -->
+      <div id="grace-period-banner" class="hidden" style="margin-bottom: 20px; background: #fffbeb; border: 2px solid #f59e0b; border-radius: 10px; padding: 16px 20px; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="font-size: 1.8rem;">⚠️</span>
+            <div>
+              <div style="font-weight: 800; color: #92400e; font-size: 1.05rem;">
+                INSTITUTIONAL LICENSE EXPIRED — 60-Day Read-Only Grace Period Active
+              </div>
+              <div style="font-size: 0.85rem; color: #b45309; margin-top: 2px;" id="grace-banner-text">
+                Your contract expired. Student and faculty accounts are operating in Read-Only mode for grade and transcript exports.
+              </div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <button type="button" id="download-archive-btn" class="btn-outline" style="border-color: #d97706; color: #b45309; background: #fef3c7; font-weight: 700; padding: 8px 14px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+              📥 Export Academic Archive (JSON)
+            </button>
+            <button type="button" id="reactivate-license-btn" class="btn-primary" style="background: #16a34a; border-color: #16a34a; font-weight: 700; padding: 8px 14px; font-size: 0.85rem; cursor: pointer;">
+              🔄 Reactivate License
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div class="page-header">
         <h1>Dean's Dashboard</h1>
         <p class="text-muted">Institutional oversight and administrative management.</p>
@@ -126,11 +151,15 @@
             <p class="stat-subtext" id="revenue-collection-text" style="margin-top: 6px;">Loading revenue streams...</p>
           </div>
           <div class="stat-block" style="margin-top: 12px; padding-top: 10px; border-top: 1px dashed #e2e8f0;">
-            <div class="stat-text-row">
+            <div class="stat-text-row" style="align-items: center;">
               <span class="stat-name">SaaS License Tier</span>
-              <span class="stat-value" id="revenue-saas-tier" style="font-size: 0.85rem; font-weight: 700;">Campus Enterprise</span>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span class="stat-value" id="revenue-saas-tier" style="font-size: 0.85rem; font-weight: 700;">Enterprise Tier</span>
+                <button type="button" id="manage-tier-btn" class="btn-outline" style="font-size: 0.7rem; padding: 3px 8px; border-radius: 4px; cursor: pointer; color: #2563eb; border-color: #93c5fd; background: #eff6ff;">⚙️ Manage / Renew</button>
+                <button type="button" id="open-cancel-modal-btn" class="btn-outline" style="font-size: 0.7rem; padding: 3px 8px; border-radius: 4px; cursor: pointer; color: #dc2626; border-color: #fca5a5; background: #fef2f2;">🚫 Cancel</button>
+              </div>
             </div>
-            <p class="stat-subtext" id="revenue-saas-mrr">$3,999 / mo (ARR: $47,988)</p>
+            <p class="stat-subtext" id="revenue-saas-mrr">$5,999 / mo (ARR: $71,988)</p>
           </div>
         </div>
 
@@ -181,6 +210,47 @@
               </tr>
             </thead>
             <tbody id="user-table-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ======================================================== -->
+      <!-- B2C STUDENT TUITION CLEARANCE & FINANCIAL HOLD ROSTER    -->
+      <!-- ======================================================== -->
+      <section class="dash-card mt-4" style="padding: 0; overflow: hidden; margin-top: 24px;">
+        <div class="card-header-flex" style="padding: 20px 24px; border-bottom: 1px solid #e5e7eb; background: #fafafa; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 1.2rem;">🎓</span>
+              <h3 class="card-title" style="margin: 0; font-size: 1.1rem; color: #0f172a;">Student Tuition Clearance & Financial Hold Roster</h3>
+            </div>
+            <p style="font-size: 0.82rem; color: #64748b; margin: 4px 0 0 0;">
+              Flat Semester Tuition ($2,500). Enforces enrollment holds until fee payment or discretionary waiver.
+            </p>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;" id="clearance-filter-buttons">
+            <button type="button" class="btn-outline active" data-filter="all" onclick="filterClearanceRoster('all')" style="padding: 5px 12px; font-size: 0.8rem; font-weight: 700;">All (<span id="count-all">0</span>)</button>
+            <button type="button" class="btn-outline" data-filter="Cleared" onclick="filterClearanceRoster('Cleared')" style="padding: 5px 12px; font-size: 0.8rem; font-weight: 600; color: #16a34a;">Cleared (<span id="count-cleared">0</span>)</button>
+            <button type="button" class="btn-outline" data-filter="Pending" onclick="filterClearanceRoster('Pending')" style="padding: 5px 12px; font-size: 0.8rem; font-weight: 600; color: #b91c1c;">Pending Hold (<span id="count-pending">0</span>)</button>
+            <button type="button" class="btn-outline" data-filter="Waived" onclick="filterClearanceRoster('Waived')" style="padding: 5px 12px; font-size: 0.8rem; font-weight: 600; color: #7c3aed;">Waived (<span id="count-waived">0</span>)</button>
+          </div>
+        </div>
+        <div class="table-container" style="padding: 0 24px 24px 24px;">
+          <table class="data-table" style="width: 100%; text-align: left; border-collapse: collapse; margin-top: 16px;">
+            <thead>
+              <tr style="border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 0.78rem; text-transform: uppercase;">
+                <th style="padding: 12px 8px;">Student Scholar</th>
+                <th style="padding: 12px 8px;">Dept & Semester</th>
+                <th style="padding: 12px 8px;">Flat Tuition</th>
+                <th style="padding: 12px 8px;">Amount Paid</th>
+                <th style="padding: 12px 8px;">Balance Due</th>
+                <th style="padding: 12px 8px;">Clearance Status</th>
+                <th style="padding: 12px 8px;">Financial Actions</th>
+              </tr>
+            </thead>
+            <tbody id="clearance-table-body">
+              <tr><td colspan="7" style="text-align: center; padding: 24px; color: #94a3b8;">Loading student fee clearance ledger...</td></tr>
+            </tbody>
           </table>
         </div>
       </section>
@@ -240,6 +310,117 @@
       </div>
     </div>
 
+    <!-- Institutional SaaS Subscription Management Modal -->
+    <div id="saas-modal" class="modal-overlay hidden">
+      <div class="modal-content" style="max-width: 560px;">
+        <div class="modal-header">
+          <h2>Institutional SaaS Subscription</h2>
+          <button type="button" id="close-saas-modal-btn" class="close-btn">&times;</button>
+        </div>
+        <div style="padding: 16px 0;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <p style="font-size: 0.9rem; color: #64748b; margin: 0;">Institutional software subscription tier:</p>
+            
+            <!-- Monthly / Annual Toggle Switch -->
+            <div style="display: flex; align-items: center; background: #f1f5f9; padding: 3px; border-radius: 20px; border: 1px solid #cbd5e1;">
+              <button type="button" id="billing-cycle-monthly" style="border: none; background: transparent; padding: 4px 10px; border-radius: 16px; font-size: 0.75rem; font-weight: 600; color: #64748b; cursor: pointer;">Monthly</button>
+              <button type="button" id="billing-cycle-annual" style="border: none; background: #3b82f6; padding: 4px 10px; border-radius: 16px; font-size: 0.75rem; font-weight: 700; color: #ffffff; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">Annual (Save 20%) ⚡</button>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 10px;" id="tier-options-container">
+            <!-- Starter Tier -->
+            <label id="tier-label-starter" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.2s ease;">
+              <div>
+                <div style="font-weight: 700; color: #0f172a;">Starter Plan</div>
+                <div id="starter-price-desc" style="font-size: 0.8rem; color: #64748b;">$999 / mo ($11,988 / yr) — Core Course Slots & Registration</div>
+              </div>
+              <input type="radio" name="saas-tier-radio" value="Starter" />
+            </label>
+            <!-- Campus Growth Tier -->
+            <label id="tier-label-campus" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.2s ease;">
+              <div>
+                <div style="font-weight: 700; color: #0f172a;">Campus Growth Plan</div>
+                <div id="campus-price-desc" style="font-size: 0.8rem; color: #64748b;">$2,499 / mo ($29,988 / yr) — Adds Prerequisites & Gradebook</div>
+              </div>
+              <input type="radio" name="saas-tier-radio" value="Campus" />
+            </label>
+            <!-- Enterprise Elite Tier -->
+            <label id="tier-label-enterprise" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border: 2px solid #3b82f6; background: #eff6ff; border-radius: 8px; cursor: pointer; transition: all 0.2s ease;">
+              <div>
+                <div style="font-weight: 700; color: #1e40af;">Enterprise Elite Plan <span style="font-size: 0.7rem; background: #3b82f6; color: #fff; padding: 2px 6px; border-radius: 4px; margin-left: 6px;">RECOMMENDED</span></div>
+                <div id="enterprise-price-desc" style="font-size: 0.8rem; color: #1e3a8a;">$5,999 / mo ($71,988 / yr) — 99.99% SLA, SPOC & Audit Logs</div>
+              </div>
+              <input type="radio" name="saas-tier-radio" value="Enterprise" checked />
+            </label>
+          </div>
+
+          <!-- Prorated Invoice Summary Box -->
+          <div id="proration-summary-box" style="margin-top: 16px; padding: 14px 16px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: #475569; letter-spacing: 0.5px;">⚡ Prorated Billing Calculation</span>
+              <span id="proration-badge" style="font-size: 0.75rem; background: #dbeafe; color: #1e40af; font-weight: 700; padding: 2px 8px; border-radius: 4px;">UPGRADE</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: #334155; margin-bottom: 4px;">
+              <span>Unused Credit on Current Plan:</span>
+              <span id="proration-credit-val" style="color: #16a34a; font-weight: 600;">-$0.00</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: #334155; margin-bottom: 6px;">
+              <span>New Plan Charge (Remaining Days):</span>
+              <span id="proration-charge-val" style="font-weight: 600;">$0.00</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px dashed #cbd5e1; font-size: 0.95rem; font-weight: 700; color: #0f172a;">
+              <span>Net Amount Charged Today:</span>
+              <span id="proration-net-total" style="font-size: 1.15rem; color: #2563eb;">$0.00</span>
+            </div>
+            <div style="margin-top: 6px; font-size: 0.75rem; color: #64748b;" id="proration-renewal-text">
+              New Annual Contract Renewal: Aug 1, 2027
+            </div>
+          </div>
+        </div>
+        <div class="modal-actions" style="display: flex; gap: 12px; margin-top: 4px;">
+          <button type="button" id="cancel-saas-btn" class="btn-outline">Close</button>
+          <button type="button" id="save-saas-btn" class="btn-primary" style="flex: 1; padding: 10px 16px; font-weight: 700;">💳 Pay & Activate Subscription</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dedicated Subscription Cancellation Modal -->
+    <div id="cancel-modal" class="modal-overlay hidden">
+      <div class="modal-content" style="max-width: 500px; border-top: 4px solid #ef4444;">
+        <div class="modal-header">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 1.3rem;">⚠️</span>
+            <h2 style="margin: 0; color: #991b1b;">Cancel Institutional Subscription</h2>
+          </div>
+          <button type="button" id="close-cancel-modal-btn" class="close-btn">&times;</button>
+        </div>
+        <div style="padding: 20px 24px;">
+          <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 14px; margin-bottom: 14px;">
+            <div style="font-weight: 700; color: #991b1b; font-size: 0.95rem; margin-bottom: 4px;">Prepaid Period Protection:</div>
+            <p style="font-size: 0.85rem; color: #7f1d1d; margin: 0; line-height: 1.5;">
+              Your university's active <strong id="cancel-modal-tier">Enterprise Plan</strong> will remain <strong>100% operational until <span id="cancel-modal-date">Sep 1, 2027</span></strong> (the end of your prepaid contract term).
+            </p>
+          </div>
+          <div style="font-size: 0.85rem; color: #475569; line-height: 1.5;">
+            <strong>What happens upon expiration:</strong>
+            <ul style="margin: 6px 0 12px 16px; padding: 0; color: #64748b;">
+              <li>Accounts transition into a <strong>60-Day Read-Only Grace Period</strong> for transcript and grade exports.</li>
+              <li>No further automatic renewal charges will be billed.</li>
+              <li>You can reactivate at any time before expiration.</li>
+            </ul>
+          </div>
+          <div style="margin-top: 8px; padding-top: 10px; border-top: 1px dashed #fecaca; text-align: center;">
+            <button type="button" id="simulate-grace-btn" style="border: 1px solid #f59e0b; background: #fffbeb; color: #b45309; font-size: 0.8rem; font-weight: 700; padding: 8px 12px; border-radius: 6px; cursor: pointer; width: 100%;">🧪 Viva Demo: Simulate Expired 60-Day Grace Period Now</button>
+          </div>
+        </div>
+        <div class="modal-actions" style="display: flex; gap: 12px; padding: 16px 24px 20px 24px; margin: 0; border-top: 1px solid #f1f5f9;">
+          <button type="button" id="cancel-modal-back-btn" class="btn-outline" style="flex: 1; padding: 10px 16px; font-weight: 600;">Keep Subscription</button>
+          <button type="button" id="confirm-cancel-btn" class="btn-danger" style="flex: 1.2; background: #dc2626; border-color: #dc2626; color: white; padding: 10px 16px; font-weight: 700; border-radius: 6px; cursor: pointer;">🚫 Confirm Cancellation</button>
+        </div>
+      </div>
+    </div>
+
     <div id="download-toast" class="contact-toast-container">
       <div class="toast-icon-circle">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -258,6 +439,17 @@
       </div>
       <span class="toast-message-text">Excel Data Imported Successfully</span>
       <button type="button" id="close-import-toast" class="toast-close-btn">&times;</button>
+    </div>
+
+    <!-- Institutional SaaS Subscription Notification Toast -->
+    <div id="saas-toast" class="contact-toast-container">
+      <div class="toast-icon-circle" style="background: #10b981; color: #ffffff; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px;">
+          <path d="M20 6L9 17l-5-5"/>
+        </svg>
+      </div>
+      <span class="toast-message-text" id="saas-toast-text">Institutional Subscription Updated Successfully</span>
+      <button type="button" id="close-saas-toast" class="toast-close-btn">&times;</button>
     </div>
 
     <div id="footer-placeholder"></div>

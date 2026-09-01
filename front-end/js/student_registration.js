@@ -255,14 +255,60 @@ async function handleEnroll(course) {
 
     if (!res.ok) {
       var errData = await res.json();
-      var errMsg = errData.message || 'Enrollment failed.';
+      var rawMsg = errData.message;
+      var errMsg = Array.isArray(rawMsg) ? rawMsg.join(' ') : (rawMsg || 'Enrollment failed.');
 
-      /* Show error view with backend message */
-      document.getElementById('errorBadge').textContent = '⚠️ ENROLLMENT ERROR';
+      var isGracePeriod = errMsg.includes('Grace Period') || errMsg.includes('Operation locked');
+      var isFinancialHold = errMsg.includes('Financial Hold') || errMsg.includes('Semester tuition fee is unpaid') || errMsg.includes('tuition fee');
+      var errorTitleEl = document.querySelector('#view-error h2');
+      var overrideBtn = document.querySelector('#view-error .status-btns .dark-btn');
+      var cancelBtn = document.querySelector('#view-error .status-btns .outline-btn');
+
+      if (isFinancialHold) {
+        if (errorTitleEl) errorTitleEl.textContent = 'Financial Hold Active';
+        document.getElementById('errorBadge').textContent = '⚠️ SEMESTER TUITION UNPAID';
+        document.getElementById('errorBadge').style.background = '#fef3c7';
+        document.getElementById('errorBadge').style.color = '#92400e';
+        document.getElementById('errorBadge').style.borderColor = '#f59e0b';
+        if (overrideBtn) {
+          overrideBtn.style.display = '';
+          overrideBtn.textContent = '💳 Pay Semester Fee ($2,500)';
+          overrideBtn.style.background = '#16a34a';
+          overrideBtn.onclick = function () {
+            navigate('view-selection');
+            openTuitionModal();
+          };
+        }
+        if (cancelBtn) cancelBtn.textContent = 'Back to Course Selection';
+      } else if (isGracePeriod) {
+        if (errorTitleEl) errorTitleEl.textContent = 'Subscription In Grace Period';
+        document.getElementById('errorBadge').textContent = '⚠️ 60-DAY READ-ONLY GRACE PERIOD';
+        document.getElementById('errorBadge').style.background = '#fef3c7';
+        document.getElementById('errorBadge').style.color = '#b45309';
+        document.getElementById('errorBadge').style.borderColor = '#f59e0b';
+        if (overrideBtn) overrideBtn.style.display = 'none';
+        if (cancelBtn) cancelBtn.textContent = 'Back to Courses';
+      } else {
+        if (errorTitleEl) errorTitleEl.textContent = 'Enrollment Error: Missing Prerequisite';
+        document.getElementById('errorBadge').textContent = '⚠️ MISSING PREREQUISITE';
+        document.getElementById('errorBadge').style.background = '';
+        document.getElementById('errorBadge').style.color = '';
+        document.getElementById('errorBadge').style.borderColor = '';
+        if (overrideBtn) {
+          overrideBtn.style.display = '';
+          overrideBtn.textContent = 'Request Override';
+          overrideBtn.style.background = '';
+          overrideBtn.onclick = function () { navigate('view-override'); };
+        }
+        if (cancelBtn) cancelBtn.textContent = 'Cancel';
+      }
+
       document.getElementById('errorMsg').textContent = errMsg;
 
-      /* Pre-fill the override form with the failed course */
-      populateOverrideForm(course.id, errMsg);
+      /* Pre-fill the override form with the failed course if not grace period or hold */
+      if (!isGracePeriod && !isFinancialHold) {
+        populateOverrideForm(course.id, errMsg);
+      }
 
       navigate('view-error');
       return;
@@ -581,11 +627,111 @@ document.addEventListener('DOMContentLoaded', async function () {
   renderMyCoursesSection();
   renderValidationStatus();
   updateSemesterBanner();
+  await checkTuitionClearance();
 
   /* ── Auto-navigate if coming from dashboard "My Courses" link ── */
   var regGoto = sessionStorage.getItem('reg_goto');
   if (regGoto) {
     sessionStorage.removeItem('reg_goto');
     navigate(regGoto);
+  }
+});
+
+/* ── 9. FLAT SEMESTER TUITION CLEARANCE & PAYMENT ── */
+var studentFeeData = null;
+
+async function checkTuitionClearance() {
+  var pill = document.getElementById('tuition-status-pill');
+  var banner = document.getElementById('tuition-hold-banner');
+  var modalSem = document.getElementById('modal-semester-name');
+  var modalStudent = document.getElementById('modal-student-name');
+
+  try {
+    var res = await fetch(API_BASE + '/revenue/student/' + CURRENT_STUDENT_ID, { headers: headers });
+    if (!res.ok) return;
+    studentFeeData = await res.json();
+
+    if (modalSem) modalSem.textContent = 'Semester ' + (studentFeeData.semester || 4) + ' (Spring 2026)';
+    if (modalStudent) modalStudent.textContent = (studentFeeData.studentName || 'Student') + ' (' + studentFeeData.studentId + ')';
+
+    if (studentFeeData.isFinancialHoldActive) {
+      if (pill) {
+        pill.style.background = '#fef2f2';
+        pill.style.color = '#991b1b';
+        pill.style.borderColor = '#fecaca';
+        pill.innerHTML = '⚠️ Financial Hold Active ($' + (studentFeeData.balanceDue || 2500) + ' Unpaid)';
+      }
+      if (banner) banner.style.display = 'flex';
+    } else {
+      if (pill) {
+        pill.style.background = '#ecfdf5';
+        pill.style.color = '#065f46';
+        pill.style.borderColor = '#a7f3d0';
+        if (studentFeeData.paymentStatus === 'Waived') {
+          pill.innerHTML = '🎓 Financial Hold Waived (Scholarship / Aid)';
+        } else {
+          pill.innerHTML = '✅ Semester Tuition Cleared ($2,500 Paid)';
+        }
+      }
+      if (banner) banner.style.display = 'none';
+    }
+  } catch (err) {
+    console.warn('Could not fetch student tuition status:', err);
+  }
+}
+
+window.openTuitionModal = function () {
+  var modal = document.getElementById('tuitionModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+};
+
+window.closeTuitionModal = function () {
+  var modal = document.getElementById('tuitionModal');
+  if (modal) {
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+};
+
+document.addEventListener('DOMContentLoaded', function () {
+  var topPayBtn = document.getElementById('pay-tuition-top-btn');
+  if (topPayBtn) {
+    topPayBtn.addEventListener('click', openTuitionModal);
+  }
+
+  var confirmPayBtn = document.getElementById('confirm-pay-btn');
+  if (confirmPayBtn) {
+    confirmPayBtn.addEventListener('click', async function () {
+      try {
+        confirmPayBtn.disabled = true;
+        confirmPayBtn.textContent = 'Processing Payment...';
+
+        var res = await fetch(API_BASE + '/revenue/student/' + CURRENT_STUDENT_ID + '/pay', {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify({ amount: 2500 }),
+        });
+
+        if (!res.ok) throw new Error('Payment processing failed');
+        var receipt = await res.json();
+
+        closeTuitionModal();
+        await checkTuitionClearance();
+
+        var toast = document.getElementById('toast');
+        if (toast) {
+          toast.textContent = '💳 Tuition Paid! Receipt #' + receipt.transactionId.slice(-8) + ' generated. Registration unlocked!';
+          showToast();
+        }
+      } catch (err) {
+        alert('Payment error: ' + err.message);
+      } finally {
+        confirmPayBtn.disabled = false;
+        confirmPayBtn.textContent = 'Pay $2,500 & Clear Financial Hold →';
+      }
+    });
   }
 });

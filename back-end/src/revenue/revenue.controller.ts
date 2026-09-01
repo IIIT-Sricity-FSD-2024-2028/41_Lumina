@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Param,
+  Query,
   Body,
   UseGuards,
 } from '@nestjs/common';
@@ -41,13 +42,66 @@ export class RevenueController {
     return this.revenueService.getActiveTier();
   }
 
+  @Get('tier/proration-preview')
+  @Roles('*')
+  @ApiOperation({ summary: 'Calculate real-time prorated invoice for upgrading/downgrading/renewing' })
+  @ApiResponse({ status: 200, description: 'Proration calculation preview' })
+  getProrationPreview(
+    @Query('targetTier') targetTier: 'Starter' | 'Campus' | 'Enterprise',
+    @Query('billingCycle') billingCycle?: 'monthly' | 'annual',
+  ) {
+    return this.revenueService.calculateProration(targetTier || 'Enterprise', billingCycle || 'annual');
+  }
 
   @Post('tier')
   @Roles('Super_User', 'Dean')
   @ApiOperation({ summary: 'Update active SaaS tier for the institution' })
   @ApiResponse({ status: 200, description: 'Updated active SaaS tier' })
-  setActiveTier(@Body('tier') tier: 'Starter' | 'Campus' | 'Enterprise') {
-    return this.revenueService.setActiveTier(tier);
+  setActiveTier(
+    @Body('tier') tier: 'Starter' | 'Campus' | 'Enterprise',
+    @Body('billingCycle') billingCycle?: 'monthly' | 'annual',
+  ) {
+    return this.revenueService.setActiveTier(tier, billingCycle || 'annual');
+  }
+
+  @Post('tier/cancel')
+  @Roles('Super_User', 'Dean')
+  @ApiOperation({ summary: 'Cancel institutional SaaS subscription at period end' })
+  @ApiResponse({ status: 200, description: 'Canceled subscription confirmation' })
+  cancelSubscription() {
+    return this.revenueService.cancelSubscription();
+  }
+
+  @Get('lifecycle')
+  @Roles('*')
+  @ApiOperation({ summary: 'Get institutional tenant lifecycle, 60-day grace period status & export rights' })
+  @ApiResponse({ status: 200, description: 'Tenant lifecycle status and grace period details' })
+  getTenantLifecycle() {
+    return this.revenueService.getTenantLifecycle();
+  }
+
+  @Get('export/archive')
+  @Roles('Dean', 'Super_User', 'Lumina_SPOC')
+  @ApiOperation({ summary: 'Export complete institutional academic and financial archive' })
+  @ApiResponse({ status: 200, description: 'Institutional academic and financial archive' })
+  exportInstitutionalArchive() {
+    return this.revenueService.exportInstitutionalArchive();
+  }
+
+  @Post('simulate-grace-period')
+  @Roles('Dean', 'Super_User')
+  @ApiOperation({ summary: 'Simulate 60-day read-only grace period for evaluation demos' })
+  @ApiResponse({ status: 200, description: 'Updated tenant lifecycle status' })
+  simulateGracePeriod(@Body('enableGrace') enableGrace: boolean) {
+    return this.revenueService.simulateGracePeriod(enableGrace ?? true);
+  }
+
+  @Get('students/clearance-roster')
+  @Roles('Dean', 'Super_User', 'Lumina_SPOC')
+  @ApiOperation({ summary: 'Get complete student financial clearance roster for Dean' })
+  @ApiResponse({ status: 200, description: 'Student fee clearance roster' })
+  getStudentsClearanceRoster() {
+    return this.revenueService.getStudentsClearanceRoster();
   }
 
   @Get('student/:studentId')
@@ -67,5 +121,16 @@ export class RevenueController {
     @Body('amount') amount: number,
   ) {
     return this.revenueService.payStudentTuition(studentId, amount);
+  }
+
+  @Post('student/:studentId/waive-hold')
+  @Roles('Dean', 'Super_User')
+  @ApiOperation({ summary: 'Grant financial hold waiver for a student (Dean only)' })
+  @ApiResponse({ status: 200, description: 'Financial hold waived and registration unlocked' })
+  waiveStudentFeeHold(
+    @Param('studentId') studentId: string,
+    @Body('waiverReason') waiverReason: string,
+  ) {
+    return this.revenueService.waiveStudentFeeHold(studentId, waiverReason);
   }
 }

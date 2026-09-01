@@ -145,4 +145,12 @@ export class SuperUserController {
   ) {
     return this.superUserService.assignSpocToInstitute(instituteId, spocAdminId);
   }
+
+  @Post('institutes/:id/archive')
+  @Roles('Super_User')
+  @ApiOperation({ summary: 'Archive an expired tenant and move to Cold Storage' })
+  @ApiResponse({ status: 200, description: 'Tenant archived successfully' })
+  archiveInstitute(@Param('id') instituteId: string) {
+    return this.superUserService.archiveInstitute(instituteId);
+  }
 }

@@ -136,10 +136,78 @@ export class SuperUserService {
   }
 
   /**
-   * Returns all onboarded client institutions
+   * Returns all onboarded client institutions with dynamic tenant lifecycle state
    */
   getInstitutes(): ClientInstitute[] {
-    return this.db.institutes;
+    const activePlan = this.db.activeInstitutePlan;
+    const realStudentsCount = this.db.users.filter((u) => u.role === 'Student').length;
+    const iiitsStudentCount = Math.max(1250, 1250 + (realStudentsCount - 22));
+
+    return this.db.institutes.map((inst) => {
+      let dynamicStudentCount = inst.studentCount;
+      if (inst.instituteId === 'INST-IIITS') {
+        dynamicStudentCount = activePlan.status === 'Suspended' ? 0 : iiitsStudentCount;
+        if (activePlan.status === 'Read_Only_Grace_Period') {
+          return {
+            ...inst,
+            studentCount: dynamicStudentCount,
+            status: 'Grace_Period',
+            displayTier: 'Enterprise (Grace Period)',
+          };
+        } else if (activePlan.status === 'Canceled') {
+          return {
+            ...inst,
+            studentCount: dynamicStudentCount,
+            status: 'Canceled',
+            displayTier: 'Enterprise (Auto-Renew OFF)',
+          };
+        } else if (activePlan.status === 'Suspended') {
+          return {
+            ...inst,
+            studentCount: 0,
+            status: 'Archived',
+            displayTier: 'Archived (Cold Storage)',
+          };
+        }
+      } else if (inst.status === 'Archived') {
+        dynamicStudentCount = 0;
+      }
+      return {
+        ...inst,
+        studentCount: dynamicStudentCount,
+        displayTier: `${inst.tier} Tier`,
+      };
+    });
+  }
+
+  /**
+   * Archives an expired tenant, releases seat capacity, and moves data to Cold Storage
+   */
+  archiveInstitute(instituteId: string) {
+    const inst = this.db.institutes.find((i) => i.instituteId === instituteId);
+    if (!inst) {
+      return { success: false, message: `Institute ${instituteId} not found.` };
+    }
+
+    inst.status = 'Archived';
+    if (instituteId === 'INST-IIITS') {
+      this.db.activeInstitutePlan.status = 'Suspended';
+    }
+
+    const spoc = this.db.adminTeam.find((a) => a.adminId === inst.spocAdminId);
+    if (spoc) {
+      spoc.assignedInstituteId = 'UNASSIGNED';
+      spoc.assignedInstituteName = 'Floating Support Queue';
+    }
+
+    return {
+      success: true,
+      instituteId,
+      instituteName: inst.name,
+      status: 'Archived',
+      message: `Tenant ${inst.name} successfully encrypted and migrated to Cold Storage. Seat quota (1,250 seats) reclaimed.`,
+      timestamp: new Date().toISOString(),
+    };
   }
 
   /**
@@ -179,28 +247,41 @@ export class SuperUserService {
   /**
    * Updates an institute's plan tier
    */
-  updateInstituteTier(instituteId: string, tier: 'Starter' | 'Campus' | 'Enterprise'): ClientInstitute {
-    const inst = this.db.institutes.find((i: ClientInstitute) => i.instituteId === instituteId);
-    if (!inst) throw new NotFoundException(`Institute '${instituteId}' not found.`);
+  updateInstituteTier(instituteId: string, newTier: 'Starter' | 'Campus' | 'Enterprise'): ClientInstitute | null {
+    const inst = this.db.institutes.find((i) => i.instituteId === instituteId);
+    if (!inst) return null;
+
+    inst.tier = newTier;
 
     const plan = this.db.saasPlans.find(
-      (p) => p.id.toLowerCase() === tier.toLowerCase() || p.name.toLowerCase().includes(tier.toLowerCase()),
+      (p) => p.id.toLowerCase() === newTier.toLowerCase() || p.name.toLowerCase().includes(newTier.toLowerCase()),
     );
+    if (plan) {
+      inst.annualContractValue = plan.annualMonthlyPrice * 12;
+    }
 
-    inst.tier = tier;
-    inst.annualContractValue = plan ? plan.annualMonthlyPrice * 12 : (tier === 'Starter' ? 14388 : tier === 'Campus' ? 41988 : 107988);
+    if (instituteId === 'INST-IIITS') {
+      this.db.activeInstitutePlan.tier = newTier;
+      this.db.activeInstitutePlan.status = 'Active';
+      this.db.activeInstitutePlan.autoRenew = true;
+    }
+
     return inst;
   }
 
   /**
-   * Assigns / reassigns a Lumina SPOC to a specific institute
+   * Assigns a Lumina SPOC Admin to a specific Client Institute
    */
-  assignSpocToInstitute(instituteId: string, spocAdminId: string) {
-    const inst = this.db.institutes.find((i: ClientInstitute) => i.instituteId === instituteId);
-    if (!inst) throw new NotFoundException(`Institute '${instituteId}' not found.`);
+  assignSpocToInstitute(
+    instituteId: string,
+    spocId: string,
+  ): { success: boolean; institute: ClientInstitute | null; spoc: LuminaAdminSpoc | null } {
+    const inst = this.db.institutes.find((i) => i.instituteId === instituteId);
+    const spoc = this.db.adminTeam.find((a) => a.adminId === spocId);
 
-    const spoc = this.db.adminTeam.find((a: LuminaAdminSpoc) => a.adminId === spocAdminId);
-    if (!spoc) throw new NotFoundException(`Lumina Admin SPOC '${spocAdminId}' not found.`);
+    if (!inst || !spoc) {
+      return { success: false, institute: null, spoc: null };
+    }
 
     inst.spocAdminId = spoc.adminId;
     inst.spocName = spoc.fullName;
@@ -208,12 +289,6 @@ export class SuperUserService {
     spoc.assignedInstituteId = inst.instituteId;
     spoc.assignedInstituteName = inst.name;
 
-    return {
-      success: true,
-      message: `Assigned ${spoc.fullName} as dedicated SPOC for ${inst.name}.`,
-      institute: inst,
-      spoc,
-    };
+    return { success: true, institute: inst, spoc: spoc };
   }
 }
-

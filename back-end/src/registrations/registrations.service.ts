@@ -40,6 +40,26 @@ export class RegistrationsService {
    * 6. Capacity check (Enrolled vs Waitlisted)
    */
   enroll(studentId: string, courseId: string): Registration {
+    // ── 0. Tenant Lifecycle Check ────────────────────────────
+    if (
+      this.db.activeInstitutePlan?.status === 'Read_Only_Grace_Period' ||
+      this.db.activeInstitutePlan?.status === 'Suspended'
+    ) {
+      throw new BadRequestException(
+        'Operation locked: Institution subscription is in 60-Day Read-Only Grace Period. Course registration is disabled until license reactivation.',
+      );
+    }
+
+    // ── 0.5 Student Semester Tuition Clearance Check (B2C Model) ──
+    const payment = this.db.studentPaymentLedger[studentId];
+    const isCleared = payment ? (payment.status === 'Cleared' || payment.status === 'Waived') : false;
+    if (!isCleared) {
+      const balance = payment ? Math.max(0, payment.totalSemesterFee - payment.amountPaid) : 2500;
+      throw new BadRequestException(
+        `Financial Hold Active: Semester tuition fee ($${balance}) is unpaid. Course registration is disabled until semester fee clearance.`,
+      );
+    }
+
     const termId = this.getActiveTermId();
 
     // ── 1. Course existence ──────────────────────────────────
@@ -191,6 +211,14 @@ export class RegistrationsService {
   }
 
   updateGrade(id: number, finalGrade: string): Registration {
+    if (
+      this.db.activeInstitutePlan?.status === 'Read_Only_Grace_Period' ||
+      this.db.activeInstitutePlan?.status === 'Suspended'
+    ) {
+      throw new BadRequestException(
+        'Operation locked: Institution subscription is in 60-Day Read-Only Grace Period. Grade submission is disabled until license reactivation.',
+      );
+    }
     const registration = this.db.registrations.find(r => r.enrollmentId === id);
     if (!registration) {
       throw new NotFoundException(`Registration with ID ${id} not found.`);

@@ -1752,6 +1752,30 @@
         ]
       }
     },
+    "/super-user/institutes/{id}/archive": {
+      "post": {
+        "operationId": "SuperUserController_archiveInstitute",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tenant archived successfully"
+          }
+        },
+        "summary": "Archive an expired tenant and move to Cold Storage",
+        "tags": [
+          "SuperUser"
+        ]
+      }
+    },
     "/revenue/summary": {
       "get": {
         "operationId": "RevenueController_getRevenueSummary",
@@ -1810,6 +1834,113 @@
         ]
       }
     },
+    "/revenue/tier/proration-preview": {
+      "get": {
+        "operationId": "RevenueController_getProrationPreview",
+        "parameters": [
+          {
+            "name": "targetTier",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "billingCycle",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Proration calculation preview"
+          }
+        },
+        "summary": "Calculate real-time prorated invoice for upgrading/downgrading/renewing",
+        "tags": [
+          "Revenue & Billing"
+        ]
+      }
+    },
+    "/revenue/tier/cancel": {
+      "post": {
+        "operationId": "RevenueController_cancelSubscription",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Canceled subscription confirmation"
+          }
+        },
+        "summary": "Cancel institutional SaaS subscription at period end",
+        "tags": [
+          "Revenue & Billing"
+        ]
+      }
+    },
+    "/revenue/lifecycle": {
+      "get": {
+        "operationId": "RevenueController_getTenantLifecycle",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Tenant lifecycle status and grace period details"
+          }
+        },
+        "summary": "Get institutional tenant lifecycle, 60-day grace period status & export rights",
+        "tags": [
+          "Revenue & Billing"
+        ]
+      }
+    },
+    "/revenue/export/archive": {
+      "get": {
+        "operationId": "RevenueController_exportInstitutionalArchive",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Institutional academic and financial archive"
+          }
+        },
+        "summary": "Export complete institutional academic and financial archive",
+        "tags": [
+          "Revenue & Billing"
+        ]
+      }
+    },
+    "/revenue/simulate-grace-period": {
+      "post": {
+        "operationId": "RevenueController_simulateGracePeriod",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Updated tenant lifecycle status"
+          }
+        },
+        "summary": "Simulate 60-day read-only grace period for evaluation demos",
+        "tags": [
+          "Revenue & Billing"
+        ]
+      }
+    },
+    "/revenue/students/clearance-roster": {
+      "get": {
+        "operationId": "RevenueController_getStudentsClearanceRoster",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Student fee clearance roster"
+          }
+        },
+        "summary": "Get complete student financial clearance roster for Dean",
+        "tags": [
+          "Revenue & Billing"
+        ]
+      }
+    },
     "/revenue/student/{studentId}": {
       "get": {
         "operationId": "RevenueController_getStudentBilling",
@@ -1853,6 +1984,30 @@
           }
         },
         "summary": "Pay outstanding tuition balance for a student",
+        "tags": [
+          "Revenue & Billing"
+        ]
+      }
+    },
+    "/revenue/student/{studentId}/waive-hold": {
+      "post": {
+        "operationId": "RevenueController_waiveStudentFeeHold",
+        "parameters": [
+          {
+            "name": "studentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Financial hold waived and registration unlocked"
+          }
+        },
+        "summary": "Grant financial hold waiver for a student (Dean only)",
         "tags": [
           "Revenue & Billing"
         ]

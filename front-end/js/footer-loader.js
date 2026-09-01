@@ -14,6 +14,14 @@
 (function () {
   'use strict';
 
+  // Ensure global-grace-guard.js is loaded across all pages
+  if (!document.getElementById('lumina-grace-guard-script')) {
+    var guardScript = document.createElement('script');
+    guardScript.id = 'lumina-grace-guard-script';
+    guardScript.src = 'js/global-grace-guard.js';
+    document.head.appendChild(guardScript);
+  }
+
   var target =
     document.getElementById('footer-placeholder') ||
     document.getElementById('footer');

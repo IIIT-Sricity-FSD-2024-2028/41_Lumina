@@ -18,6 +18,16 @@ describe('Policies and Dynamic Validation Integration', () => {
     dbService.onModuleInit(); // seed in-memory DB
     policiesService = module.get<PoliciesService>(PoliciesService);
     registrationsService = module.get<RegistrationsService>(RegistrationsService);
+
+    // Clear S2024001's tuition so enrollment policy checks are reachable
+    dbService.studentPaymentLedger['S2024001'] = {
+      amountPaid: 2500,
+      totalSemesterFee: 2500,
+      status: 'Cleared',
+      semester: 4,
+      paymentDate: new Date().toISOString(),
+      transactionId: 'TXN-TEST-SETUP',
+    };
   });
 
   it('should return initial policy settings and change logs', () => {

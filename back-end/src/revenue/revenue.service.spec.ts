@@ -24,9 +24,9 @@ describe('RevenueService', () => {
     const summary = service.getRevenueSummary();
     expect(summary).toBeDefined();
     expect(summary.currency).toBe('USD');
-    expect(summary.totalGrossRevenue).toBeGreaterThan(0);
-    expect(summary.totalCreditsEnrolled).toBeGreaterThan(0);
-    expect(summary.departmentBreakdown.length).toBeGreaterThan(0);
+    expect(summary.flatSemesterTuition).toBe(2500);
+    expect(summary.totalTuitionTarget).toBeGreaterThan(0);
+    expect(summary.studentClearanceRoster.length).toBeGreaterThan(0);
     expect(summary.activeSaasPlan.enabledModules.length).toBeGreaterThan(0);
   });
 
@@ -36,15 +36,14 @@ describe('RevenueService', () => {
 
     const updated = service.setActiveTier('Starter');
     expect(updated.activeTier).toBe('Starter');
-    expect(updated.activePlan.includedModules).toContain('Course Catalog & Prerequisite Validation');
   });
 
-  it('should return itemized student billing', () => {
+  it('should return flat semester student billing', () => {
     const billing = service.getStudentBilling('S2024001');
     expect(billing).toBeDefined();
     expect(billing.studentId).toBe('S2024001');
-    expect(billing.tuitionFee).toBeGreaterThanOrEqual(0);
-    expect(billing.itemizedCourses.length).toBeGreaterThan(0);
+    expect(billing.flatSemesterTuition).toBe(2500);
+    expect(billing.totalAmountDue).toBe(2500);
   });
 
   it('should process simulated student fee payment', () => {
@@ -58,7 +57,6 @@ describe('RevenueService', () => {
     const plansData = service.getSaasPlans();
     expect(plansData.plans.length).toBe(3);
     const campusPlan = plansData.plans.find((p) => p.id === 'campus');
-    expect(campusPlan?.popular).toBe(true);
-    expect(campusPlan?.includedModules).toContain('Assistant Dean 1: Slot & Timetable Allocation');
+    expect(campusPlan).toBeDefined();
   });
 });

@@ -19,7 +19,7 @@ export interface SupportDocket {
   instituteId: string;
   instituteName: string;
   submittedBy: string;
-  category: 'SSO_Integration' | 'Data_Migration' | 'Performance_Latency' | 'Seat_Quota_Expansion' | 'Database_Backup' | 'System_Incident';
+  category: 'SSO_Integration' | 'Data_Migration' | 'Performance_Latency' | 'Seat_Quota_Expansion' | 'Database_Backup' | 'System_Incident' | 'Offboarding_Retention';
   priority: 'Low' | 'Medium' | 'High' | 'Critical';
   subject: string;
   description: string;
@@ -52,7 +52,8 @@ export interface ClientInstitute {
   deanName: string;
   deanEmail: string;
   studentCount: number;
-  status: 'Active' | 'Onboarding' | 'Trial';
+  status: 'Active' | 'Onboarding' | 'Trial' | 'Grace_Period' | 'Canceled' | 'Archived' | 'Suspended';
+  displayTier?: string;
   annualContractValue: number;
   joinedDate: string;
 }
@@ -72,7 +73,7 @@ export interface SaasPlanDefinition {
 export interface ActivePlanState {
   tier: 'Starter' | 'Campus' | 'Enterprise';
   billingCycle: 'monthly' | 'annual';
-  status: 'Active' | 'Trial' | 'Past_Due';
+  status: 'Active' | 'Trial' | 'Past_Due' | 'Canceled' | 'Suspended' | 'Read_Only_Grace_Period';
   activatedAt: string;
   renewalDate: string;
   autoRenew: boolean;
@@ -80,8 +81,27 @@ export interface ActivePlanState {
 
 export interface PaymentRecord {
   amountPaid: number;
-  paymentDate: string;
-  status: 'Cleared' | 'Pending';
+  totalSemesterFee: number;
+  paymentDate?: string;
+  status: 'Cleared' | 'Pending' | 'Waived';
+  semester: number;
+  waiverReason?: string;
+  transactionId?: string;
+}
+
+export interface StudentClearanceRosterItem {
+  studentId: string;
+  fullName: string;
+  email: string;
+  deptId: string;
+  semester: number;
+  totalSemesterFee: number;
+  amountPaid: number;
+  balanceDue: number;
+  status: 'Cleared' | 'Pending' | 'Waived';
+  paymentDate?: string;
+  waiverReason?: string;
+  transactionId?: string;
 }
 
 

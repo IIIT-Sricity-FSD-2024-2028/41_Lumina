@@ -143,6 +143,7 @@
       case 'Data_Migration': return `<span class="category-badge cat-migration">Data Ingestion</span>`;
       case 'Seat_Quota_Expansion': return `<span class="category-badge cat-quota">Seat Quota</span>`;
       case 'Database_Backup': return `<span class="category-badge cat-backup">Backup & Cold Archive</span>`;
+      case 'Offboarding_Retention': return `<span class="category-badge" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a;">Offboarding & Grace</span>`;
       default: return `<span class="category-badge">Infrastructure</span>`;
     }
   }

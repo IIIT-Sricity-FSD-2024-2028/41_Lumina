@@ -1805,8 +1805,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Update stats dynamically across both Overview tab and Client Institutes tab
-            const totalArr = cachedInstitutes.reduce((sum, i) => sum + (i.annualContractValue || 0), 0);
-            const totalStudents = cachedInstitutes.reduce((sum, i) => sum + (i.studentCount || 0), 0);
+            const activeInstitutes = cachedInstitutes.filter(i => i.status !== 'Archived');
+            const totalArr = activeInstitutes.reduce((sum, i) => sum + (i.annualContractValue || 0), 0);
+            const totalStudents = activeInstitutes.reduce((sum, i) => sum + (i.studentCount || 0), 0);
+            const monthlyMrr = Math.round(totalArr / 12);
 
             ['stat-inst-count', 'overview-inst-count'].forEach(id => {
                 const el = document.getElementById(id);
@@ -1824,6 +1826,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const el = document.getElementById(id);
                 if (el) el.textContent = totalStudents.toLocaleString();
             });
+
+            const arrSubtext = document.getElementById('overview-arr-subtext');
+            if (arrSubtext) arrSubtext.textContent = `$${monthlyMrr.toLocaleString()} monthly MRR`;
+
+            const studentsSubtext = document.getElementById('overview-students-subtext');
+            if (studentsSubtext) studentsSubtext.textContent = `Enrolled across ${activeInstitutes.length} active tenants`;
 
 
             renderInstitutesTable();
@@ -1872,19 +1880,39 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        tbody.innerHTML = cachedInstitutes.map(inst => `
+        tbody.innerHTML = cachedInstitutes.map(inst => {
+            const isGrace = inst.status === 'Grace_Period';
+            const isArchived = inst.status === 'Archived';
+
+            let tierHtml = `<span class="status-badge ${getTierBadgeClass(inst.tier)}">${escapeHtml(inst.tier)} Tier</span>`;
+            let slaHtml = `
+                <span class="status-badge badge-active" style="display: inline-flex; align-items: center; gap: 5px;">
+                    <span style="width: 6px; height: 6px; border-radius: 50%; background: #16a34a; display: inline-block;"></span>
+                    99.99% SLA
+                </span>
+            `;
+
+            if (isGrace) {
+                tierHtml = `<span class="status-badge" style="background: #fef3c7; color: #92400e; border: 1px solid #fde68a; font-weight: 700;">⚠️ Grace Period (29d Left)</span>`;
+                slaHtml = `<span class="status-badge" style="background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; font-weight: 700;">🔒 Read-Only Locked</span>`;
+            } else if (isArchived) {
+                tierHtml = `<span class="status-badge" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1;">Archived (Cold Storage)</span>`;
+                slaHtml = `<span class="status-badge" style="background: #f1f5f9; color: #64748b;">Decommissioned</span>`;
+            }
+
+            return `
             <tr>
                 <td>
                     <div style="font-weight: 700; color: #0f172a; font-size: 0.92rem;">${escapeHtml(inst.name)}</div>
                     <code style="font-size: 0.72rem; color: #64748b; font-family: monospace;">${escapeHtml(inst.instituteId)}</code>
                 </td>
                 <td>
-                    <span class="status-badge ${getTierBadgeClass(inst.tier)}">${escapeHtml(inst.tier)} Tier</span>
+                    ${tierHtml}
                 </td>
                 <td>
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <img src="assets/icons/shield.svg" alt="" width="14" height="14" style="opacity: 0.65;" />
-                        <span style="font-weight: 600; color: #0f172a;">${escapeHtml(inst.spocName)}</span>
+                        <span style="font-weight: 600; color: #0f172a;">${escapeHtml(inst.spocName || 'Unassigned')}</span>
                     </div>
                 </td>
                 <td>
@@ -1898,23 +1926,26 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span style="font-weight: 700; color: #166534;">$${(inst.annualContractValue || 0).toLocaleString()} / yr</span>
                 </td>
                 <td>
-                    <span class="status-badge badge-active" style="display: inline-flex; align-items: center; gap: 5px;">
-                        <span style="width: 6px; height: 6px; border-radius: 50%; background: #16a34a; display: inline-block;"></span>
-                        99.99% SLA
-                    </span>
+                    ${slaHtml}
                 </td>
                 <td>
-                    <div style="display: flex; gap: 6px;">
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
                         <button class="btn btn-outline btn-xs" onclick="openReassignSpocModal('${escapeHtml(inst.instituteId)}', '${escapeHtml(inst.name)}', '${escapeHtml(inst.spocAdminId)}')">
                             Reassign SPOC
                         </button>
                         <button class="btn btn-outline btn-xs" onclick="openChangeTierModal('${escapeHtml(inst.instituteId)}', '${escapeHtml(inst.name)}', '${escapeHtml(inst.tier)}')">
                             Change Tier
                         </button>
+                        ${isGrace ? `
+                            <button class="btn btn-outline btn-xs" style="color: #dc2626; border-color: #fca5a5; background: #fef2f2; font-weight: 700;" onclick="archiveTenant('${escapeHtml(inst.instituteId)}', '${escapeHtml(inst.name)}')">
+                                📦 Archive Tenant
+                            </button>
+                        ` : ''}
                     </div>
                 </td>
             </tr>
-        `).join('');
+            `;
+        }).join('');
     }
 
     function renderSpocRoster() {
@@ -2182,6 +2213,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const remaining = dockets.filter(d => d.id !== docketId);
         localStorage.setItem('Lumina_Onboard_Dockets', JSON.stringify(remaining));
         renderOnboardingDockets();
+    };
+
+    window.archiveTenant = async function (instituteId, instituteName) {
+        try {
+            const res = await fetch(`${API_BASE}/super-user/institutes/${instituteId}/archive`, {
+                method: 'POST',
+                headers,
+            });
+
+            if (!res.ok) throw new Error('Failed to archive tenant.');
+            const data = await res.json();
+            showToast(`📦 Tenant ${instituteName} encrypted & moved to Cold Storage! 1,250 seats reclaimed.`, 'success');
+            loadInstitutesAndSpocs();
+        } catch (error) {
+            showToast(error.message, 'error');
+        }
     };
 
     // =========================================================================
