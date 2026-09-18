@@ -1,0 +1,76 @@
+.siteFooter {
+  background-color: #0d1b2a;
+  color: #ffffff;
+  padding: 40px 5% 24px;
+  margin-top: auto;
+  width: 100%;
+}
+
+.footerTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #1e293b;
+  padding-bottom: 24px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.logoGroup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.logoIcon {
+  width: 24px;
+  height: 24px;
+}
+
+.footerNav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+
+.footerNav a {
+  color: #cbd5e1;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+.footerNav a:hover {
+  color: #ffffff;
+}
+
+.footerBottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #64748b;
+  font-size: 0.85rem;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.socialLinks {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.socialLinks a {
+  color: #cbd5e1;
+  font-size: 0.875rem;
+  transition: color 0.15s ease;
+}
+
+.socialLinks a:hover {
+  color: #ffffff;
+}

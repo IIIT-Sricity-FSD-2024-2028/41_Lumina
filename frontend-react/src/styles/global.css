@@ -124,3 +124,8 @@ button {
   background-color: var(--status-rejected-bg);
   color: var(--status-rejected);
 }
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px;
+}
