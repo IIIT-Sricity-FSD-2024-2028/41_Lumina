@@ -1,0 +1,340 @@
+/* TopNavbar.module.css
+ *
+ * Consolidates the navbar styles from:
+ *   - faculty_common.css   (.navbar, .navbar-brand, .nav-link, .navbar-right,
+ *                           .navbar-bell, .navbar-user, .navbar-avatar, .navbar-signout,
+ *                           .notif-overlay, .notif-popup, .notif-header, .alert-item)
+ *   - Dean1_shared.css     (.navbar, .navbar__brand, .navbar__link, .navbar__link--active,
+ *                           .navbar__right, .navbar__bell)
+ *   - Dean2_styles.css     (header, .logo-container, nav.main-nav, .user-controls,
+ *                           .notification-wrapper, .user-info, .sign-out)
+ *   - student_navbar.html  (.navbar, .nav-left, .nav-right, .bell-wrapper)
+ *
+ * The design uses the Lumina brand design tokens from global.css.
+ */
+
+/* ── Container ── */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  height: 64px;
+  background-color: #ffffff;
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+  position: sticky;
+  top: 0;
+  z-index: 500;
+  box-shadow: 0 1px 6px rgba(15, 23, 42, 0.06);
+  flex-shrink: 0;
+}
+
+/* ── Left side ── */
+.navLeft {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  overflow: hidden;
+}
+
+/* ── Brand / Logo ── */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--primary-dark, #071932);
+  font-size: 1.15rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  letter-spacing: 0.2px;
+}
+
+.brand:hover {
+  opacity: 0.85;
+}
+
+.brandLogo {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+/* ── Navigation links ── */
+.navLinks {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 64px;
+}
+
+.navLink {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted, #64748b);
+  text-decoration: none;
+  border-bottom: 3px solid transparent;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+  white-space: nowrap;
+}
+
+.navLink:hover {
+  color: var(--text-main, #0f172a);
+  background-color: #f8fafc;
+}
+
+/* Active state — matches Dean1_shared.css .navbar__link--active and
+   Dean2_styles.css nav.main-nav a.active  */
+.navLinkActive {
+  color: var(--primary-dark, #071932);
+  font-weight: 700;
+  border-bottom: 3px solid var(--primary-dark, #071932);
+  background-color: transparent;
+}
+
+/* ── Right side ── */
+.navRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+/* ── Notification Bell ── */
+.bellWrapper {
+  position: relative;
+}
+
+.bellBtn {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted, #64748b);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.bellBtn:hover {
+  background-color: #f1f5f9;
+}
+
+.bellIcon {
+  width: 18px;
+  height: 18px;
+}
+
+/* Unread indicator dot — matches Dean1_shared.css .navbar__bell-dot */
+.bellDot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  background-color: #ef4444;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+}
+
+/* ── Notification popup ── */
+/* Click-outside overlay */
+.notifOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 498;
+}
+
+.notifPopup {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 320px;
+  background: #ffffff;
+  border-radius: var(--radius-lg, 12px);
+  border: 1px solid var(--border-color, #e2e8f0);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  z-index: 499;
+  overflow: hidden;
+}
+
+/* Matches .notif-header in faculty_common.css */
+.notifHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-main, #0f172a);
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+}
+
+.notifClose {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: var(--text-muted, #64748b);
+  line-height: 1;
+  padding: 0;
+}
+.notifClose:hover { color: var(--text-main, #0f172a); }
+
+.notifList {
+  list-style: none;
+  padding: 8px 0;
+  margin: 0;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.notifItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 16px;
+}
+.notifItem:hover { background-color: #f8fafc; }
+
+/* Matches .alert-dot in faculty_common.css */
+.notifDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+.dotGreen  { background-color: #16a34a; }
+.dotYellow { background-color: #ca8a04; }
+.dotRed    { background-color: #dc2626; }
+
+.notifText {
+  font-size: 0.8rem;
+  color: var(--text-main, #0f172a);
+  line-height: 1.4;
+}
+
+.notifTime {
+  font-size: 0.7rem;
+  color: var(--text-muted, #64748b);
+  margin-top: 2px;
+}
+
+.notifEmpty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 16px;
+  font-size: 0.85rem;
+  color: var(--text-muted, #64748b);
+}
+
+/* ── User Info ── */
+/* Matches .navbar-user in faculty_common.css and .user-info in Dean2_styles.css */
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-right: 12px;
+  margin-right: 4px;
+  border-right: 1px solid var(--border-color, #e2e8f0);
+}
+
+.userText {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+/* Matches .navbar-user-name in faculty_common.css */
+.userName {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-main, #0f172a);
+  white-space: nowrap;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Matches .navbar-user-dept in faculty_common.css */
+.userRole {
+  font-size: 0.7rem;
+  color: var(--text-muted, #64748b);
+  white-space: nowrap;
+}
+
+/* ── Logout ── */
+/* Matches .navbar-signout in faculty_common.css and .sign-out in Dean2_styles.css */
+.logoutBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-md, 8px);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted, #64748b);
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+}
+
+.logoutBtn:hover {
+  background-color: #fef2f2;
+  color: #ef4444;
+}
+
+.logoutText {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-main, #0f172a);
+}
+
+.logoutBtn:hover .logoutText {
+  color: #ef4444;
+}
+
+.logoutIcon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+/* ── Responsive: hide nav link text on small screens ── */
+@media (max-width: 900px) {
+  .navLink {
+    font-size: 0.8rem;
+    padding: 0 10px;
+  }
+  .logoutText {
+    display: none;
+  }
+  .userName {
+    max-width: 100px;
+  }
+}
+
+@media (max-width: 640px) {
+  .navbar {
+    padding: 0 16px;
+  }
+  .navLinks {
+    display: none;
+  }
+  .userText {
+    display: none;
+  }
+}

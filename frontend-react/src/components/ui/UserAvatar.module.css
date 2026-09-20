@@ -1,0 +1,36 @@
+/* UserAvatar.module.css
+   Matches legacy .navbar-avatar (faculty_common.css) and
+   .avatar patterns (Dean2_styles.css, super_user.css)
+*/
+
+.avatar {
+  border-radius: 50%;
+  background-color: var(--accent-blue, #4a90e2);
+  color: #ffffff;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  user-select: none;
+  letter-spacing: 0.5px;
+}
+
+/* Size variants */
+.sm {
+  width: 28px;
+  height: 28px;
+  font-size: 10px;
+}
+
+.md {
+  width: 36px;
+  height: 36px;
+  font-size: 13px;
+}
+
+.lg {
+  width: 44px;
+  height: 44px;
+  font-size: 16px;
+}
