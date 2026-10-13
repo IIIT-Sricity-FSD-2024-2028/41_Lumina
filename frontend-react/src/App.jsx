@@ -1,3 +1,4 @@
+
 import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { Toaster } from 'react-hot-toast';
@@ -6,11 +7,13 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 
-/* ── Deal1 (AD1) Pages ── */
+// AD1 (Assistant Dean 1) Pages
 import AD1Dashboard from './pages/ad1/AD1Dashboard';
 import CourseCatalog from './pages/ad1/CourseCatalog';
 import CourseSection from './pages/ad1/CourseSection';
 import Timetable from './pages/ad1/Timetable';
+
+// Dean 2 Pages
 import Dean2Home from './pages/ad2/Dean2Home';
 import Dean2Policies from './pages/ad2/Dean2Policies';
 import Dean2Enrollment from './pages/ad2/Dean2Enrollment';
@@ -19,25 +22,35 @@ import Dean2Analytics from './pages/ad2/Dean2Analytics';
 import Dean2Gradesheets from './pages/ad2/Dean2Gradesheets';
 import Dean2GradesheetDetail from './pages/ad2/Dean2GradesheetDetail';
 
+// Faculty Portal Pages
+import FacultyLayout from './pages/faculty/FacultyLayout';
+import FacultyHome from './pages/faculty/FacultyHome';
+import FacultyCourses from './pages/faculty/FacultyCourses';
+import FacultyGrades from './pages/faculty/FacultyGrades';
+import FacultyRosters from './pages/faculty/FacultyRosters';
+import FacultyAnnouncements from './pages/faculty/FacultyAnnouncements';
+
 export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        {/* Global Toast notifications */}
         <Toaster position="top-right" />
 
-        {/* Clean Route Table */}
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
 
-          {/* Deal1 (AD1) Routes */}
+          {/* AD1 Routes */}
           <Route path="/ad1/dashboard" element={<AD1Dashboard />} />
           <Route path="/ad1/course-catalog" element={<CourseCatalog />} />
           <Route path="/ad1/course-section" element={<CourseSection />} />
           <Route path="/ad1/timetable" element={<Timetable />} />
-          <Route path="/dean1" element={<Navigate to="/ad1/dashboard" replace />} />
-          {/* Dean 2 (Assistant Dean 2) Routes */}
+          <Route
+            path="/dean1"
+            element={<Navigate to="/ad1/dashboard" replace />}
+          />
+
+          {/* Dean 2 Routes */}
           <Route
             path="/ad2"
             element={
@@ -103,18 +116,61 @@ export default function App() {
             }
           />
 
-          {/* Alias /dean2 to /ad2 */}
-          <Route path="/dean2" element={<Navigate to="/ad2" replace />} />
-          <Route path="/dean2/*" element={<Navigate to="/ad2" replace />} />
+          {/* Dean 2 Aliases */}
+          <Route
+            path="/dean2"
+            element={<Navigate to="/ad2" replace />}
+          />
+          <Route
+            path="/dean2/*"
+            element={<Navigate to="/ad2" replace />}
+          />
 
-          {/* Unauthorized page */}
+          {/* Faculty Portal Routes */}
+          <Route
+            path="/faculty"
+            element={
+              <ProtectedRoute
+                allowedRoles={[
+                  'Faculty',
+                  'Dean',
+                  'Admin',
+                  'Super_User',
+                  'Assistant_Dean_1',
+                  'Assistant_Dean_2',
+                ]}
+              >
+                <FacultyLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<FacultyHome />} />
+            <Route path="courses" element={<FacultyCourses />} />
+            <Route path="grades" element={<FacultyGrades />} />
+            <Route path="grades/:courseId" element={<FacultyGrades />} />
+            <Route path="roster" element={<FacultyRosters />} />
+            <Route path="roster/:courseId" element={<FacultyRosters />} />
+            <Route
+              path="announcements"
+              element={<FacultyAnnouncements />}
+            />
+          </Route>
+
+          {/* Unauthorized Page */}
           <Route
             path="/unauthorized"
             element={
               <div style={{ padding: '40px', textAlign: 'center' }}>
                 <h2>403 - Unauthorized Access</h2>
                 <p>You do not have permission to view this page.</p>
-                <Link to="/" style={{ color: 'var(--accent-blue)', marginTop: '8px', display: 'inline-block' }}>
+                <Link
+                  to="/"
+                  style={{
+                    color: 'var(--accent-blue)',
+                    marginTop: '8px',
+                    display: 'inline-block',
+                  }}
+                >
                   Return to Home
                 </Link>
               </div>
@@ -127,7 +183,14 @@ export default function App() {
             element={
               <div style={{ padding: '40px', textAlign: 'center' }}>
                 <h2>404 - Page Not Found</h2>
-                <Link to="/" style={{ color: 'var(--accent-blue)', marginTop: '8px', display: 'inline-block' }}>
+                <Link
+                  to="/"
+                  style={{
+                    color: 'var(--accent-blue)',
+                    marginTop: '8px',
+                    display: 'inline-block',
+                  }}
+                >
                   Return to Home
                 </Link>
               </div>

@@ -1,0 +1,359 @@
+.container {
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 32px 24px 64px 24px;
+}
+
+/* Page Header */
+.pageHeader {
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.pageTitle {
+  font-size: 1.85rem;
+  font-weight: 700;
+  color: var(--text-main, #0f172a);
+  letter-spacing: -0.025em;
+  margin-bottom: 4px;
+}
+
+.pageSub {
+  font-size: 0.95rem;
+  color: var(--text-muted, #64748b);
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Control Toolbar */
+.toolbar {
+  background: var(--surface-white, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: var(--radius-lg, 12px);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.toolbarLeft {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.courseSelect {
+  padding: 9px 14px;
+  font-size: 0.9rem;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: var(--radius-md, 8px);
+  background: #f8fafc;
+  color: var(--text-main, #0f172a);
+  font-weight: 600;
+  outline: none;
+  min-width: 240px;
+  cursor: pointer;
+}
+
+.courseSelect:focus {
+  border-color: var(--accent-blue, #4a90e2);
+  background: #ffffff;
+}
+
+.searchWrapper {
+  position: relative;
+  min-width: 240px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 9px 12px 9px 36px;
+  font-size: 0.85rem;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: var(--radius-md, 8px);
+  background: #f8fafc;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.searchInput:focus {
+  background: #ffffff;
+  border-color: var(--accent-blue, #4a90e2);
+}
+
+/* Distribution / Stats Summary Bar */
+.statsBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface-white, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: var(--radius-lg, 12px);
+  padding: 16px 22px;
+  margin-bottom: 24px;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.summaryMetrics {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.metricItem {
+  display: flex;
+  flex-direction: column;
+}
+
+.metricLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted, #64748b);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.metricValue {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--text-main, #0f172a);
+}
+
+.gradeDist {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.distBadge {
+  padding: 4px 10px;
+  border-radius: var(--radius-sm, 6px);
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Spreadsheet Table Container */
+.tableContainer {
+  background: var(--surface-white, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: var(--radius-lg, 12px);
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.gradeTable {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.88rem;
+}
+
+.gradeTable th {
+  background: #f8fafc;
+  padding: 14px 18px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted, #64748b);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+  white-space: nowrap;
+}
+
+.gradeTable td {
+  padding: 14px 18px;
+  border-bottom: 1px solid #f1f5f9;
+  color: var(--text-main, #0f172a);
+  vertical-align: middle;
+}
+
+.gradeTable tr:hover td {
+  background-color: #fafbfc;
+}
+
+.gradeTable tfoot td {
+  background: #f8fafc;
+  font-weight: 700;
+  border-top: 2px solid var(--border-color, #e2e8f0);
+  border-bottom: none;
+}
+
+.scoreInput {
+  width: 80px;
+  padding: 6px 10px;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-main, #0f172a);
+  border: 1.5px solid #cbd5e1;
+  border-radius: var(--radius-sm, 6px);
+  background: #ffffff;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.scoreInput:focus {
+  border-color: var(--accent-blue, #4a90e2);
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15);
+}
+
+.scoreInput:disabled {
+  background: #f1f5f9;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.totalScore {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text-main, #0f172a);
+  text-align: center;
+  display: block;
+}
+
+.gradeBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+
+.statusPillDraft {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.statusPillSubmitted {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: #ecfdf5;
+  color: #059669;
+}
+
+/* Footer Action Bar */
+.bottomActionBar {
+  margin-top: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.noticeText {
+  font-size: 0.85rem;
+  color: var(--text-muted, #64748b);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.actionButtonGroup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.exportBtn {
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  padding: 10px 18px;
+  border-radius: var(--radius-md, 8px);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-main, #0f172a);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+}
+
+.exportBtn:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.saveDraftBtn {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  padding: 10px 20px;
+  border-radius: var(--radius-md, 8px);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-main, #0f172a);
+  transition: all 0.15s ease;
+}
+
+.saveDraftBtn:hover {
+  background: #e2e8f0;
+}
+
+.submitGradesBtn {
+  background: var(--status-approved, #10b981);
+  border: none;
+  padding: 10px 22px;
+  border-radius: var(--radius-md, 8px);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+}
+
+.submitGradesBtn:hover {
+  background: #059669;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+}
+
+.emptyState {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--text-muted, #64748b);
+}
