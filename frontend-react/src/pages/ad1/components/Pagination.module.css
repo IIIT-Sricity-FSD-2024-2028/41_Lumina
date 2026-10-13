@@ -1,0 +1,45 @@
+/* Pagination.module.css */
+
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 24px;
+  border-top: 1px solid #f3f4f6;
+  margin-top: 16px;
+}
+.info {
+  font-size: .85rem;
+  color: #3b82f6;
+  font-weight: 500;
+}
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.btn {
+  padding: 6px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  font-size: .85rem;
+  font-weight: 500;
+  color: #4b5563;
+  cursor: pointer;
+  transition: all .2s ease;
+  font-family: inherit;
+}
+.btn:hover:not(.active):not(:disabled) {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+.active {
+  background: #0f1b2d;
+  color: #fff;
+  border-color: #0f1b2d;
+}
+.btn:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}

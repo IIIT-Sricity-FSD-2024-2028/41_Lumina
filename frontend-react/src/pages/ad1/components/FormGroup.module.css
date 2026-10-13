@@ -1,0 +1,25 @@
+/* FormGroup.module.css */
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: .8rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.error {
+  font-size: .75rem;
+  color: #ef4444;
+  display: block;
+}
+
+/* When invalid, tint child inputs/selects */
+.invalid input,
+.invalid select {
+  border-color: #ef4444;
+}
