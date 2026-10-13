@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/auth.service';
 import Footer from '../components/Footer';
@@ -9,6 +9,13 @@ export default function Landing() {
   const { isAuthenticated, role } = useAuth();
   const [billingCycle, setBillingCycle] = useState('monthly'); // 'monthly' or 'annual'
 
+  const dashboardRoute = authService.getDashboardRoute(role);
+
+  // If already authenticated, redirect straight to role dashboard
+  if (isAuthenticated) {
+    return <Navigate to={dashboardRoute} replace />;
+  }
+
   // Pricing calculation (20% discount on annual)
   const isAnnual = billingCycle === 'annual';
   const prices = {
@@ -16,8 +23,6 @@ export default function Landing() {
     campus: isAnnual ? '3,199' : '3,999',
     enterprise: isAnnual ? '7,199' : '8,999',
   };
-
-  const dashboardRoute = authService.getDashboardRoute(role);
 
   return (
     <div className={styles.pageWrapper}>

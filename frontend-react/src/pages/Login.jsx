@@ -21,8 +21,8 @@ export default function Login() {
     setLoading(true);
 
     try {
-      // Call the backend via authService
-      const sessionData = await authService.login(userId, password);
+      // Call the backend via authService (trim to prevent accidental spaces)
+      const sessionData = await authService.login(userId.trim(), password);
 
       // Save user to global AuthContext (and localStorage)
       login(sessionData);
