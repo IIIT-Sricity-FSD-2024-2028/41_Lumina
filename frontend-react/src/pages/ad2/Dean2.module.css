@@ -1,0 +1,1372 @@
+/* =========================================
+   Dean2.module.css
+   Converted from front-end/css/Dean2_styles.css
+   All class names are camelCase for CSS Modules
+   ========================================= */
+
+/* ── Variables (local to this module) ── */
+.root {
+  --d2-primary: #1C274C;
+  --d2-primary-hover: #131b36;
+  --d2-bg: #F8FAFC;
+  --d2-card: #FFFFFF;
+  --d2-text-dark: #1e293b;
+  --d2-text-muted: #475569;
+  --d2-text-light: #64748b;
+  --d2-border: #E2E8F0;
+  --d2-accent-red: #d32f2f;
+  --d2-font: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* =========================================
+   LAYOUT & CONTAINER
+   ========================================= */
+.container {
+  padding: 2.5rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.pageHeader {
+  margin-bottom: 1.75rem;
+}
+
+.pageHeader h1 {
+  font-size: 1.8rem;
+  color: #1e293b;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.pageHeader p {
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+.pageHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.75rem;
+}
+
+.pageHeaderRow h1 {
+  font-size: 1.8rem;
+  color: #1e293b;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.pageHeaderRow p {
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+/* =========================================
+   CARDS
+   ========================================= */
+.card {
+  background: #FFFFFF;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  margin-bottom: 1.5rem;
+}
+
+.card:last-child {
+  margin-bottom: 0;
+}
+
+/* =========================================
+   STATUS CARDS — Dashboard top row
+   ========================================= */
+.grid6 {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.statusCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 0;
+  background: #FFFFFF;
+  border-radius: 12px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.statusCard .icon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.statusInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.statusInfo .label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.statusInfo .value {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-top: 2px;
+}
+
+/* =========================================
+   METRICS GRID — Dashboard second row
+   ========================================= */
+.grid3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem 2.5rem;
+}
+
+.cardTitle {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cardValue {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #1e293b;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.trend {
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.trendPositive {
+  color: #059669;
+}
+
+.subtext {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-top: 0.5rem;
+}
+
+.actionLink {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #d32f2f;
+  text-decoration: none;
+}
+
+.flexBetween {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* =========================================
+   PROGRESS BAR
+   ========================================= */
+.progressBg {
+  background: #E2E8F0;
+  border-radius: 99px;
+  height: 10px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+  flex: 1;
+}
+
+.progressFill {
+  height: 100%;
+  background: #1C274C;
+  border-radius: 99px;
+  transition: width 0.4s ease;
+}
+
+.progressRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* =========================================
+   PRIMARY ACTION CARD (Dashboard quick action)
+   ========================================= */
+.primaryAction {
+  background: #1C274C;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transition: background 0.2s;
+  margin-bottom: 0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid #1C274C;
+}
+
+.primaryAction:hover {
+  background: #131b36;
+}
+
+.actionLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.6);
+  margin-bottom: 0.5rem;
+}
+
+.actionTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: white;
+}
+
+/* =========================================
+   SECTION HEADING
+   ========================================= */
+.sectionHeading {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1C274C;
+  margin-bottom: 1.25rem;
+}
+
+/* =========================================
+   TABLE STYLING
+   ========================================= */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  text-align: left;
+  font-size: 0.75rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  padding: 0.75rem 0.75rem;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+.table td {
+  padding: 1rem 0.75rem;
+  border-bottom: 1px solid #E2E8F0;
+  font-size: 0.9rem;
+  color: #1e293b;
+  vertical-align: middle;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table tbody tr:hover td {
+  background: #FAFBFF;
+}
+
+.actionIcons span {
+  cursor: pointer;
+  margin-right: 10px;
+  font-size: 1rem;
+  opacity: 0.65;
+  transition: opacity 0.2s;
+}
+
+.actionIcons span:hover {
+  opacity: 1;
+}
+
+/* =========================================
+   BADGES
+   ========================================= */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.badgeActive    { background: #D1FAE5; color: #059669; }
+.badgeUpcoming  { background: #DBEAFE; color: #2563EB; }
+.badgeCompleted { background: #F1F5F9; color: #64748b; }
+.badgePaused    { background: #FEF3C7; color: #92400E; }
+.badgeClosed    { background: #FEE2E2; color: #991B1B; }
+.badgePending   { background: #FEF3C7; color: #92400E; }
+.badgeApproved  { background: #D1FAE5; color: #059669; }
+.badgeRejected  { background: #FEE2E2; color: #991B1B; }
+
+/* =========================================
+   BUTTONS
+   ========================================= */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0.6rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  border: 1px solid transparent;
+  font-family: inherit;
+  transition: all 0.18s;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.btnSm {
+  padding: 0.38rem 0.875rem;
+  font-size: 0.8rem;
+}
+
+.btnPrimary {
+  background: #1C274C;
+  color: white;
+  border-color: #1C274C;
+}
+.btnPrimary:hover { background: #131b36; border-color: #131b36; }
+
+.btnWarning {
+  background: #F59E0B;
+  color: white;
+  border-color: #F59E0B;
+}
+.btnWarning:hover { filter: brightness(0.92); }
+
+.btnDanger {
+  background: #EF4444;
+  color: white;
+  border-color: #EF4444;
+}
+.btnDanger:hover { filter: brightness(0.92); }
+
+.btnDangerOutline {
+  background: white;
+  border-color: #FCA5A5;
+  color: #DC2626;
+}
+.btnDangerOutline:hover { background: #FEF2F2; }
+
+.btnLight {
+  background: #F1F5F9;
+  color: #1e293b;
+  border-color: #E2E8F0;
+}
+.btnLight:hover { background: #E2E8F0; }
+
+.btnOutline {
+  background: white;
+  border-color: #E2E8F0;
+  color: #1e293b;
+}
+.btnOutline:hover { background: #F8FAFC; }
+
+.btnGreen {
+  background: #059669;
+  color: white;
+  border-color: #059669;
+}
+.btnGreen:hover { background: #047857; }
+
+.btnGhost {
+  background: transparent;
+  border-color: transparent;
+  color: #475569;
+  font-weight: 600;
+}
+.btnGhost:hover { color: #1e293b; }
+
+/* =========================================
+   FORMS
+   ========================================= */
+.formGroup {
+  margin-bottom: 1.25rem;
+}
+
+.formGroup label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 0.45rem;
+}
+
+.formControl {
+  width: 100%;
+  padding: 0.68rem 0.875rem;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.875rem;
+  color: #1e293b;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background-color: white;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.formControlSelect {
+  width: 100%;
+  padding: 0.68rem 2.25rem 0.68rem 0.875rem;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.875rem;
+  color: #1e293b;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background-color: white;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+
+.formControl:focus,
+.formControlSelect:focus {
+  outline: none;
+  border-color: #1C274C;
+  box-shadow: 0 0 0 3px rgba(28,39,76,0.07);
+}
+
+.formControl:disabled,
+.formControlSelect:disabled {
+  background: #F8FAFC;
+  color: #64748b;
+  cursor: not-allowed;
+}
+
+/* Toggle Switch */
+.toggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 0;
+  margin-bottom: 0.75rem;
+  font-size: 0.875rem;
+  color: #1e293b;
+  font-weight: 500;
+}
+
+.toggleRow span {
+  flex: 1;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: #CBD5E1;
+  transition: .3s;
+  border-radius: 24px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .3s;
+  border-radius: 50%;
+}
+
+.switch input:checked + .slider {
+  background-color: #1C274C;
+}
+
+.switch input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+.switch input:disabled + .slider {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* =========================================
+   POLICIES PAGE
+   ========================================= */
+.policiesLayout {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  align-items: start;
+}
+
+.policiesMain {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.policiesMain .card {
+  margin-bottom: 0;
+}
+
+.policySectionTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1C274C;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 1.25rem;
+}
+
+.twoCol {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+.infoBanner {
+  background: #DBEAFE;
+  border: 1px solid #BFDBFE;
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #2563EB;
+  font-size: 0.85rem;
+  display: none;
+  margin-bottom: 1rem;
+  align-items: center;
+  gap: 8px;
+}
+
+.infoBannerShow {
+  display: flex;
+}
+
+.policyStatusBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-radius: 12px;
+  border: 1px solid #E2E8F0;
+  margin-bottom: 1.5rem;
+  background: white;
+}
+
+.statusLeft {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.statusIcon {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.statusBannerActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.changeLog {
+  border-left: 2px solid #E2E8F0;
+  margin-left: 8px;
+  padding-left: 16px;
+  position: relative;
+}
+
+.logEntry {
+  margin-bottom: 1.25rem;
+  position: relative;
+}
+
+.logDot {
+  position: absolute;
+  left: -24px;
+  top: 4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #CBD5E1;
+  border: 2px solid white;
+}
+
+.logDotLatest {
+  background: #1C274C;
+}
+
+.logMsg {
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 2px;
+}
+
+.logMeta {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+/* =========================================
+   ENROLLMENT PAGE
+   ========================================= */
+.enrollmentStatusCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  background: #FFFFFF;
+  border-radius: 12px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  margin-bottom: 1.5rem;
+}
+
+.enrollmentPhaseName {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #1C274C;
+  margin-bottom: 0.4rem;
+}
+
+.enrollmentMeta {
+  display: flex;
+  gap: 1.25rem;
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.enrollmentMeta span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.enrollmentActions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.windowHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.windowDates {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.windowButtons {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.phasesHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.phasesTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1C274C;
+}
+
+/* =========================================
+   MODAL
+   ========================================= */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15,23,42,0.45);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+}
+
+.modalBox {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 520px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  border: 1px solid #E2E8F0;
+}
+
+.modalTitle {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #1C274C;
+  margin-bottom: 1.5rem;
+}
+
+.modalActions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.75rem;
+}
+
+/* =========================================
+   OVERRIDES PAGE
+   ========================================= */
+.overridesLayout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.filtersBar {
+  background: white;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.filtersBar .formGroup {
+  margin: 0;
+}
+
+.filterSearchWrap {
+  position: relative;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b;
+  font-size: 0.9rem;
+  pointer-events: none;
+}
+
+.filterSearchWrap input {
+  padding-left: 34px;
+}
+
+.overridesTableCard {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #E2E8F0;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  margin-bottom: 1.25rem;
+}
+
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.metricCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 1.1rem 1.25rem;
+  border-radius: 12px;
+  border: 1px solid;
+}
+
+.metricIcon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.metricLabel {
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.metricValue {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #1e293b;
+  line-height: 1;
+}
+
+.bulletList {
+  list-style: none;
+  padding: 0;
+}
+
+.bulletList li {
+  font-size: 0.875rem;
+  color: #475569;
+  padding: 0.4rem 0 0.4rem 1.2rem;
+  position: relative;
+}
+
+.bulletList li::before {
+  content: '●';
+  position: absolute;
+  left: 0;
+  color: #1C274C;
+  font-size: 0.5rem;
+  top: 0.65rem;
+}
+
+.bulletList li strong {
+  color: #1e293b;
+}
+
+.overrideSidebar {
+  position: sticky;
+  top: 90px;
+}
+
+.sidebarCard {
+  background: white;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  overflow: hidden;
+}
+
+.sidebarEmpty {
+  padding: 3rem 1.5rem;
+  text-align: center;
+  color: #475569;
+}
+
+.emptyIcon {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+  opacity: 0.5;
+}
+
+.sidebarEmpty p:first-of-type {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #1e293b;
+  margin-bottom: 0.4rem;
+}
+
+.sidebarEmpty p:last-of-type {
+  font-size: 0.83rem;
+  line-height: 1.5;
+}
+
+.reviewHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #E2E8F0;
+  background: #FAFBFF;
+}
+
+.reviewHeader h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1C274C;
+}
+
+.sidebarSectionLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #64748b;
+  padding: 1rem 1.5rem 0.5rem;
+}
+
+.studentCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0.75rem 1.5rem 1rem;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+.studentAvatar {
+  width: 40px;
+  height: 40px;
+  background: #F0F4FF;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  border: 2px solid #E0E7FF;
+}
+
+.reqDetailItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 0.75rem 1.5rem;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+.reqDetailIcon {
+  font-size: 1rem;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.reqDetailLabel {
+  font-size: 0.78rem;
+  color: #64748b;
+  margin-bottom: 2px;
+}
+
+.reqDetailValue {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.sidebarActions {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.sidebarActions .btn {
+  width: 100%;
+  justify-content: center;
+  padding: 0.7rem;
+}
+
+.resolvedBanner {
+  margin: 0 1.5rem 1.5rem;
+  padding: 0.875rem 1rem;
+  border-radius: 8px;
+  border: 1px solid;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+/* =========================================
+   ANALYTICS PAGE
+   ========================================= */
+.analyticsYearLabel {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 2px;
+}
+
+.analyticsYearSub {
+  font-size: 0.72rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.6rem;
+}
+
+.analyticsPct {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #1e293b;
+}
+
+.utilizationHigh { color: #059669; font-weight: 700; }
+.utilizationMed  { color: #2563EB; font-weight: 700; }
+.utilizationLow  { color: #D97706; font-weight: 700; }
+.utilizationCrit { color: #DC2626; font-weight: 700; }
+
+.criticalBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #FFF7ED;
+  border: 1px solid #FED7AA;
+  color: #C2410C;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+/* =========================================
+   GRADE SHEETS — TABS NAV
+   ========================================= */
+.tabsNav {
+  display: flex;
+  gap: 0;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #E2E8F0;
+}
+
+.tabLink {
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #64748b;
+  padding: 0.65rem 0;
+  margin-right: 2rem;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.2s, border-color 0.2s;
+  white-space: nowrap;
+}
+
+.tabLink:hover {
+  color: #1C274C;
+}
+
+.tabLinkActive {
+  color: #1C274C;
+  border-bottom: 2px solid #1C274C;
+  font-weight: 700;
+}
+
+/* =========================================
+   GRADE SHEETS — SEARCH INPUT
+   ========================================= */
+.gsSearchWrap {
+  position: relative;
+  width: 220px;
+}
+
+.gsSearchIcon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.85rem;
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.gsSearchInput {
+  width: 100%;
+  padding: 0.55rem 0.875rem 0.55rem 2rem;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.875rem;
+  color: #1e293b;
+  background: #F8FAFC;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.gsSearchInput:focus {
+  outline: none;
+  border-color: #1C274C;
+  box-shadow: 0 0 0 3px rgba(28,39,76,0.07);
+  background: white;
+}
+
+/* =========================================
+   GRADE SHEETS — ACTION BUTTONS
+   ========================================= */
+.btnViewDark {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1.1rem;
+  background: #1C274C;
+  color: white;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.18s;
+  white-space: nowrap;
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+}
+
+.btnViewDark:hover {
+  background: #131b36;
+}
+
+/* =========================================
+   GRADE SHEETS DETAIL — DIMMED LIST CARD
+   ========================================= */
+.gsListDimmed {
+  opacity: 0.55;
+  pointer-events: none;
+  user-select: none;
+  margin-bottom: 0;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom: none;
+}
+
+/* =========================================
+   GRADE SHEETS DETAIL — DETAIL HEADER ROW
+   ========================================= */
+.gsDetailHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: white;
+  border: 1px solid #E2E8F0;
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  gap: 1rem;
+}
+
+.gsBackBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid #E2E8F0;
+  background: white;
+  color: #1e293b;
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 2px;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s;
+  font-family: inherit;
+}
+
+.gsBackBtn:hover {
+  background: #F8FAFC;
+  border-color: #cbd5e1;
+}
+
+.gsDetailTitle {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #1C274C;
+  margin-bottom: 0.3rem;
+  line-height: 1.2;
+}
+
+.gsDetailMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #475569;
+  font-size: 0.875rem;
+  flex-wrap: wrap;
+}
+
+.badgeAwaiting {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #FDE68A;
+  white-space: nowrap;
+}
+
+/* =========================================
+   GRADE SHEETS DETAIL — MAIN CARD
+   ========================================= */
+.gsDetailCard {
+  border-radius: 16px;
+  padding: 2rem;
+  background: white;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.gsInnerTitle {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin-bottom: 0.35rem;
+}
+
+.gsInnerMeta {
+  color: #475569;
+  font-size: 0.875rem;
+  margin-bottom: 2rem;
+}
+
+/* =========================================
+   GRADE BADGES
+   ========================================= */
+.gradeBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.gradeA    { background: #D1FAE5; color: #065F46; border: 1.5px solid #6EE7B7; }
+.gradeBPlus { background: #DBEAFE; color: #1E40AF; border: 1.5px solid #93C5FD; }
+.gradeB    { background: #EDE9FE; color: #4C1D95; border: 1.5px solid #C4B5FD; }
+.gradeC    { background: #FEF3C7; color: #92400E; border: 1.5px solid #FDE68A; }
+.gradeD    { background: #FEE2E2; color: #991B1B; border: 1.5px solid #FCA5A5; }
+.gradeDash { background: #F1F5F9; color: #64748b; border: 1.5px solid #E2E8F0; }
+
+/* =========================================
+   GRADE SHEETS DETAIL — CARD FOOTER
+   ========================================= */
+.gsCardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 1.25rem;
+  margin-top: 0.5rem;
+  border-top: 1px solid #E2E8F0;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.gsPagination {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.875rem;
+  color: #475569;
+  font-weight: 500;
+}
+
+.gsPageBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: 1px solid #E2E8F0;
+  background: white;
+  color: #1e293b;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s;
+  font-family: inherit;
+}
+
+.gsPageBtn:hover {
+  background: #F8FAFC;
+  border-color: #cbd5e1;
+}
+
+/* =========================================
+   DASHBOARD UG TABLE
+   ========================================= */
+.ugTableCard {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+/* =========================================
+   RESPONSIVE
+   ========================================= */
+@media (max-width: 1100px) {
+  .grid6 { grid-template-columns: repeat(3, 1fr); }
+  .overridesLayout { grid-template-columns: 1fr 300px; }
+}
+
+@media (max-width: 900px) {
+  .overridesLayout { grid-template-columns: 1fr; }
+  .overrideSidebar { position: static; }
+}
+
+@media (max-width: 768px) {
+  .grid6 { grid-template-columns: repeat(2, 1fr); }
+  .grid3 { grid-template-columns: 1fr; }
+  .grid2 { grid-template-columns: 1fr; }
+  .policiesLayout { grid-template-columns: 1fr; }
+  .twoCol { grid-template-columns: 1fr; }
+  .filtersBar { flex-direction: column; }
+  .metricsGrid { grid-template-columns: 1fr; }
+  .gsDetailHeaderRow { flex-direction: column; }
+  .gsCardFooter { flex-direction: column; align-items: flex-start; }
+  .gsSearchWrap { width: 100%; }
+  .gsDetailTitle { font-size: 1.1rem; }
+}
