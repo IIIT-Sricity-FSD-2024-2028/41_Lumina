@@ -1,0 +1,460 @@
+.container {
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 32px 24px 64px 24px;
+}
+
+/* Welcome Block */
+.welcomeBlock {
+  margin-bottom: 28px;
+}
+
+.welcomeTitle {
+  font-size: 1.85rem;
+  font-weight: 700;
+  color: var(--text-main, #0f172a);
+  letter-spacing: -0.025em;
+  margin-bottom: 6px;
+}
+
+.welcomeSub {
+  font-size: 0.95rem;
+  color: var(--text-muted, #64748b);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.deptBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 10px;
+  background: rgba(74, 144, 226, 0.1);
+  color: var(--accent-blue, #4a90e2);
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* Stats Row */
+.statsRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.statCard {
+  background: var(--surface-white, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: var(--radius-lg, 12px);
+  padding: 22px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.statCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.06);
+}
+
+.statLabel {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-muted, #64748b);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.statValue {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-main, #0f172a);
+  line-height: 1.1;
+}
+
+.statIconBox {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md, 8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.statIconBlue {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.statIconEmerald {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.statIconAmber {
+  background: #fffbeb;
+  color: #d97706;
+}
+
+/* Two-column layout */
+.dashGrid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 28px;
+}
+
+@media (max-width: 980px) {
+  .dashGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.leftCol {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.rightCol {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* Section styling */
+.sectionCard {
+  background: var(--surface-white, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: var(--radius-lg, 12px);
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.sectionTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-main, #0f172a);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sectionTitleIcon {
+  color: var(--accent-blue, #4a90e2);
+}
+
+.viewAllLink {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent-blue, #4a90e2);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.15s ease;
+}
+
+.viewAllLink:hover {
+  color: var(--accent-blue-hover, #357abd);
+  text-decoration: underline;
+}
+
+/* Class List Cards */
+.classList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.classCard {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-md, 8px);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  transition: all 0.2s ease;
+}
+
+.classCard:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+}
+
+.classTimeBox {
+  background: var(--surface-white, #ffffff);
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-sm, 6px);
+  min-width: 76px;
+  padding: 8px 10px;
+  text-align: center;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.timeHour {
+  display: block;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-main, #0f172a);
+  line-height: 1.1;
+}
+
+.timeAmpm {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted, #64748b);
+  letter-spacing: 0.05em;
+}
+
+.classDetails {
+  flex: 1;
+}
+
+.className {
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: var(--text-main, #0f172a);
+  margin-bottom: 4px;
+}
+
+.classMeta {
+  font-size: 0.82rem;
+  color: var(--text-muted, #64748b);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.metaBadge {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.upcomingBadge {
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  background: #ecfdf5;
+  color: #059669;
+}
+
+/* Mini Courses Grid */
+.miniCoursesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.miniCourseCard {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-md, 8px);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+  transition: all 0.2s ease;
+}
+
+.miniCourseCard:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.miniCourseSem {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--accent-blue, #4a90e2);
+  letter-spacing: 0.05em;
+}
+
+.miniCourseTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-main, #0f172a);
+  line-height: 1.3;
+}
+
+.miniCourseMeta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 0.82rem;
+  color: var(--text-muted, #64748b);
+}
+
+.miniCourseActions {
+  display: flex;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.miniBtn {
+  flex: 1;
+  padding: 6px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm, 6px);
+  text-align: center;
+  transition: all 0.15s ease;
+}
+
+.miniBtnOutline {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: var(--text-main, #0f172a);
+}
+
+.miniBtnOutline:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.miniBtnPrimary {
+  background: var(--primary-dark, #071932);
+  border: 1px solid transparent;
+  color: #ffffff;
+}
+
+.miniBtnPrimary:hover {
+  background: var(--primary-hover, #0a254a);
+}
+
+/* Quick Roster Widget */
+.widgetCard {
+  background: var(--surface-white, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: var(--radius-lg, 12px);
+  padding: 22px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.widgetTitle {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main, #0f172a);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.rosterSearch {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: var(--radius-md, 8px);
+  background: #f8fafc;
+  outline: none;
+  transition: all 0.2s ease;
+  margin-bottom: 14px;
+}
+
+.rosterSearch:focus {
+  background: #ffffff;
+  border-color: var(--accent-blue, #4a90e2);
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.12);
+}
+
+.rosterList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.rosterRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm, 6px);
+  transition: background 0.15s ease;
+  cursor: pointer;
+}
+
+.rosterRow:hover {
+  background: #f1f5f9;
+}
+
+.rosterLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.rAvatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.78rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.rInfo {
+  min-width: 0;
+}
+
+.rName {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--text-main, #0f172a);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rCourse {
+  font-size: 0.74rem;
+  color: var(--text-muted, #64748b);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rArrow {
+  font-size: 1rem;
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+.emptyRoster {
+  padding: 24px 12px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-muted, #64748b);
+}

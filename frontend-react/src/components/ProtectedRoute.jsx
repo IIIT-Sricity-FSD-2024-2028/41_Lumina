@@ -10,7 +10,7 @@ import { useAuth } from '../context/AuthContext';
  * </ProtectedRoute>
  */
 export default function ProtectedRoute({ children, allowedRoles }) {
-  const { user, isAuthenticated, role } = useAuth();
+  const { isAuthenticated, role } = useAuth();
   const location = useLocation();
 
   // 1. Not logged in at all? Redirect to /login

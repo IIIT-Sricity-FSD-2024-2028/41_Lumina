@@ -53,4 +53,18 @@ export const policiesService = {
     const res = await api.delete(`/enrollment-phases/${id}`);
     return res.data;
   },
+
+  /**
+   * Update a specific policy or enrollment window setting
+   * @param {string} key
+   * @param {*} value
+   * @param {string} [logMessage]
+   */
+  async updateSetting(key, value, logMessage) {
+    const res = await api.put('/policies', {
+      [key]: value,
+      ...(logMessage ? { logMessage } : {}),
+    });
+    return res.data;
+  },
 };
