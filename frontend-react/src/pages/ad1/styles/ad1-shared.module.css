@@ -1,0 +1,149 @@
+/* ad1-shared.module.css — Shared tokens for all Deal1 pages */
+
+/* ── Buttons ── */
+.btnPrimary {
+  background: #0f1b2d;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: .875rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all .2s ease;
+  font-family: inherit;
+}
+.btnPrimary:hover { background: #1a2b45; box-shadow: 0 4px 6px -1px rgba(0,0,0,.07); }
+.btnPrimary:disabled { opacity: .45; cursor: not-allowed; }
+
+.btnSecondary {
+  background: transparent;
+  color: #4b5563;
+  border: 1px solid #d1d5db;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: .875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s ease;
+  font-family: inherit;
+}
+.btnSecondary:hover { background: #f9fafb; border-color: #9ca3af; }
+
+.btnDanger {
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: .875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s ease;
+  font-family: inherit;
+}
+.btnDanger:hover { background: #dc2626; }
+.btnDanger:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ── Inputs ── */
+.inputField {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: .875rem;
+  color: #1f2937;
+  background: #fff;
+  outline: none;
+  transition: border-color .2s ease;
+  font-family: inherit;
+}
+.inputField:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.15); }
+
+.readonlyField { background: #f9fafb; color: #6b7280; cursor: not-allowed; }
+
+.selectField {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: .875rem;
+  color: #1f2937;
+  background: #fff;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  cursor: pointer;
+  outline: none;
+  transition: border-color .2s ease;
+  font-family: inherit;
+}
+.selectField:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.15); }
+.selectField:disabled { background: #f3f4f6; color: #9ca3af; cursor: not-allowed; }
+
+.searchInput {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: .875rem;
+  color: #1f2937;
+  outline: none;
+  font-family: inherit;
+  transition: border-color .2s ease;
+}
+.searchInput:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.15); }
+
+/* ── Form ── */
+.formLabel {
+  font-size: .8rem;
+  font-weight: 600;
+  color: #374151;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.radioGroup { display: flex; gap: 24px; padding-top: 4px; }
+.radioLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .875rem;
+  color: #374151;
+  cursor: pointer;
+}
+.radioLabel input[type="radio"] { accent-color: #0f1b2d; width: 16px; height: 16px; cursor: pointer; }
+
+/* ── Page layout ── */
+.mainContent {
+  flex: 1;
+  padding: 24px 32px;
+  max-width: 1320px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.errorState { text-align: center; padding: 64px 24px; color: #6b7280; }
+.errorState h2 { font-size: 1.25rem; color: #ef4444; margin-bottom: 8px; }
+
+/* ── Animations ── */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .formRow { grid-template-columns: 1fr; }
+  .mainContent { padding: 16px; }
+}

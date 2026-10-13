@@ -1,0 +1,62 @@
+/* AD1Dashboard.module.css — Page-specific styles only */
+
+/* Bottom Layout */
+.dashboardBottom {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  align-items: start;
+  margin-top: 8px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.05);
+  border: 1px solid #e5e7eb;
+  padding: 24px;
+}
+
+.panelTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 16px;
+}
+
+/* Room Panel */
+.roomFilters { display:flex; gap:16px; align-items:center; flex-wrap:wrap; margin-bottom:24px; }
+.roomFilter { display:flex; align-items:center; gap:8px; }
+.roomFilterLabel { font-size:.85rem; font-weight:500; color:#6b7280; }
+.selectSm { width:auto; min-width:130px; padding:8px 32px 8px 12px; font-size:.85rem; border:1px solid #d1d5db; border-radius:8px; background:#fff; appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; cursor:pointer; outline:none; transition:border-color .2s; font-family:inherit; color:#1f2937; }
+.selectSm:focus { border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,.15); }
+
+/* Room card */
+.roomCard { background:#f9fafb; border:1px solid #e5e7eb; border-radius:12px; padding:24px; margin-bottom:16px; transition:box-shadow .2s; }
+.roomCard:hover { box-shadow:0 4px 6px -1px rgba(0,0,0,.07); }
+.roomCardName { font-size:1.25rem; font-weight:800; color:#111827; margin-bottom:16px; }
+.roomCardMeta { display:flex; gap:32px; margin-bottom:16px; }
+.roomCardMetaItem { display:flex; flex-direction:column; gap:4px; }
+.roomCardMetaLabel { font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#6b7280; }
+.roomCardMetaValue { font-size:1rem; font-weight:700; color:#1f2937; }
+
+/* Badges */
+.badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:9999px; font-size:.75rem; font-weight:600; }
+.badgeAvailable { background:#dcfce7; color:#15803d; }
+.badgeBooked { background:#fee2e2; color:#b91c1c; }
+.badgeDot { width:6px; height:6px; border-radius:50%; display:inline-block; }
+.dotGreen { background:#22c55e; }
+.dotRed { background:#ef4444; }
+
+/* Slots */
+.roomCardSlots { margin-top:8px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+.roomCardSlotsLabel { width:100%; font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#6b7280; margin-bottom:4px; }
+.timeTag { display:inline-flex; align-items:center; padding:4px 12px; background:#f8fafc; color:#334155; border:1px solid #cbd5e1; border-radius:9999px; font-size:.75rem; font-weight:600; white-space:nowrap; }
+.timeTagEmpty { color:#9ca3af; font-style:italic; padding:4px 0; }
+
+/* Activities */
+.activityTableWrapper { flex:1; overflow-y:auto; max-height:400px; }
+.activityTime { white-space:nowrap; color:#3b82f6; font-weight:500; }
+
+/* Responsive */
+@media (max-width:900px) { .dashboardBottom { grid-template-columns:1fr; } }

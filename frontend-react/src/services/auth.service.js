@@ -29,7 +29,7 @@ export const authService = {
       case 'Dean':
         return '/dean';
       case 'Assistant_Dean_1':
-        return '/dean1';
+        return '/ad1/dashboard';
       case 'Assistant_Dean_2':
         return '/dean2';
       case 'Super_User':

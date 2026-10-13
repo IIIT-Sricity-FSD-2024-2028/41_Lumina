@@ -1,0 +1,47 @@
+/* CourseCatalog.module.css — Page-specific styles only (shared tokens in ad1-shared.module.css) */
+
+/* Header */
+.catalogHeader { display:flex; justify-content:space-between; align-items:center; margin-bottom:32px; }
+.catalogTitle { font-size:1.5rem; font-weight:800; color:#111827; }
+
+/* Filter Bar */
+.filterBar { display:flex; align-items:center; gap:16px; margin-bottom:32px; flex-wrap:wrap; }
+.filterSearch { position:relative; flex:1; min-width:220px; }
+.searchIcon { position:absolute; left:14px; top:50%; transform:translateY(-50%); font-size:.9rem; pointer-events:none; opacity:.5; }
+.searchInput { width:100%; padding:10px 14px 10px 40px; border:1px solid #d1d5db; border-radius:8px; font-size:.875rem; color:#1f2937; background:#fff; outline:none; transition:border-color .2s; font-family:inherit; }
+.searchInput:focus { border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,.15); }
+.filterSelect { width:auto; min-width:120px; padding:10px 32px 10px 14px; border:1px solid #d1d5db; border-radius:8px; font-size:.875rem; color:#1f2937; background:#fff; appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; cursor:pointer; outline:none; transition:border-color .2s; font-family:inherit; }
+.filterSelect:focus { border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,.15); }
+.filterSelect:disabled { background:#f3f4f6; color:#9ca3af; cursor:not-allowed; }
+.clearBtn { width:40px; height:40px; display:flex; align-items:center; justify-content:center; border:1px solid #d1d5db; border-radius:8px; background:#fff; font-size:1.1rem; color:#6b7280; cursor:pointer; transition:all .2s; }
+.clearBtn:hover { background:#f9fafb; color:#1f2937; border-color:#9ca3af; }
+
+/* Table Card */
+.tableCard { background:#fff; border-radius:12px; box-shadow:0 1px 2px rgba(0,0,0,.05); border:1px solid #e5e7eb; padding:24px; overflow-x:auto; }
+.codeCell { font-weight:700; color:#3b82f6; }
+
+/* Type Badge */
+.typeBadge { display:inline-block; padding:3px 10px; border-radius:6px; font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.03em; white-space:nowrap; }
+.typeBadgeInstitute { background:#e0e7ff; color:#3730a3; }
+.typeBadgeProgram { background:#d1fae5; color:#065f46; }
+.typeBadgeElective { background:#fef3c7; color:#92400e; }
+.typeBadgeSeed { background:#ccfbf1; color:#0f766e; }
+
+/* Status Badge */
+.statusBadge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:9999px; font-size:.75rem; font-weight:600; }
+.badgeActive { background:#dcfce7; color:#15803d; }
+.badgeInactive { background:#fee2e2; color:#b91c1c; }
+.badgeDot { width:6px; height:6px; border-radius:50%; display:inline-block; }
+.dotGreen { background:#22c55e; }
+.dotRed { background:#ef4444; }
+
+/* Action Button */
+.actionBtn { background:none; border:none; padding:6px 8px; border-radius:6px; cursor:pointer; font-size:1rem; color:#9ca3af; transition:all .2s; }
+.actionBtn:hover { color:#0f1b2d; background:#f3f4f6; }
+
+/* Responsive */
+@media (max-width:768px) {
+  .catalogHeader { flex-direction:column; align-items:flex-start; gap:16px; }
+  .filterBar { flex-direction:column; align-items:stretch; }
+  .filterSelect { width:100%; }
+}
