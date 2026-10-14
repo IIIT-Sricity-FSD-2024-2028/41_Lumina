@@ -13,6 +13,7 @@ import Dean2Overrides from './pages/ad2/Dean2Overrides';
 import Dean2Analytics from './pages/ad2/Dean2Analytics';
 import Dean2Gradesheets from './pages/ad2/Dean2Gradesheets';
 import Dean2GradesheetDetail from './pages/ad2/Dean2GradesheetDetail';
+import SuperUserDashboard from './pages/superuser/SuperUserDashboard';
 
 export default function App() {
   return (
@@ -88,6 +89,24 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={['Assistant_Dean_2', 'Dean']}>
                 <Dean2GradesheetDetail />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Super User Console Route */}
+          <Route
+            path="/superuser"
+            element={
+              <ProtectedRoute allowedRoles={['Super_User']}>
+                <SuperUserDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/superuser/*"
+            element={
+              <ProtectedRoute allowedRoles={['Super_User']}>
+                <SuperUserDashboard />
               </ProtectedRoute>
             }
           />

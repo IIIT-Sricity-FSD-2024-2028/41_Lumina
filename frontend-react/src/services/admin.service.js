@@ -105,4 +105,50 @@ export const adminService = {
     const res = await api.post('/super-user/institutes', instituteData);
     return res.data;
   },
+
+  /**
+   * Get Lumina Admin / SPOC staff roster
+   */
+  async getAdminTeam() {
+    const res = await api.get('/super-user/admin-team');
+    return res.data;
+  },
+
+  /**
+   * Employ / add a new Lumina Admin SPOC
+   * @param {Object} payload
+   */
+  async addAdminSpoc(payload) {
+    const res = await api.post('/super-user/admin-team', payload);
+    return res.data;
+  },
+
+  /**
+   * Update institute subscription plan tier
+   * @param {string} instituteId
+   * @param {'Starter' | 'Campus' | 'Enterprise'} tier
+   */
+  async updateInstituteTier(instituteId, tier) {
+    const res = await api.patch(`/super-user/institutes/${instituteId}/tier`, { tier });
+    return res.data;
+  },
+
+  /**
+   * Assign or reassign Lumina SPOC to an institute
+   * @param {string} instituteId
+   * @param {string} spocAdminId
+   */
+  async assignSpoc(instituteId, spocAdminId) {
+    const res = await api.post(`/super-user/institutes/${instituteId}/assign-spoc`, { spocAdminId });
+    return res.data;
+  },
+
+  /**
+   * Archive institute tenant and move to cold storage
+   * @param {string} instituteId
+   */
+  async archiveInstitute(instituteId) {
+    const res = await api.post(`/super-user/institutes/${instituteId}/archive`);
+    return res.data;
+  },
 };
