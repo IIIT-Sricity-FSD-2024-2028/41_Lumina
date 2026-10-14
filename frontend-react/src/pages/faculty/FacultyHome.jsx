@@ -155,7 +155,7 @@ export default function FacultyHome() {
                     <div className={styles.classMeta}>
                       <span className={styles.metaBadge}>{item.room}</span>
                       <span>{item.dayOfWeek}</span>
-                      <span>&bull;</span>
+                      <span>•</span>
                       <span>Ends at {item.end}</span>
                     </div>
                   </div>
@@ -249,7 +249,7 @@ export default function FacultyHome() {
                       </div>
                       <div className={styles.rInfo}>
                         <div className={styles.rName}>{student.name}</div>
-                        <div className={styles.rCourse}>{student.roll} &bull; {student.courseId}</div>
+                        <div className={styles.rCourse}>{student.roll} • {student.courseId}</div>
                       </div>
                     </div>
                     <span className={styles.rArrow}>&rsaquo;</span>

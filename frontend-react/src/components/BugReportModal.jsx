@@ -74,7 +74,7 @@ export default function BugReportModal({ isOpen, onClose }) {
             {/* SPOC Info Badge */}
             <div className={styles.spocBadge}>
               <span>🛡️</span>
-              <span>Assigned SPOC: <strong>Arjun Verma</strong> &bull; Avg Response: <strong>14 mins</strong> (99.99% SLA)</span>
+              <span>Assigned SPOC: <strong>Arjun Verma</strong> • Avg Response: <strong>14 mins</strong> (99.99% SLA)</span>
             </div>
 
             <div className={styles.formGroup}>

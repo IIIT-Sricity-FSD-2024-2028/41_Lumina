@@ -22,6 +22,9 @@ export default function StudentRegistration() {
   const [registrations, setRegistrations] = useState([]);
   const [overrides, setOverrides] = useState([]);
   const [billing, setBilling] = useState(null);
+  const [currentSemester, setCurrentSemester] = useState(4);
+  const [activeTerm, setActiveTerm] = useState('Spring 2026');
+  const [allCatalog, setAllCatalog] = useState([]);
 
   const [activeTab, setActiveTab] = useState('catalog'); // 'catalog' | 'myCourses' | 'overrides' | 'timetable'
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -40,45 +43,78 @@ export default function StudentRegistration() {
     async function fetchData() {
       setLoading(true);
       try {
-        const [coursesRes, regsRes, overridesRes, billingRes] = await Promise.allSettled([
+        const [catalogRes, studentCoursesRes, regsRes, overridesRes, billingRes] = await Promise.allSettled([
+          coursesService.getAll(),
           coursesService.getForStudent(studentId),
           registrationsService.getAll(),
           overridesService.getByStudent(studentId),
           revenueService.getStudentBilling(studentId),
         ]);
 
-        if (coursesRes.status === 'fulfilled' && coursesRes.value) {
-          const raw = coursesRes.value;
-          if (raw?.courses && Array.isArray(raw.courses)) {
-            setCourses(raw.courses.map((item) => item.course));
-          } else if (Array.isArray(raw)) {
-            setCourses(raw);
-          } else {
-            // Catalog fallback
-            const catalog = await coursesService.getAll();
-            setCourses(catalog);
-          }
+        const catalogList = catalogRes.status === 'fulfilled' && Array.isArray(catalogRes.value) ? catalogRes.value : [];
+        const studentRaw = studentCoursesRes.status === 'fulfilled' ? studentCoursesRes.value : null;
+        const studentCourses = studentRaw?.courses && Array.isArray(studentRaw.courses)
+          ? studentRaw.courses.map((item) => ({
+              ...item.course,
+              courseType: item.courseType || item.course?.courseType,
+              sections: item.sections,
+            }))
+          : [];
+
+        setAllCatalog(catalogList);
+
+        if (studentRaw?.currentSemester) {
+          setCurrentSemester(studentRaw.currentSemester);
+        }
+        if (studentRaw?.activeTerm) {
+          setActiveTerm(studentRaw.activeTerm);
+        }
+
+        // Show ONLY the courses of that student's semester
+        if (studentCourses.length > 0) {
+          setCourses(studentCourses);
         } else {
-          // Fallback course list
+          // Fallback semester 4 courses for the student
           setCourses([
-            { courseId: 'CS301', courseName: 'Database Management Systems', credits: 4, courseType: 'Program Core', deptId: 'CSE', prerequisite: 'CS101' },
-            { courseId: 'CS302', courseName: 'Operating Systems', credits: 4, courseType: 'Program Core', deptId: 'CSE', prerequisite: 'CS101' },
-            { courseId: 'IC241', courseName: 'Computer Communication Networks', credits: 4, courseType: 'Institute Core', deptId: 'ECE', prerequisite: 'None' },
-            { courseId: 'CS304', courseName: 'Formal Languages & Automata', credits: 3, courseType: 'Program Core', deptId: 'CSE', prerequisite: 'CS201' },
-            { courseId: 'PE311', courseName: 'Cloud Computing & DevOps', credits: 3, courseType: 'Program Elective', deptId: 'CSE', prerequisite: 'CS302' },
-            { courseId: 'IE201', courseName: 'Principles of Economics & Management', credits: 3, courseType: 'Open Elective', deptId: 'HS', prerequisite: 'None' },
-            { courseId: 'SEED1', courseName: 'Design Thinking & Innovation', credits: 2, courseType: 'SEED', deptId: 'DES', prerequisite: 'None' },
+            { courseId: 'PC401', courseName: 'Computer and Communication Networks', credits: 4, courseType: 'Program Core', deptId: 'CSE', prerequisite: 'None' },
+            { courseId: 'PC402', courseName: 'Fundamentals of Full Stack Development', credits: 4, courseType: 'Program Core', deptId: 'CSE', prerequisite: 'None' },
+            { courseId: 'IC401', courseName: 'Theory of Computation', credits: 4, courseType: 'Institute Core', deptId: 'CSE', prerequisite: 'None' },
+            { courseId: 'PC403', courseName: 'Artificial Intelligence', credits: 4, courseType: 'Program Core', deptId: 'CSE', prerequisite: 'None' },
+            { courseId: 'SEED05', courseName: 'Advanced Communication Skills', credits: 2, courseType: 'SEED', deptId: 'CSE', prerequisite: 'None' },
           ]);
         }
 
+        let userRegs = [];
         if (regsRes.status === 'fulfilled' && Array.isArray(regsRes.value)) {
-          setRegistrations(regsRes.value.filter((r) => r.Student_ID === studentId));
+          userRegs = regsRes.value.filter((r) => r.studentId === studentId || r.Student_ID === studentId);
+        }
+
+        try {
+          const cached = localStorage.getItem(`Lumina_Regs_${studentId}`);
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            if (Array.isArray(parsed)) {
+              parsed.forEach((cr) => {
+                const cId = cr.courseId || cr.Course_ID;
+                if (cId && !userRegs.some((ur) => (ur.courseId || ur.Course_ID) === cId)) {
+                  userRegs.push(cr);
+                }
+              });
+            }
+          }
+        } catch (e) {}
+
+        if (userRegs.length > 0) {
+          setRegistrations(userRegs);
+          try {
+            localStorage.setItem(`Lumina_Regs_${studentId}`, JSON.stringify(userRegs));
+          } catch (e) {}
         } else {
           setRegistrations([
-            { registrationId: 101, Student_ID: studentId, Course_ID: 'CS301', status: 'Enrolled', Term_ID: 'SPRING2026' },
-            { registrationId: 102, Student_ID: studentId, Course_ID: 'CS302', status: 'Enrolled', Term_ID: 'SPRING2026' },
-            { registrationId: 103, Student_ID: studentId, Course_ID: 'IC241', status: 'Enrolled', Term_ID: 'SPRING2026' },
-            { registrationId: 104, Student_ID: studentId, Course_ID: 'CS304', status: 'Enrolled', Term_ID: 'SPRING2026' },
+            { registrationId: 101, studentId, courseId: 'CS301', status: 'Enrolled', termId: 'SPRING2026' },
+            { registrationId: 102, studentId, courseId: 'CS302', status: 'Enrolled', termId: 'SPRING2026' },
+            { registrationId: 103, studentId, courseId: 'IC241', status: 'Enrolled', termId: 'SPRING2026' },
+            { registrationId: 104, studentId, courseId: 'CS304', status: 'Enrolled', termId: 'SPRING2026' },
           ]);
         }
 
@@ -106,7 +142,18 @@ export default function StudentRegistration() {
     fetchData();
   }, [studentId]);
 
-  const registeredCourseIds = new Set(registrations.map((r) => r.Course_ID || r.courseId));
+  // Courses available in current semester catalog
+  const catalogCourseIds = new Set(courses.map((c) => c.courseId || c.Course_ID).filter(Boolean));
+
+  // Registered courses that are strictly in this semester catalog
+  const registeredInCatalogCourseIds = new Set(
+    registrations
+      .filter((r) => r.status !== 'Dropped')
+      .map((r) => r.courseId || r.Course_ID)
+      .filter((cId) => Boolean(cId) && catalogCourseIds.has(cId))
+  );
+
+  const registeredCourseIds = registeredInCatalogCourseIds;
 
   async function handleRegister(courseId) {
     if (billing?.isFinancialHoldActive) {
@@ -116,19 +163,42 @@ export default function StudentRegistration() {
     }
 
     try {
-      await registrationsService.enroll(studentId, courseId);
+      const res = await registrationsService.enroll(studentId, courseId);
       toast.success(`Successfully registered for ${courseId}!`);
-      setRegistrations((prev) => [
-        ...prev,
-        { registrationId: Date.now(), Student_ID: studentId, Course_ID: courseId, status: 'Enrolled', Term_ID: 'SPRING2026' },
-      ]);
+      const newReg = res || {
+        enrollmentId: Date.now(),
+        studentId,
+        courseId,
+        status: 'Enrolled',
+        termId: 'SPRING2026',
+      };
+      setRegistrations((prev) => {
+        const next = [...prev, newReg];
+        try {
+          localStorage.setItem(`Lumina_Regs_${studentId}`, JSON.stringify(next));
+        } catch (e) {}
+        return next;
+      });
     } catch (err) {
-      // Fallback update
-      toast.success(`Enrolled in ${courseId}!`);
-      setRegistrations((prev) => [
-        ...prev,
-        { registrationId: Date.now(), Student_ID: studentId, Course_ID: courseId, status: 'Enrolled', Term_ID: 'SPRING2026' },
-      ]);
+      const errMsg = err?.response?.data?.message || err?.message;
+      if (typeof errMsg === 'string' && (errMsg.includes('already') || errMsg.includes('Duplicate'))) {
+        toast.success(`Course ${courseId} is already registered!`);
+      } else {
+        toast.success(`Enrolled in ${courseId}!`);
+      }
+      setRegistrations((prev) => {
+        if (!prev.some((r) => (r.courseId || r.Course_ID) === courseId)) {
+          const next = [
+            ...prev,
+            { enrollmentId: Date.now(), studentId, courseId, status: 'Enrolled', termId: 'SPRING2026' },
+          ];
+          try {
+            localStorage.setItem(`Lumina_Regs_${studentId}`, JSON.stringify(next));
+          } catch (e) {}
+          return next;
+        }
+        return prev;
+      });
     }
   }
 
@@ -195,10 +265,10 @@ export default function StudentRegistration() {
     }
   }
 
-  // Calculate enrolled credits
+  // Calculate enrolled credits strictly from registered courses in this catalog
   const enrolledCredits = courses
-    .filter((c) => registeredCourseIds.has(c.courseId))
-    .reduce((sum, c) => sum + (c.credits || 3), 0) || 15;
+    .filter((c) => registeredInCatalogCourseIds.has(c.courseId || c.Course_ID))
+    .reduce((sum, c) => sum + (c.credits || 4), 0);
 
   // Filter courses
   const filteredCourses = courses.filter((c) => {
@@ -222,7 +292,7 @@ export default function StudentRegistration() {
       <div className={styles.container}>
         <PageHeader
           title="Course Registration & Catalog"
-          subtitle="Spring 2026 Active Enrollment &bull; Select courses, manage registrations, and submit override requests."
+          subtitle={`${activeTerm} Active Enrollment • Semester ${currentSemester} Courses • Select courses, manage registrations, and submit override requests.`}
         />
 
         {/* Financial Hold Warning Banner */}
@@ -253,7 +323,7 @@ export default function StudentRegistration() {
           <div className={styles.statusItems}>
             <div className={styles.statusItem}>
               <span className={styles.statusLabel}>Term / Semester</span>
-              <span className={styles.statusVal}>Spring 2026 (Sem 4)</span>
+              <span className={styles.statusVal}>{activeTerm} (Sem {currentSemester})</span>
             </div>
             <div className={styles.statusItem}>
               <span className={styles.statusLabel}>Enrolled Credits</span>
@@ -284,7 +354,7 @@ export default function StudentRegistration() {
             className={`${styles.tabBtn} ${activeTab === 'catalog' ? styles.tabBtnActive : ''}`}
             onClick={() => setActiveTab('catalog')}
           >
-            Available Catalog ({courses.length})
+            Semester {currentSemester} Catalog ({courses.length})
           </button>
           <button
             type="button"
@@ -341,7 +411,7 @@ export default function StudentRegistration() {
 
                 <div className={styles.courseGrid}>
                   {filteredCourses.map((c) => {
-                    const isEnrolled = registeredCourseIds.has(c.courseId);
+                    const isEnrolled = registeredCourseIds.has(c.courseId) || registeredCourseIds.has(c.Course_ID);
                     return (
                       <div key={c.courseId} className={styles.courseCard}>
                         <div>
@@ -375,15 +445,20 @@ export default function StudentRegistration() {
                           </div>
                         </div>
 
-                        <div className={styles.cardFooter}>
-                          <button
-                            type="button"
-                            className="btn-outline"
-                            onClick={() => handleOpenOverride(c)}
-                            style={{ fontSize: '0.8rem', padding: '6px 12px' }}
-                          >
-                            Request Override
-                          </button>
+                        <div
+                          className={styles.cardFooter}
+                          style={isEnrolled ? { justifyContent: 'flex-end' } : {}}
+                        >
+                          {!isEnrolled && (
+                            <button
+                              type="button"
+                              className="btn-outline"
+                              onClick={() => handleOpenOverride(c)}
+                              style={{ fontSize: '0.8rem', padding: '6px 12px' }}
+                            >
+                              Request Override
+                            </button>
+                          )}
 
                           {isEnrolled ? (
                             <span className="badge badge-approved" style={{ padding: '6px 12px' }}>
@@ -410,43 +485,48 @@ export default function StudentRegistration() {
             {/* TAB 2: MY REGISTERED COURSES */}
             {activeTab === 'myCourses' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {courses.filter((c) => registeredCourseIds.has(c.courseId)).length === 0 ? (
+                {courses.filter((c) => registeredInCatalogCourseIds.has(c.courseId || c.Course_ID)).length === 0 ? (
                   <div style={{ background: '#ffffff', padding: '32px', textAlign: 'center', borderRadius: '12px', color: '#64748b' }}>
-                    No registered courses found for Spring 2026.
+                    No registered courses found for Semester {currentSemester} ({activeTerm}).
                   </div>
                 ) : (
                   courses
-                    .filter((c) => registeredCourseIds.has(c.courseId))
-                    .map((c) => (
-                      <div
-                        key={c.courseId}
-                        style={{
-                          background: '#ffffff',
-                          border: '1px solid #e2e8f0',
-                          borderRadius: '10px',
-                          padding: '16px 20px',
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          flexWrap: 'wrap',
-                          gap: '12px',
-                        }}
-                      >
-                        <div>
-                          <div style={{ fontWeight: 800, fontSize: '1.05rem', color: '#0f172a' }}>
-                            {c.courseId}: {c.courseName}
+                    .filter((c) => registeredInCatalogCourseIds.has(c.courseId || c.Course_ID))
+                    .map((c) => {
+                      const matchReg = registrations.find(
+                        (r) => (r.courseId || r.Course_ID) === (c.courseId || c.Course_ID)
+                      );
+                      return (
+                        <div
+                          key={c.courseId || c.Course_ID}
+                          style={{
+                            background: '#ffffff',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '10px',
+                            padding: '16px 20px',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                            gap: '12px',
+                          }}
+                        >
+                          <div>
+                            <div style={{ fontWeight: 800, fontSize: '1.05rem', color: '#0f172a' }}>
+                              {c.courseId}: {c.courseName}
+                            </div>
+                            <div style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '4px' }}>
+                              {c.credits || 4} Credits • Section {matchReg?.sectionId || 'S1'} • Term {matchReg?.termId || activeTerm} • Type: {c.courseType || 'Program Core'}
+                            </div>
                           </div>
-                          <div style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '4px' }}>
-                            {c.credits || 4} Credits &bull; Section PC402-S1 &bull; Room G04 &bull; Instructor: Prof. Dr. A. Sharma
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <span className="badge badge-approved" style={{ fontSize: '0.85rem' }}>
+                              ✓ Enrolled & Confirmed
+                            </span>
                           </div>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                          <span className="badge badge-approved" style={{ fontSize: '0.85rem' }}>
-                            Enrolled & Confirmed
-                          </span>
-                        </div>
-                      </div>
-                    ))
+                      );
+                    })
                 )}
               </div>
             )}
