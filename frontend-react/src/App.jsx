@@ -22,6 +22,7 @@ import Dean2Analytics from './pages/ad2/Dean2Analytics';
 import Dean2Gradesheets from './pages/ad2/Dean2Gradesheets';
 import Dean2GradesheetDetail from './pages/ad2/Dean2GradesheetDetail';
 
+<<<<<<< HEAD
 // Faculty Portal Pages
 import FacultyLayout from './pages/faculty/FacultyLayout';
 import FacultyHome from './pages/faculty/FacultyHome';
@@ -29,6 +30,10 @@ import FacultyCourses from './pages/faculty/FacultyCourses';
 import FacultyGrades from './pages/faculty/FacultyGrades';
 import FacultyRosters from './pages/faculty/FacultyRosters';
 import FacultyAnnouncements from './pages/faculty/FacultyAnnouncements';
+=======
+// Admin / SPOC Portal
+import AdminPortalPage from './pages/admin/AdminPortalPage';
+>>>>>>> 7101dbb2 (Update React App component)
 
 export default function App() {
   return (
@@ -116,6 +121,7 @@ export default function App() {
             }
           />
 
+<<<<<<< HEAD
           {/* Dean 2 Aliases */}
           <Route
             path="/dean2"
@@ -125,6 +131,30 @@ export default function App() {
             path="/dean2/*"
             element={<Navigate to="/ad2" replace />}
           />
+=======
+          {/* Admin / SPOC Operations Portal */}
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute allowedRoles={['Lumina_SPOC']}>
+                <AdminPortalPage />
+              </ProtectedRoute>
+            }
+          />
+          {/* Admin sub-tabs share the same page component (tab state managed internally) */}
+          <Route
+            path="/admin/*"
+            element={
+              <ProtectedRoute allowedRoles={['Lumina_SPOC']}>
+                <AdminPortalPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Alias /dean2 to /ad2 */}
+          <Route path="/dean2" element={<Navigate to="/ad2" replace />} />
+          <Route path="/dean2/*" element={<Navigate to="/ad2" replace />} />
+>>>>>>> 7101dbb2 (Update React App component)
 
           {/* Faculty Portal Routes */}
           <Route
