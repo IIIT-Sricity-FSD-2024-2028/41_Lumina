@@ -25,8 +25,19 @@ import { usersService } from '../../services/users.service';
 import { coursesService } from '../../services/courses.service';
 import { registrationsService } from '../../services/registrations.service';
 import { revenueService } from '../../services/revenue.service';
+import { policiesService } from '../../services/policies.service';
+import { overridesService } from '../../services/overrides.service';
 
 import styles from './DeanDashboard.module.css';
+
+function formatTimelineDate(dtStr, fallbackMonth = 'SEP', fallbackDay = '01') {
+  if (!dtStr) return { month: fallbackMonth, day: fallbackDay };
+  const d = new Date(dtStr);
+  if (isNaN(d.getTime())) return { month: fallbackMonth, day: fallbackDay };
+  const month = d.toLocaleString('en-US', { month: 'short' }).toUpperCase();
+  const day = String(d.getDate()).padStart(2, '0');
+  return { month, day };
+}
 
 export default function DeanDashboard() {
   const { user } = useAuth();
@@ -39,6 +50,9 @@ export default function DeanDashboard() {
   const [clearanceRoster, setClearanceRoster] = useState([]);
   const [clearanceFilter, setClearanceFilter] = useState('all');
   const [graceLifecycle, setGraceLifecycle] = useState(null);
+  const [policies, setPolicies] = useState({});
+  const [phases, setPhases] = useState([]);
+  const [overrides, setOverrides] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // User CRUD Modal State
@@ -46,6 +60,14 @@ export default function DeanDashboard() {
     isOpen: false,
     mode: 'create', // 'create' | 'edit'
     data: null,
+  });
+
+  // Financial Hold Waiver Modal State
+  const [waiverModal, setWaiverModal] = useState({
+    isOpen: false,
+    studentId: '',
+    studentName: '',
+    reason: 'Dean Academic Merit Scholarship Waiver',
   });
 
   // SaaS Subscription Modal State
@@ -69,13 +91,16 @@ export default function DeanDashboard() {
   async function loadAllData() {
     setLoading(true);
     try {
-      const [uRes, cRes, rRes, revRes, clearRes, lifeRes] = await Promise.allSettled([
+      const [uRes, cRes, rRes, revRes, clearRes, lifeRes, polRes, phasesRes, ovRes] = await Promise.allSettled([
         usersService.getAll(),
         coursesService.getAll(),
         registrationsService.getAll(),
         revenueService.getSummary(),
         revenueService.getClearanceRoster(),
         revenueService.getLifecycle(),
+        policiesService.getPolicies(),
+        policiesService.getPhases(),
+        overridesService.getAll(),
       ]);
 
       if (uRes.status === 'fulfilled' && Array.isArray(uRes.value)) setUsers(uRes.value);
@@ -84,6 +109,9 @@ export default function DeanDashboard() {
       if (revRes.status === 'fulfilled' && revRes.value) setRevenueData(revRes.value);
       if (clearRes.status === 'fulfilled' && Array.isArray(clearRes.value)) setClearanceRoster(clearRes.value);
       if (lifeRes.status === 'fulfilled' && lifeRes.value) setGraceLifecycle(lifeRes.value);
+      if (polRes.status === 'fulfilled' && polRes.value?.settings) setPolicies(polRes.value.settings);
+      if (phasesRes.status === 'fulfilled' && Array.isArray(phasesRes.value)) setPhases(phasesRes.value);
+      if (ovRes.status === 'fulfilled' && Array.isArray(ovRes.value)) setOverrides(ovRes.value);
     } catch (err) {
       console.warn('Error loading Dean dashboard data:', err);
     } finally {
@@ -98,6 +126,16 @@ export default function DeanDashboard() {
       return r.includes('Assistant_Dean');
     });
   }, [users]);
+
+  // Pending Override Requests
+  const pendingOverrides = useMemo(() => {
+    return overrides.filter(
+      (o) => (o.approvalStatus || o.Approval_Status || o.status) === 'Pending'
+    );
+  }, [overrides]);
+
+  const startDateObj = formatTimelineDate(policies.startDate, 'AUG', '01');
+  const endDateObj = formatTimelineDate(policies.endDate, 'AUG', '30');
 
   // Enrollment Statistics Calculations
   const enrollmentStats = useMemo(() => {
@@ -208,13 +246,22 @@ export default function DeanDashboard() {
     }
   }
 
-  async function handleGrantWaiver(studentId, name) {
-    const reason = prompt(`Enter financial hold waiver reason for ${name}:`, 'Dean Academic Merit Scholarship Waiver');
-    if (!reason) return;
+  function openGrantWaiverModal(studentId, name) {
+    setWaiverModal({
+      isOpen: true,
+      studentId,
+      studentName: name,
+      reason: 'Dean Academic Merit Scholarship Waiver',
+    });
+  }
 
+  async function handleConfirmWaiver(e) {
+    e.preventDefault();
+    const { studentId, studentName, reason } = waiverModal;
+    setWaiverModal(prev => ({ ...prev, isOpen: false }));
     try {
-      await revenueService.waiveHold(studentId, reason);
-      toast.success(`Financial hold waived for ${name} (${reason})!`);
+      await revenueService.waiveHold(studentId, reason.trim() || 'Dean Academic Merit Scholarship Waiver');
+      toast.success(`Financial hold waived for ${studentName}!`);
       const [revRes, clearRes] = await Promise.all([
         revenueService.getSummary(),
         revenueService.getClearanceRoster(),
@@ -307,13 +354,63 @@ export default function DeanDashboard() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `lumina_academic_archive_${res.data?.institutionInfo?.name?.replace(/\s+/g, '_') || 'IIIT_Sri_City'}.json`;
+      const instName = data?.institutionInfo?.name?.replace(/\s+/g, '_') || 'IIIT_Sri_City';
+      a.download = `lumina_academic_archive_${instName}.json`;
       a.click();
       URL.revokeObjectURL(url);
       toast.success('📥 Academic Archive Downloaded Successfully!');
     } catch (err) {
       toast.error('Failed to export academic archive');
     }
+  }
+
+  // Download Pending Override Intervention Forms Report
+  function handleDownloadOverrideForms() {
+    const pendingList = overrides.filter(
+      (o) => (o.approvalStatus || o.Approval_Status || o.status) === 'Pending'
+    );
+    if (pendingList.length === 0) {
+      toast.error('No pending override requests to download.');
+      return;
+    }
+
+    const headers = ['Request ID', 'Student ID', 'Course ID', 'Reason', 'Status', 'Date'];
+    const rows = pendingList.map((r) => [
+      `"${r.requestId || r.Request_ID || r.id}"`,
+      `"${r.studentId || r.Student_ID || 'N/A'}"`,
+      `"${r.courseId || r.Course_ID || 'N/A'}"`,
+      `"${(r.reason || r.Reason || '').replace(/"/g, '""')}"`,
+      `"${r.approvalStatus || r.Approval_Status || 'Pending'}"`,
+      `"${r.createdAt || r.Created_At || new Date().toISOString()}"`,
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', 'Lumina_Pending_Override_Interventions.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success(`📥 Downloaded ${pendingList.length} override intervention forms!`);
+  }
+
+  // Download User Import Template CSV
+  function handleDownloadUserTemplate() {
+    const headers = ['User_ID', 'Full_Name', 'Email', 'Role', 'Dept_ID'];
+    const sampleRows = [
+      ['S2024099', 'Sample Student', 'student@lumina.edu', 'Student', 'CSE'],
+      ['F2024099', 'Dr. Sample Faculty', 'faculty@lumina.edu', 'Faculty', 'ECE'],
+    ];
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...sampleRows.map(r => r.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', 'Lumina_User_Directory_Template.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success('📥 User Directory import template downloaded!');
   }
 
   const navLinks = [
@@ -404,55 +501,110 @@ export default function DeanDashboard() {
 
           {/* Override Interventions */}
           <div className={styles.card}>
-            <h3 className={styles.cardTitle}>❗ Override Interventions</h3>
-            <div className={`${styles.alertBox} ${styles.alertHigh}`}>
-              <h4 className={styles.alertHighTitle}>High-Priority Enrollment Conflict</h4>
-              <p className={styles.alertText}>
-                CS401 - Advanced Algorithms: Pending prerequisite override requests for graduating seniors.
-              </p>
-              <button
-                type="button"
-                className={styles.alertLink}
-                onClick={() => toast.success('�� Override verification forms downloaded!')}
+            <div className={styles.cardHeaderFlex}>
+              <h3 className={styles.cardTitle}>❗ Override Interventions</h3>
+              <span
+                className={styles.cardLiveBadge}
+                style={{
+                  background: pendingOverrides.length > 0 ? '#fef2f2' : '#f0fdf4',
+                  color: pendingOverrides.length > 0 ? '#dc2626' : '#16a34a',
+                  borderColor: pendingOverrides.length > 0 ? '#fca5a5' : '#86efac',
+                }}
               >
-                Download and Review forms ↗
-              </button>
+                {pendingOverrides.length > 0 ? `${pendingOverrides.length} PENDING` : 'RESOLVED'}
+              </span>
             </div>
-            <div className={`${styles.alertBox} ${styles.alertMinor}`}>
-              <h4 className={styles.alertMinorTitle}>Minor Prerequisite Bypass</h4>
-              <p className={styles.alertText}>
-                Routine bypass requests assigned to Assistant Dean 2 queue.
-              </p>
-            </div>
+
+            {pendingOverrides.length > 0 ? (
+              <>
+                <div className={`${styles.alertBox} ${styles.alertHigh}`}>
+                  <h4 className={styles.alertHighTitle}>
+                    {pendingOverrides[0].courseId || pendingOverrides[0].Course_ID || 'Course Override'} Exception
+                  </h4>
+                  <p className={styles.alertText}>
+                    Student {pendingOverrides[0].studentId || pendingOverrides[0].Student_ID}: {pendingOverrides[0].reason || pendingOverrides[0].Reason || 'Prerequisite / Capacity Override Request'}.
+                  </p>
+                  <button
+                    type="button"
+                    className={styles.alertLink}
+                    onClick={handleDownloadOverrideForms}
+                  >
+                    Download and Review forms ({pendingOverrides.length}) ↗
+                  </button>
+                </div>
+                {pendingOverrides.length > 1 && (
+                  <div className={`${styles.alertBox} ${styles.alertMinor}`}>
+                    <h4 className={styles.alertMinorTitle}>Active AD2 Override Queue</h4>
+                    <p className={styles.alertText}>
+                      {pendingOverrides.length - 1} additional exception request(s) awaiting Assistant Dean review.
+                    </p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className={styles.alertBox} style={{ background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+                <h4 style={{ color: '#166534', margin: '0 0 4px 0', fontSize: '0.95rem' }}>✓ All Overrides Reviewed</h4>
+                <p className={styles.alertText} style={{ color: '#15803d' }}>
+                  No urgent prerequisite or capacity conflicts currently pending Dean or Assistant Dean intervention.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Enrollment Window Calendar */}
           <div className={styles.card}>
-            <h3 className={styles.cardTitle}>📅 Enrollment Window Calendar</h3>
+            <div className={styles.cardHeaderFlex}>
+              <h3 className={styles.cardTitle}>📅 Enrollment Window Calendar</h3>
+              <span className={styles.cardLiveBadge}>
+                {policies.windowStatus || 'ACTIVE'}
+              </span>
+            </div>
             <div className={styles.timelineItem}>
               <div className={styles.dateBox}>
-                <span className={styles.dateMonth}>SEP</span>
-                <span className={styles.dateDay}>01</span>
+                <span className={styles.dateMonth}>{startDateObj.month}</span>
+                <span className={styles.dateDay}>{startDateObj.day}</span>
               </div>
               <div className={styles.timelineContent}>
                 <h4>Enrollment Window Start</h4>
-                <p>All undergraduate and postgraduate programs</p>
+                <p>Term: {policies.term || 'Spring'} {policies.academicYear || '2025-2026'}</p>
               </div>
             </div>
-            <div className={styles.timelineItem}>
-              <div className={styles.dateBox}>
-                <span className={styles.dateMonth}>SEP</span>
-                <span className={styles.dateDay}>15</span>
+
+            {phases.length > 0 ? (
+              phases.slice(0, 2).map((phase) => (
+                <div key={phase.id} className={styles.timelineItem}>
+                  <div
+                    className={styles.dateBox}
+                    style={{ background: '#eff6ff', color: '#2563EB', borderColor: '#bfdbfe' }}
+                  >
+                    <span className={styles.dateMonth}>
+                      {phase.status?.substring(0, 3).toUpperCase() || 'PHS'}
+                    </span>
+                    <span className={styles.dateDay}>●</span>
+                  </div>
+                  <div className={styles.timelineContent}>
+                    <h4>{phase.name}</h4>
+                    <p>{phase.timeline || phase.eligibleGroups || 'Registration Phase'}</p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className={styles.timelineItem}>
+                <div className={styles.dateBox}>
+                  <span className={styles.dateMonth}>ACTIVE</span>
+                  <span className={styles.dateDay}>●</span>
+                </div>
+                <div className={styles.timelineContent}>
+                  <h4>Regular Registration Period</h4>
+                  <p>All enrolled student cohorts</p>
+                </div>
               </div>
-              <div className={styles.timelineContent}>
-                <h4>Late Registration Phase</h4>
-                <p>Sep 15 – Sep 20 (Course drop penalty rules active)</p>
-              </div>
-            </div>
+            )}
+
             <div className={styles.timelineItem}>
               <div className={`${styles.dateBox} ${styles.dateBoxGray}`}>
-                <span className={styles.dateMonth}>SEP</span>
-                <span className={styles.dateDay}>30</span>
+                <span className={styles.dateMonth}>{endDateObj.month}</span>
+                <span className={styles.dateDay}>{endDateObj.day}</span>
               </div>
               <div className={styles.timelineContent}>
                 <h4>Enrollment Window End</h4>
@@ -575,9 +727,10 @@ export default function DeanDashboard() {
               <button
                 type="button"
                 className={`${styles.btn} ${styles.btnOutline} ${styles.btnSm}`}
-                onClick={() => toast.success('📊 Excel import template ready for ingestion.')}
+                onClick={handleDownloadUserTemplate}
+                title="Download CSV import template"
               >
-                Import Excel
+                📥 Download Template
               </button>
               <button
                 type="button"
@@ -734,7 +887,7 @@ export default function DeanDashboard() {
                               type="button"
                               className={`${styles.btn} ${styles.btnOutline} ${styles.btnXs}`}
                               style={{ color: '#7c3aed', borderColor: '#c4b5fd', background: '#f5f3ff' }}
-                              onClick={() => handleGrantWaiver(s.studentId, s.fullName)}
+                              onClick={() => openGrantWaiverModal(s.studentId, s.fullName)}
                             >
                               🎓 Waive Hold
                             </button>
@@ -1065,6 +1218,62 @@ export default function DeanDashboard() {
                 Permanently Delete
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Financial Hold Waiver Modal */}
+      {waiverModal.isOpen && (
+        <div className={styles.modalBackdrop}>
+          <div className={styles.modalDialog} style={{ maxWidth: '480px' }}>
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>Grant Tuition Hold Waiver</h3>
+              <button
+                type="button"
+                className={styles.modalCloseBtn}
+                onClick={() => setWaiverModal(prev => ({ ...prev, isOpen: false }))}
+              >
+                &times;
+              </button>
+            </div>
+            <form onSubmit={handleConfirmWaiver}>
+              <div className={styles.modalBody}>
+                <p style={{ margin: '0 0 16px', fontSize: '0.92rem', color: 'var(--text-main)' }}>
+                  Waive the tuition fee hold for scholar{' '}
+                  <strong>{waiverModal.studentName}</strong> (<code>{waiverModal.studentId}</code>)?
+                </p>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Waiver Reason / Justification</label>
+                  <input
+                    type="text"
+                    required
+                    value={waiverModal.reason}
+                    onChange={(e) => setWaiverModal(prev => ({ ...prev, reason: e.target.value }))}
+                    className={styles.formControl}
+                    placeholder="e.g. Dean Academic Merit Scholarship Waiver"
+                  />
+                </div>
+                <div style={{ background: '#f5f3ff', border: '1px solid #ddd6fe', borderRadius: '8px', padding: '12px', color: '#6d28d9', fontSize: '0.85rem' }}>
+                  🎓 This will lift financial clearance holds immediately and allow course registration.
+                </div>
+              </div>
+              <div className={styles.modalFooter}>
+                <button
+                  type="button"
+                  className={`${styles.btn} ${styles.btnOutline}`}
+                  onClick={() => setWaiverModal(prev => ({ ...prev, isOpen: false }))}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className={`${styles.btn} ${styles.btnPrimary}`}
+                  style={{ background: '#7c3aed', borderColor: '#6d28d9' }}
+                >
+                  Confirm &amp; Waive Hold
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
