@@ -81,8 +81,32 @@ export default function AdminPortalPage() {
   }, [currentInstituteId]);
 
   useEffect(() => {
-    loadDashboard(authenticatedSpocId, currentInstituteId);
-  }, [authenticatedSpocId, currentInstituteId, loadDashboard]);
+    let ignore = false;
+    async function init() {
+      try {
+        const data = await adminService.getDashboard(authenticatedSpocId, currentInstituteId || undefined);
+        if (!ignore) {
+          setDashboard(data);
+          if (data?.assignedInstitute?.instituteId && !currentInstituteId) {
+            setCurrentInstituteId(data.assignedInstitute.instituteId);
+          }
+          setLoading(false);
+        }
+      } catch (err) {
+        if (!ignore) {
+          console.error('Failed to load admin dashboard from backend:', err);
+          const msg = err.response?.data?.message || err.message || 'Failed to fetch dashboard data from server';
+          setApiError(msg);
+          toast.error(`Backend Error: ${msg}`);
+          setLoading(false);
+        }
+      }
+    }
+    init();
+    return () => {
+      ignore = true;
+    };
+  }, [authenticatedSpocId, currentInstituteId]);
 
   // ── Client Institute Switcher (for assigned multi-tenant universities) ─────
   function handleInstituteSwitch(newInstId) {

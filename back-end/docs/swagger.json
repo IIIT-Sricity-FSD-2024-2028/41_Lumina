@@ -1800,6 +1800,30 @@
         ]
       }
     },
+    "/super-user/institutes/{id}": {
+      "patch": {
+        "operationId": "SuperUserController_updateInstitute",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Institute updated successfully"
+          }
+        },
+        "summary": "Update institute details, quota, or contact (Super User only)",
+        "tags": [
+          "SuperUser"
+        ]
+      }
+    },
     "/revenue/summary": {
       "get": {
         "operationId": "RevenueController_getRevenueSummary",

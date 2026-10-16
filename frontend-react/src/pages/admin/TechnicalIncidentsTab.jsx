@@ -247,8 +247,10 @@ export default function TechnicalIncidentsTab({
               </div>
             </div>
             <div className={styles.modalFooter}>
-              <button className={styles.btnOutline} onClick={closeResolveModal}>Cancel</button>
-              <button className={styles.btnPrimary} onClick={submitResolution}>Save Resolution &amp; Log</button>
+              <button type="button" className={styles.btnOutline} onClick={closeResolveModal}>Cancel</button>
+              <button type="button" className={styles.btnPrimary} onClick={submitResolution} disabled={isSubmitting}>
+                {isSubmitting ? 'Saving...' : 'Save Resolution & Log'}
+              </button>
             </div>
           </div>
         </div>
