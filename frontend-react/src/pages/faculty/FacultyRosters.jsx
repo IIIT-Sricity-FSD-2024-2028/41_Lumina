@@ -49,7 +49,7 @@ export default function FacultyRosters() {
     }
     if (pathCourseId) return pathCourseId;
     if (queryCourseId) return queryCourseId;
-    return courses[0]?.id || 'CS402';
+    return courses[0]?.id || '';
   })();
 
   // Load roster whenever selectedCourseId changes

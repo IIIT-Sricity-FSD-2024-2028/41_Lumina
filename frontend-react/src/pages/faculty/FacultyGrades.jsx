@@ -47,7 +47,7 @@ export default function FacultyGrades() {
     }
     if (pathCourseId) return pathCourseId;
     if (queryCourseId) return queryCourseId;
-    return courses[0]?.id || 'CS402';
+    return courses[0]?.id || '';
   })();
 
   // Load students/grades whenever selected course changes

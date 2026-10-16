@@ -25,8 +25,8 @@ export default function FacultyHome() {
 
         const [cList, classes, students] = await Promise.all([
           facultyDataService.getCourses(user),
-          facultyDataService.getTodaysClasses(),
-          facultyDataService.getAllEnrolledStudents(),
+          facultyDataService.getTodaysClasses(user),
+          facultyDataService.getAllEnrolledStudents(user),
         ]);
 
         setCourses(cList);
@@ -144,24 +144,28 @@ export default function FacultyHome() {
             </div>
 
             <div className={styles.classList}>
-              {todaysClasses.map((item) => (
-                <div key={item.id} className={styles.classCard}>
-                  <div className={styles.classTimeBox}>
-                    <span className={styles.timeHour}>{item.time}</span>
-                    <span className={styles.timeAmpm}>{item.ampm}</span>
-                  </div>
-                  <div className={styles.classDetails}>
-                    <div className={styles.className}>{item.courseId} - {item.courseName}</div>
-                    <div className={styles.classMeta}>
-                      <span className={styles.metaBadge}>{item.room}</span>
-                      <span>{item.dayOfWeek}</span>
-                      <span>•</span>
-                      <span>Ends at {item.end}</span>
+              {todaysClasses.length > 0 ? (
+                todaysClasses.map((item) => (
+                  <div key={item.id} className={styles.classCard}>
+                    <div className={styles.classTimeBox}>
+                      <span className={styles.timeHour}>{item.time}</span>
+                      <span className={styles.timeAmpm}>{item.ampm}</span>
                     </div>
+                    <div className={styles.classDetails}>
+                      <div className={styles.className}>{item.courseId} - {item.courseName}</div>
+                      <div className={styles.classMeta}>
+                        <span className={styles.metaBadge}>{item.room}</span>
+                        <span>{item.dayOfWeek}</span>
+                        <span>•</span>
+                        <span>Ends at {item.end}</span>
+                      </div>
+                    </div>
+                    <span className={styles.upcomingBadge}>UPCOMING</span>
                   </div>
-                  <span className={styles.upcomingBadge}>UPCOMING</span>
-                </div>
-              ))}
+                ))
+              ) : (
+                <div className={styles.emptyRoster}>No scheduled classes today</div>
+              )}
             </div>
           </section>
 
@@ -181,35 +185,41 @@ export default function FacultyHome() {
             </div>
 
             <div className={styles.miniCoursesGrid}>
-              {courses.slice(0, 2).map((course) => (
-                <div key={course.id} className={styles.miniCourseCard}>
-                  <div>
-                    <span className={styles.miniCourseSem}>{course.semester}</span>
-                    <h3 className={styles.miniCourseTitle} style={{ marginTop: '4px' }}>
-                      {course.id} &ndash; {course.name}
-                    </h3>
+              {courses.length > 0 ? (
+                courses.slice(0, 2).map((course) => (
+                  <div key={course.id} className={styles.miniCourseCard}>
+                    <div>
+                      <span className={styles.miniCourseSem}>{course.semester}</span>
+                      <h3 className={styles.miniCourseTitle} style={{ marginTop: '4px' }}>
+                        {course.id} &ndash; {course.name}
+                      </h3>
+                    </div>
+                    <div className={styles.miniCourseMeta}>
+                      <span>👥 {course.students} Enrolled</span>
+                      <span>🎓 {course.credits} Credits</span>
+                      <span>🏛️ {course.room}</span>
+                    </div>
+                    <div className={styles.miniCourseActions}>
+                      <button
+                        className={`${styles.miniBtn} ${styles.miniBtnOutline}`}
+                        onClick={() => navigate(`/faculty/roster?course=${course.id}`)}
+                      >
+                        Roster
+                      </button>
+                      <button
+                        className={`${styles.miniBtn} ${styles.miniBtnPrimary}`}
+                        onClick={() => navigate(`/faculty/grades?course=${course.id}`)}
+                      >
+                        Gradebook
+                      </button>
+                    </div>
                   </div>
-                  <div className={styles.miniCourseMeta}>
-                    <span>👥 {course.students} Enrolled</span>
-                    <span>🎓 {course.credits} Credits</span>
-                    <span>🏛️ {course.room}</span>
-                  </div>
-                  <div className={styles.miniCourseActions}>
-                    <button
-                      className={`${styles.miniBtn} ${styles.miniBtnOutline}`}
-                      onClick={() => navigate(`/faculty/roster?course=${course.id}`)}
-                    >
-                      Roster
-                    </button>
-                    <button
-                      className={`${styles.miniBtn} ${styles.miniBtnPrimary}`}
-                      onClick={() => navigate(`/faculty/grades?course=${course.id}`)}
-                    >
-                      Gradebook
-                    </button>
-                  </div>
+                ))
+              ) : (
+                <div className={styles.emptyRoster} style={{ gridColumn: '1 / -1' }}>
+                  No courses currently assigned
                 </div>
-              ))}
+              )}
             </div>
           </section>
         </div>
