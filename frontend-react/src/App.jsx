@@ -159,7 +159,7 @@ export default function App() {
           <Route
             path='/admin'
             element={
-              <ProtectedRoute allowedRoles={['Lumina_SPOC', 'Admin']}>
+              <ProtectedRoute allowedRoles={['Lumina_SPOC', 'Admin', 'Super_User']}>
                 <AdminPortalPage />
               </ProtectedRoute>
             }
@@ -168,7 +168,7 @@ export default function App() {
           <Route
             path='/admin/*'
             element={
-              <ProtectedRoute allowedRoles={['Lumina_SPOC', 'Admin']}>
+              <ProtectedRoute allowedRoles={['Lumina_SPOC', 'Admin', 'Super_User']}>
                 <AdminPortalPage />
               </ProtectedRoute>
             }
