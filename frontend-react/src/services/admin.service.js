@@ -160,4 +160,15 @@ export const adminService = {
     const res = await api.post(`/super-user/institutes/${instituteId}/archive`);
     return res.data;
   },
+
+  /**
+   * Update institute details (quota, contacts, SLA status)
+   * @param {string} instituteId
+   * @param {Object} data
+   */
+  async updateInstitute(instituteId, data) {
+    const res = await api.patch(`/super-user/institutes/${instituteId}`, data);
+    return res.data;
+  },
 };
+

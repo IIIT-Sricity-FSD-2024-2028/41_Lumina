@@ -161,4 +161,16 @@ export class SuperUserController {
   archiveInstitute(@Param('id') instituteId: string) {
     return this.superUserService.archiveInstitute(instituteId);
   }
+
+  @Patch('institutes/:id')
+  @Roles('Super_User')
+  @ApiOperation({ summary: 'Update institute details, quota, or contact (Super User only)' })
+  @ApiResponse({ status: 200, description: 'Institute updated successfully' })
+  updateInstitute(
+    @Param('id') instituteId: string,
+    @Body() payload: Partial<ClientInstitute>,
+  ) {
+    return this.superUserService.updateInstitute(instituteId, payload);
+  }
 }
+

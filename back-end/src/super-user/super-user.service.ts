@@ -109,14 +109,29 @@ export class SuperUserService {
   // =========================================================================
 
   /**
-   * Returns all Lumina Admins (SPOCs) employed under Super User
+   * Returns all Lumina Admins (SPOCs) employed under Super User with live docket and tenant assignments
    */
   getAdminTeam(): LuminaAdminSpoc[] {
-    return this.db.adminTeam;
+    return this.db.adminTeam.map((spoc) => {
+      const activeDockets = this.db.supportDockets.filter(
+        (d) => d.assignedSpocId === spoc.adminId && d.status !== 'Resolved',
+      ).length;
+      const assignedInsts = this.db.institutes
+        .filter((i) => i.spocAdminId === spoc.adminId && i.status !== 'Archived')
+        .map((i) => i.name);
+
+      return {
+        ...spoc,
+        activeDockets,
+        assignedInstituteName: assignedInsts.length > 0
+          ? assignedInsts.join(', ')
+          : (spoc.assignedInstituteName || 'Floating Support Queue'),
+      };
+    });
   }
 
   /**
-   * Recruits / adds a new Lumina Admin SPOC to the internal staff
+   * Recruits / adds a new Lumina Admin SPOC to the internal staff and user database
    */
   addAdminSpoc(payload: Partial<LuminaAdminSpoc>): LuminaAdminSpoc {
     const newAdmin: LuminaAdminSpoc = {
@@ -132,11 +147,22 @@ export class SuperUserService {
       activeDockets: 0,
     };
     this.db.adminTeam.push(newAdmin);
+
+    // Sync with users collection
+    this.db.users.push({
+      userId: newAdmin.adminId,
+      fullName: newAdmin.fullName,
+      email: newAdmin.email,
+      password: 'password123',
+      role: 'Lumina_SPOC',
+      deptId: newAdmin.assignedInstituteId || 'INST-IIITS',
+    });
+
     return newAdmin;
   }
 
   /**
-   * Removes / offboards a Lumina Admin SPOC from the operations staff
+   * Removes / offboards a Lumina Admin SPOC from operations staff and user directory
    */
   deleteAdminSpoc(adminId: string): { success: boolean; message: string; adminId: string } {
     const idx = this.db.adminTeam.findIndex((a) => a.adminId === adminId);
@@ -146,6 +172,12 @@ export class SuperUserService {
 
     const spoc = this.db.adminTeam[idx];
     this.db.adminTeam.splice(idx, 1);
+
+    // Also remove from user directory
+    const userIdx = this.db.users.findIndex((u) => u.userId === adminId);
+    if (userIdx !== -1) {
+      this.db.users.splice(userIdx, 1);
+    }
 
     // Reassign any institutes assigned to this SPOC to floating support queue or backup SPOC
     const fallbackSpoc = this.db.adminTeam[0];
@@ -169,22 +201,35 @@ export class SuperUserService {
   }
 
   /**
-   * Returns all onboarded client institutions with dynamic tenant lifecycle state
+   * Returns all onboarded client institutions with dynamic student counts and lifecycle state
    */
   getInstitutes(): ClientInstitute[] {
     const activePlan = this.db.activeInstitutePlan;
-    const realStudentsCount = this.db.users.filter((u) => u.role === 'Student').length;
-    const iiitsStudentCount = Math.max(1250, 1250 + (realStudentsCount - 22));
+
+    const renewalMs = new Date(activePlan.renewalDate || Date.now()).getTime();
+    const graceEndsMs = renewalMs + 60 * 24 * 60 * 60 * 1000;
+    const daysRemainingInGrace = Math.max(0, Math.ceil((graceEndsMs - Date.now()) / (1000 * 60 * 60 * 24)));
 
     return this.db.institutes.map((inst) => {
-      let dynamicStudentCount = inst.studentCount;
+      const instStudents = this.db.students.filter(
+        (s) => s.instituteId === inst.instituteId || (!s.instituteId && inst.instituteId === 'INST-IIITS'),
+      );
+      const instUserStudents = this.db.users.filter(
+        (u) => u.role === 'Student' && (u.instituteId === inst.instituteId || (!u.instituteId && inst.instituteId === 'INST-IIITS')),
+      );
+      const realInstituteCount = instStudents.length > 0 ? instStudents.length : instUserStudents.length;
+
+      let dynamicStudentCount = inst.status === 'Archived' ? 0 : (realInstituteCount > 0 ? realInstituteCount : (inst.studentCount || 0));
+
       if (inst.instituteId === 'INST-IIITS') {
-        dynamicStudentCount = activePlan.status === 'Suspended' ? 0 : iiitsStudentCount;
+        dynamicStudentCount = activePlan.status === 'Suspended' ? 0 : realInstituteCount;
+        inst.studentCount = dynamicStudentCount;
         if (activePlan.status === 'Read_Only_Grace_Period') {
           return {
             ...inst,
             studentCount: dynamicStudentCount,
             status: 'Grace_Period',
+            daysRemainingInGrace,
             displayTier: 'Enterprise (Grace Period)',
           };
         } else if (activePlan.status === 'Canceled') {
@@ -205,6 +250,8 @@ export class SuperUserService {
       } else if (inst.status === 'Archived') {
         dynamicStudentCount = 0;
       }
+
+      inst.studentCount = dynamicStudentCount;
       return {
         ...inst,
         studentCount: dynamicStudentCount,
@@ -222,7 +269,9 @@ export class SuperUserService {
       return { success: false, message: `Institute ${instituteId} not found.` };
     }
 
+    const reclaimedQuota = inst.studentCount;
     inst.status = 'Archived';
+    inst.studentCount = 0;
     if (instituteId === 'INST-IIITS') {
       this.db.activeInstitutePlan.status = 'Suspended';
     }
@@ -238,7 +287,7 @@ export class SuperUserService {
       instituteId,
       instituteName: inst.name,
       status: 'Archived',
-      message: `Tenant ${inst.name} successfully encrypted and migrated to Cold Storage. Seat quota (1,250 seats) reclaimed.`,
+      message: `Tenant ${inst.name} successfully encrypted and migrated to Cold Storage. Seat quota (${reclaimedQuota.toLocaleString()} seats) reclaimed.`,
       timestamp: new Date().toISOString(),
     };
   }
@@ -324,4 +373,29 @@ export class SuperUserService {
 
     return { success: true, institute: inst, spoc: spoc };
   }
+
+  /**
+   * Updates an institute's quota, contact details, or status
+   */
+  updateInstitute(instituteId: string, payload: Partial<ClientInstitute>): ClientInstitute {
+    const inst = this.db.institutes.find((i) => i.instituteId === instituteId);
+    if (!inst) {
+      throw new NotFoundException(`Institute ${instituteId} not found.`);
+    }
+
+    if (payload.name) inst.name = payload.name;
+    if (payload.deanName) inst.deanName = payload.deanName;
+    if (payload.deanEmail) inst.deanEmail = payload.deanEmail;
+    if (payload.studentCount !== undefined && payload.studentCount !== null) {
+      inst.studentCount = Number(payload.studentCount);
+    }
+    if (payload.slaStatus) inst.slaStatus = payload.slaStatus;
+    if (payload.status) inst.status = payload.status;
+    if (payload.tier) {
+      this.updateInstituteTier(instituteId, payload.tier);
+    }
+
+    return inst;
+  }
 }
+

@@ -56,6 +56,8 @@ export interface ClientInstitute {
   displayTier?: string;
   annualContractValue: number;
   joinedDate: string;
+  slaStatus?: string;
+  daysRemainingInGrace?: number;
 }
 
 export interface SaasPlanDefinition {
@@ -135,12 +137,14 @@ export interface User {
   password: string;
   role: UserRole;
   deptId: string;
+  instituteId?: string;
 }
 
 export interface Student {
   studentId: string;
   currentSemester: number;
   enrollmentYear: number;
+  instituteId?: string;
 }
 
 export interface Department {

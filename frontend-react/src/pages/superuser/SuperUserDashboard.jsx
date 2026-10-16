@@ -143,12 +143,19 @@ export default function SuperUserDashboard() {
   const [systemHealth, setSystemHealth] = useState(null);
   const [onboardDockets, setOnboardDockets] = useState([]);
 
-  // Tier counts derived dynamically from live institutes
-  const tierCounts = useMemo(() => {
+  // Tier counts & annual contract averages derived dynamically from live institutes
+  const tierStats = useMemo(() => {
+    const active = institutes.filter(i => i.status !== 'Archived');
+    const enterprise = active.filter(i => i.tier === 'Enterprise');
+    const campus = active.filter(i => i.tier === 'Campus');
+    const starter = active.filter(i => i.tier === 'Starter');
     return {
-      enterprise: institutes.filter(i => i.tier === 'Enterprise').length,
-      campus: institutes.filter(i => i.tier === 'Campus').length,
-      starter: institutes.filter(i => i.tier === 'Starter').length,
+      enterpriseCount: enterprise.length,
+      campusCount: campus.length,
+      starterCount: starter.length,
+      enterpriseAvg: enterprise.length > 0 ? Math.round(enterprise.reduce((s, i) => s + (i.annualContractValue || 0), 0) / enterprise.length) : 107988,
+      campusAvg: campus.length > 0 ? Math.round(campus.reduce((s, i) => s + (i.annualContractValue || 0), 0) / campus.length) : 41988,
+      starterAvg: starter.length > 0 ? Math.round(starter.reduce((s, i) => s + (i.annualContractValue || 0), 0) / starter.length) : 11988,
     };
   }, [institutes]);
 
@@ -163,6 +170,15 @@ export default function SuperUserDashboard() {
   const seenLogSetRef = useRef(new Set());
 
   // Modals state
+  const [editInstModal, setEditInstModal] = useState({
+    isOpen: false,
+    instId: '',
+    name: '',
+    studentCount: 0,
+    deanName: '',
+    deanEmail: '',
+    slaStatus: '99.99% SLA',
+  });
   const [reassignSpocModal, setReassignSpocModal] = useState({ isOpen: false, instId: '', instName: '', spocId: '' });
   const [changeTierModal, setChangeTierModal] = useState({ isOpen: false, instId: '', instName: '', tier: 'Campus' });
   const [employSpocModal, setEmploySpocModal] = useState({ isOpen: false, fullName: '', email: '', phone: '' });
@@ -294,7 +310,8 @@ export default function SuperUserDashboard() {
     const totalArr = activeInsts.reduce((sum, i) => sum + (i.annualContractValue || 0), 0);
     const totalStudents = activeInsts.reduce((sum, i) => sum + (i.studentCount || 0), 0);
     return {
-      instCount: institutes.length,
+      instCount: activeInsts.length,
+      totalCount: institutes.length,
       spocCount: adminTeam.length,
       arr: totalArr,
       mrr: Math.round(totalArr / 12),
@@ -322,6 +339,25 @@ export default function SuperUserDashboard() {
 
 
   // Tenant / Institute Actions
+  async function handleConfirmEditInstitute(e) {
+    e.preventDefault();
+    try {
+      await adminService.updateInstitute(editInstModal.instId, {
+        name: editInstModal.name,
+        studentCount: Number(editInstModal.studentCount),
+        deanName: editInstModal.deanName,
+        deanEmail: editInstModal.deanEmail,
+        slaStatus: editInstModal.slaStatus,
+      });
+      toast.success(`Updated quota & details for ${editInstModal.name}!`);
+      setEditInstModal({ isOpen: false, instId: '', name: '', studentCount: 0, deanName: '', deanEmail: '', slaStatus: '99.99% SLA' });
+      loadInstitutesAndStaff();
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to update institute details');
+    }
+  }
+
   async function handleConfirmAssignSpoc() {
     try {
       await adminService.assignSpoc(reassignSpocModal.instId, reassignSpocModal.spocId);
@@ -545,16 +581,16 @@ export default function SuperUserDashboard() {
                 </div>
                 <div className={styles.telemetryList}>
                   <div className={styles.telemetryRow}>
-                    <span className={styles.telemetryLabel}>Enterprise Elite ($107,988 / yr)</span>
-                    <span className={styles.telemetryValue}>{tierCounts.enterprise} {tierCounts.enterprise === 1 ? 'University' : 'Universities'}</span>
+                    <span className={styles.telemetryLabel}>Enterprise Elite (${tierStats.enterpriseAvg.toLocaleString()} / yr)</span>
+                    <span className={styles.telemetryValue}>{tierStats.enterpriseCount} {tierStats.enterpriseCount === 1 ? 'University' : 'Universities'}</span>
                   </div>
                   <div className={styles.telemetryRow}>
-                    <span className={styles.telemetryLabel}>Campus Growth ($41,988 / yr)</span>
-                    <span className={styles.telemetryValue}>{tierCounts.campus} {tierCounts.campus === 1 ? 'University' : 'Universities'}</span>
+                    <span className={styles.telemetryLabel}>Campus Growth (${tierStats.campusAvg.toLocaleString()} / yr)</span>
+                    <span className={styles.telemetryValue}>{tierStats.campusCount} {tierStats.campusCount === 1 ? 'University' : 'Universities'}</span>
                   </div>
                   <div className={styles.telemetryRow}>
-                    <span className={styles.telemetryLabel}>Starter Tier ($11,988 / yr)</span>
-                    <span className={styles.telemetryValue}>{tierCounts.starter} {tierCounts.starter === 1 ? 'University' : 'Universities'}</span>
+                    <span className={styles.telemetryLabel}>Starter Tier (${tierStats.starterAvg.toLocaleString()} / yr)</span>
+                    <span className={styles.telemetryValue}>{tierStats.starterCount} {tierStats.starterCount === 1 ? 'University' : 'Universities'}</span>
                   </div>
                   <div className={styles.telemetryRow}>
                     <span className={styles.telemetryLabel}>Total Contract Portfolio</span>
@@ -716,7 +752,9 @@ export default function SuperUserDashboard() {
                           </td>
                           <td>
                             {isGrace ? (
-                              <span className={`${styles.badge} ${styles.badgeGrace}`}>⚠️ Grace Period (29d Left)</span>
+                              <span className={`${styles.badge} ${styles.badgeGrace}`}>
+                                ⚠️ Grace Period ({inst.daysRemainingInGrace != null ? `${inst.daysRemainingInGrace}d Left` : 'Active'})
+                              </span>
                             ) : isArchived ? (
                               <span className={`${styles.badge} ${styles.badgeArchived}`}>Archived</span>
                             ) : (
@@ -741,11 +779,26 @@ export default function SuperUserDashboard() {
                             ) : isArchived ? (
                               <span className={`${styles.badge} ${styles.badgeArchived}`}>Decommissioned</span>
                             ) : (
-                              <span className={`${styles.badge} ${styles.badgeApproved}`}>● 99.99% SLA</span>
+                              <span className={`${styles.badge} ${styles.badgeApproved}`}>● {inst.slaStatus || '99.95% SLA'}</span>
                             )}
                           </td>
                           <td>
                             <div className={styles.rowActions}>
+                              <button
+                                type="button"
+                                className={styles.actionBtn}
+                                onClick={() => setEditInstModal({
+                                  isOpen: true,
+                                  instId: inst.instituteId,
+                                  name: inst.name,
+                                  studentCount: inst.studentCount || 0,
+                                  deanName: inst.deanName || '',
+                                  deanEmail: inst.deanEmail || '',
+                                  slaStatus: inst.slaStatus || '99.99% SLA',
+                                })}
+                              >
+                                Edit Quota
+                              </button>
                               <button
                                 type="button"
                                 className={styles.actionBtn}
@@ -822,7 +875,9 @@ export default function SuperUserDashboard() {
                       </div>
 
                       <div className={styles.spocTenantBox}>
-                        <div className={styles.spocTenantLabel}>Assigned University Tenant</div>
+                        <div className={styles.spocTenantLabel}>
+                          Assigned University Tenant{spoc.assignedInstituteName?.includes(',') ? 's' : ''}
+                        </div>
                         <div style={{ fontWeight: '700', color: 'var(--text-main)', fontSize: '0.9rem' }}>
                           {spoc.assignedInstituteName}
                         </div>
@@ -831,8 +886,13 @@ export default function SuperUserDashboard() {
                       <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         <div>✉️ {spoc.email}</div>
                         <div>📞 {spoc.phone}</div>
-                        <div style={{ marginTop: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span className={`${styles.badge} ${styles.badgeRole}`}>{spoc.slaHealth}</span>
+                        <div style={{ marginTop: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
+                          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                            <span className={`${styles.badge} ${styles.badgeRole}`}>{spoc.slaHealth}</span>
+                            <span className={`${styles.badge} ${spoc.activeDockets > 0 ? styles.badgePending : styles.badgeApproved}`}>
+                              {spoc.activeDockets || 0} Open {spoc.activeDockets === 1 ? 'Docket' : 'Dockets'}
+                            </span>
+                          </div>
                           <button
                             type="button"
                             className={`${styles.btn} ${styles.btnDangerOutline} ${styles.btnXs}`}
@@ -1473,7 +1533,101 @@ export default function SuperUserDashboard() {
         </div>
       )}
 
+      {/* Edit Tenant Quota & Details Modal */}
+      {editInstModal.isOpen && (
+        <div className={styles.modalBackdrop}>
+          <div className={styles.modalDialog}>
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>Edit Client University Quota &amp; Details</h3>
+              <button
+                type="button"
+                className={styles.modalCloseBtn}
+                onClick={() => setEditInstModal(prev => ({ ...prev, isOpen: false }))}
+              >
+                &times;
+              </button>
+            </div>
+            <form onSubmit={handleConfirmEditInstitute}>
+              <div className={styles.modalBody}>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Institute Full Name</label>
+                  <input
+                    type="text"
+                    required
+                    className={styles.formControl}
+                    value={editInstModal.name}
+                    onChange={(e) => setEditInstModal(prev => ({ ...prev, name: e.target.value }))}
+                  />
+                </div>
+                <div className={styles.formRow}>
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Enrolled Student Count / Quota</label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      className={styles.formControl}
+                      value={editInstModal.studentCount}
+                      onChange={(e) => setEditInstModal(prev => ({ ...prev, studentCount: e.target.value }))}
+                    />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>SLA Status</label>
+                    <select
+                      className={styles.formControl}
+                      value={editInstModal.slaStatus}
+                      onChange={(e) => setEditInstModal(prev => ({ ...prev, slaStatus: e.target.value }))}
+                    >
+                      <option value="99.99% SLA">99.99% SLA (Dedicated)</option>
+                      <option value="99.95% SLA">99.95% SLA (High Priority)</option>
+                      <option value="99.90% SLA">99.90% SLA (Standard)</option>
+                      <option value="99.85% SLA">99.85% SLA (Standard Basic)</option>
+                      <option value="99.80% SLA">99.80% SLA (Basic)</option>
+                    </select>
+                  </div>
+                </div>
+                <div className={styles.formRow}>
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Dean / Registrar Contact</label>
+                    <input
+                      type="text"
+                      required
+                      className={styles.formControl}
+                      value={editInstModal.deanName}
+                      onChange={(e) => setEditInstModal(prev => ({ ...prev, deanName: e.target.value }))}
+                    />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Institutional Email</label>
+                    <input
+                      type="email"
+                      required
+                      className={styles.formControl}
+                      value={editInstModal.deanEmail}
+                      onChange={(e) => setEditInstModal(prev => ({ ...prev, deanEmail: e.target.value }))}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className={styles.modalFooter}>
+                <button
+                  type="button"
+                  className={`${styles.btn} ${styles.btnOutline}`}
+                  onClick={() => setEditInstModal(prev => ({ ...prev, isOpen: false }))}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className={`${styles.btn} ${styles.btnPrimary}`}>
+                  Save Tenant Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <Footer />
     </>
   );
 }
+
