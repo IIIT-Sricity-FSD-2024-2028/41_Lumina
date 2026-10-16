@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/auth.service';
 import Footer from '../components/Footer';
@@ -9,6 +9,13 @@ export default function Landing() {
   const { isAuthenticated, role } = useAuth();
   const [billingCycle, setBillingCycle] = useState('monthly'); // 'monthly' or 'annual'
 
+  const dashboardRoute = authService.getDashboardRoute(role);
+
+  // If already authenticated, redirect straight to role dashboard
+  if (isAuthenticated) {
+    return <Navigate to={dashboardRoute} replace />;
+  }
+
   // Pricing calculation (20% discount on annual)
   const isAnnual = billingCycle === 'annual';
   const prices = {
@@ -16,8 +23,6 @@ export default function Landing() {
     campus: isAnnual ? '3,199' : '3,999',
     enterprise: isAnnual ? '7,199' : '8,999',
   };
-
-  const dashboardRoute = authService.getDashboardRoute(role);
 
   return (
     <div className={styles.pageWrapper}>
@@ -37,15 +42,9 @@ export default function Landing() {
         </nav>
 
         <div>
-          {isAuthenticated ? (
-            <Link to={dashboardRoute} className="btn-primary" style={{ padding: '8px 18px', fontSize: '0.875rem' }}>
-              Go to Dashboard
-            </Link>
-          ) : (
-            <Link to="/login" className="btn-primary" style={{ padding: '8px 20px', fontSize: '0.875rem' }}>
-              Login
-            </Link>
-          )}
+          <Link to="/login" className="btn-primary" style={{ padding: '8px 20px', fontSize: '0.875rem' }}>
+            Login
+          </Link>
         </div>
       </header>
 
@@ -60,8 +59,8 @@ export default function Landing() {
           dynamic policy governance, and seamless student registration.
         </p>
         <div className={styles.heroActions}>
-          <Link to={isAuthenticated ? dashboardRoute : '/login'} className="btn-primary">
-            {isAuthenticated ? 'Go to Dashboard' : 'Login to Portal'}
+          <Link to="/login" className="btn-primary">
+            Login to Portal
           </Link>
           <a href="#pricing" className="btn-outline">
             Explore SaaS Plans

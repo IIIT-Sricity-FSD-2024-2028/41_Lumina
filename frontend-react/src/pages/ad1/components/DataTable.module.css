@@ -1,0 +1,36 @@
+/* DataTable.module.css */
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.table thead {
+  border-bottom: 2px solid #e5e7eb;
+}
+.table th {
+  text-align: left;
+  padding: 16px;
+  font-size: .7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: #6b7280;
+}
+.table td {
+  padding: 16px;
+  font-size: .875rem;
+  border-bottom: 1px solid #f3f4f6;
+  color: #374151;
+}
+.table tbody tr {
+  transition: background .2s ease;
+}
+.table tbody tr:hover {
+  background: #f9fafb;
+}
+.empty {
+  text-align: center;
+  padding: 40px !important;
+  color: #9ca3af;
+  font-style: italic;
+}

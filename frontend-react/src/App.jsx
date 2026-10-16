@@ -6,6 +6,18 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 
+// Student Pages
+import StudentDashboard from './pages/student/StudentDashboard';
+import StudentRegistration from './pages/student/StudentRegistration';
+import StudentRoadmap from './pages/student/StudentRoadmap';
+
+// AD1 (Assistant Dean 1) Pages
+import AD1Dashboard from './pages/ad1/AD1Dashboard';
+import CourseCatalog from './pages/ad1/CourseCatalog';
+import CourseSection from './pages/ad1/CourseSection';
+import Timetable from './pages/ad1/Timetable';
+
+// Dean 2 Pages
 import Dean2Home from './pages/ad2/Dean2Home';
 import Dean2Policies from './pages/ad2/Dean2Policies';
 import Dean2Enrollment from './pages/ad2/Dean2Enrollment';
@@ -16,21 +28,70 @@ import Dean2GradesheetDetail from './pages/ad2/Dean2GradesheetDetail';
 import SuperUserDashboard from './pages/superuser/SuperUserDashboard';
 import DeanDashboard from './pages/dean/DeanDashboard';
 
+// Faculty Portal Pages
+import FacultyLayout from './pages/faculty/FacultyLayout';
+import FacultyHome from './pages/faculty/FacultyHome';
+import FacultyCourses from './pages/faculty/FacultyCourses';
+import FacultyGrades from './pages/faculty/FacultyGrades';
+import FacultyRosters from './pages/faculty/FacultyRosters';
+import FacultyAnnouncements from './pages/faculty/FacultyAnnouncements';
+
+// Admin / SPOC Portal
+import AdminPortalPage from './pages/admin/AdminPortalPage';
+
 export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        {/* Global Toast notifications */}
-        <Toaster position="top-right" />
+        <Toaster position='top-right' />
 
-        {/* Clean Route Table */}
         <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login />} />
+          <Route path='/' element={<Landing />} />
+          <Route path='/login' element={<Login />} />
 
-          {/* Dean 2 (Assistant Dean 2) Routes */}
+          {/* Student Role Routes */}
           <Route
-            path="/ad2"
+            path='/student'
+            element={
+              <ProtectedRoute allowedRoles={['Student', 'student']}>
+                <StudentDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path='/student/dashboard'
+            element={<Navigate to='/student' replace />}
+          />
+          <Route
+            path='/student/registration'
+            element={
+              <ProtectedRoute allowedRoles={['Student', 'student']}>
+                <StudentRegistration />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path='/student/roadmap'
+            element={
+              <ProtectedRoute allowedRoles={['Student', 'student']}>
+                <StudentRoadmap />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* AD1 Routes */}
+          <Route path='/ad1/dashboard' element={<AD1Dashboard />} />
+          <Route path='/ad1/course-catalog' element={<CourseCatalog />} />
+          <Route path='/ad1/course-section' element={<CourseSection />} />
+          <Route path='/ad1/timetable' element={<Timetable />} />
+          <Route
+            path='/dean1'
+            element={<Navigate to='/ad1/dashboard' replace />}
+          />
+
+          {/* Dean 2 Routes */}
+          <Route
+            path='/ad2'
             element={
               <ProtectedRoute allowedRoles={['Assistant_Dean_2']}>
                 <Dean2Home />
@@ -38,7 +99,7 @@ export default function App() {
             }
           />
           <Route
-            path="/ad2/policies"
+            path='/ad2/policies'
             element={
               <ProtectedRoute allowedRoles={['Assistant_Dean_2']}>
                 <Dean2Policies />
@@ -46,7 +107,7 @@ export default function App() {
             }
           />
           <Route
-            path="/ad2/enrollment"
+            path='/ad2/enrollment'
             element={
               <ProtectedRoute allowedRoles={['Assistant_Dean_2']}>
                 <Dean2Enrollment />
@@ -54,7 +115,7 @@ export default function App() {
             }
           />
           <Route
-            path="/ad2/overrides"
+            path='/ad2/overrides'
             element={
               <ProtectedRoute allowedRoles={['Assistant_Dean_2']}>
                 <Dean2Overrides />
@@ -62,7 +123,7 @@ export default function App() {
             }
           />
           <Route
-            path="/ad2/analytics"
+            path='/ad2/analytics'
             element={
               <ProtectedRoute allowedRoles={['Assistant_Dean_2']}>
                 <Dean2Analytics />
@@ -70,7 +131,7 @@ export default function App() {
             }
           />
           <Route
-            path="/ad2/gradesheets"
+            path='/ad2/gradesheets'
             element={
               <ProtectedRoute allowedRoles={['Assistant_Dean_2']}>
                 <Dean2Gradesheets />
@@ -78,7 +139,7 @@ export default function App() {
             }
           />
           <Route
-            path="/ad2/gradesheets/:courseId/:termId"
+            path='/ad2/gradesheets/:courseId/:termId'
             element={
               <ProtectedRoute allowedRoles={['Assistant_Dean_2']}>
                 <Dean2GradesheetDetail />
@@ -86,10 +147,29 @@ export default function App() {
             }
           />
           <Route
-            path="/ad2/gradesheets/detail"
+            path='/ad2/gradesheets/detail'
             element={
               <ProtectedRoute allowedRoles={['Assistant_Dean_2']}>
                 <Dean2GradesheetDetail />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Admin / SPOC Operations Portal */}
+          <Route
+            path='/admin'
+            element={
+              <ProtectedRoute allowedRoles={['Lumina_SPOC', 'Admin']}>
+                <AdminPortalPage />
+              </ProtectedRoute>
+            }
+          />
+          {/* Admin sub-tabs share the same page component (tab state managed internally) */}
+          <Route
+            path='/admin/*'
+            element={
+              <ProtectedRoute allowedRoles={['Lumina_SPOC', 'Admin']}>
+                <AdminPortalPage />
               </ProtectedRoute>
             }
           />
@@ -134,14 +214,51 @@ export default function App() {
           <Route path="/dean2" element={<Navigate to="/ad2" replace />} />
           <Route path="/dean2/*" element={<Navigate to="/ad2" replace />} />
 
-          {/* Unauthorized page */}
+          {/* Faculty Portal Routes */}
           <Route
-            path="/unauthorized"
+            path='/faculty'
+            element={
+              <ProtectedRoute
+                allowedRoles={[
+                  'Faculty',
+                  'Dean',
+                  'Admin',
+                  'Super_User',
+                  'Assistant_Dean_1',
+                  'Assistant_Dean_2',
+                ]}
+              >
+                <FacultyLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<FacultyHome />} />
+            <Route path='courses' element={<FacultyCourses />} />
+            <Route path='grades' element={<FacultyGrades />} />
+            <Route path='grades/:courseId' element={<FacultyGrades />} />
+            <Route path='roster' element={<FacultyRosters />} />
+            <Route path='roster/:courseId' element={<FacultyRosters />} />
+            <Route
+              path='announcements'
+              element={<FacultyAnnouncements />}
+            />
+          </Route>
+
+          {/* Unauthorized Page */}
+          <Route
+            path='/unauthorized'
             element={
               <div style={{ padding: '40px', textAlign: 'center' }}>
                 <h2>403 - Unauthorized Access</h2>
                 <p>You do not have permission to view this page.</p>
-                <Link to="/" style={{ color: 'var(--accent-blue)', marginTop: '8px', display: 'inline-block' }}>
+                <Link
+                  to='/'
+                  style={{
+                    color: 'var(--accent-blue)',
+                    marginTop: '8px',
+                    display: 'inline-block',
+                  }}
+                >
                   Return to Home
                 </Link>
               </div>
@@ -150,11 +267,18 @@ export default function App() {
 
           {/* 404 Catch-all */}
           <Route
-            path="*"
+            path='*'
             element={
               <div style={{ padding: '40px', textAlign: 'center' }}>
                 <h2>404 - Page Not Found</h2>
-                <Link to="/" style={{ color: 'var(--accent-blue)', marginTop: '8px', display: 'inline-block' }}>
+                <Link
+                  to='/'
+                  style={{
+                    color: 'var(--accent-blue)',
+                    marginTop: '8px',
+                    display: 'inline-block',
+                  }}
+                >
                   Return to Home
                 </Link>
               </div>
