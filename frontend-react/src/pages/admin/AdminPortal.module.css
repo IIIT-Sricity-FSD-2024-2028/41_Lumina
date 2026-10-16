@@ -91,6 +91,35 @@
   letter-spacing: 0.05em;
 }
 
+.spocVerifiedBadge {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  color: #f1f5f9;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: -0.01em;
+}
+
+.spocBadgeDot {
+  width: 7px;
+  height: 7px;
+  background-color: #10b981;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.7);
+}
+
+.spocBadgeId {
+  color: #94a3b8;
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
 .spocSelect {
   background: #0f172a;
   border: 1px solid #334155;
