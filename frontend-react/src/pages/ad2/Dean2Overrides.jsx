@@ -104,6 +104,14 @@ export default function Dean2Overrides() {
     return list;
   }, [overridesList, search, deptFilter, statusFilter]);
 
+  const availableDepts = useMemo(() => {
+    const set = new Set(['CSE', 'ECE', 'AIDS']);
+    overridesList.forEach((r) => {
+      if (r.dept && r.dept !== 'Unknown') set.add(r.dept);
+    });
+    return Array.from(set);
+  }, [overridesList]);
+
   // Metrics
   const metrics = useMemo(() => {
     const pending = overridesList.filter((r) => r.status === 'Pending').length;
@@ -115,13 +123,28 @@ export default function Dean2Overrides() {
   // Insights
   const insights = useMemo(() => {
     const total = overridesList.length;
-    const cseCnt = overridesList.filter((r) => r.dept === 'CSE').length;
+    const deptCounts = {};
+    overridesList.forEach((r) => {
+      if (r.dept && r.dept !== 'Unknown') {
+        deptCounts[r.dept] = (deptCounts[r.dept] || 0) + 1;
+      }
+    });
+
+    let topDept = 'CSE';
+    let topCount = 0;
+    Object.entries(deptCounts).forEach(([dept, count]) => {
+      if (count > topCount) {
+        topDept = dept;
+        topCount = count;
+      }
+    });
+
+    const topPct = total > 0 ? Math.round((topCount / total) * 100) : 0;
     const cfCnt = overridesList.filter((r) => r.reason.toLowerCase().includes('course full')).length;
-    const csePct = total > 0 ? Math.round((cseCnt / total) * 100) : 0;
     const cfPct = total > 0 ? Math.round((cfCnt / total) * 100) : 0;
     const pending = overridesList.filter((r) => r.status === 'Pending').length;
 
-    return { total, cseCnt, csePct, cfPct, pending };
+    return { total, topDept, topCount, topPct, cfPct, pending };
   }, [overridesList]);
 
   // Handle Approve / Reject
@@ -189,9 +212,11 @@ export default function Dean2Overrides() {
                   className={styles.formControlSelect}
                 >
                   <option value="All Departments">All Departments</option>
-                  <option value="CSE">CSE</option>
-                  <option value="ECE">ECE</option>
-                  <option value="AIDS">AIDS</option>
+                  {availableDepts.map((d) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -346,8 +371,8 @@ export default function Dean2Overrides() {
               </div>
               <ul className={styles.bulletList}>
                 <li>
-                  CSE Department accounts for <strong>{insights.csePct}%</strong> of all override requests (
-                  {insights.cseCnt} of {insights.total}).
+                  <strong>{insights.topDept}</strong> Department accounts for <strong>{insights.topPct}%</strong> of all override requests (
+                  {insights.topCount} of {insights.total}).
                 </li>
                 <li>
                   &apos;Course Full&apos; is the top reason for override requests (<strong>{insights.cfPct}%</strong> of total).

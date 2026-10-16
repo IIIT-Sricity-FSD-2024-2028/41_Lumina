@@ -76,7 +76,31 @@ export default function Dean2Gradesheets() {
   }, [courseRows, search]);
 
   const handleExport = () => {
-    toast.success('📥 Grade sheets exported successfully!');
+    if (courseRows.length === 0) {
+      toast.error('No course records to export.');
+      return;
+    }
+
+    const headers = ['Course Code', 'Course Name', 'Semester', 'Total Enrolled', 'Grades Submitted', 'Status'];
+    const rows = courseRows.map((r) => [
+      `"${r.courseId}"`,
+      `"${r.courseName.replace(/"/g, '""')}"`,
+      `"${r.term}"`,
+      r.totalEnrolled,
+      r.withGrades,
+      `"${r.withGrades > 0 ? 'Grades Submitted' : 'Pending'}"`,
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', 'Lumina_All_Course_GradeSheets.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast.success(`📥 Exported ${courseRows.length} course grade summaries to CSV!`);
   };
 
   return (

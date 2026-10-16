@@ -3,6 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import Dean2Layout from './Dean2Layout';
 import { policiesService } from '../../services/policies.service';
 import { overridesService } from '../../services/overrides.service';
+import { usersService } from '../../services/users.service';
+import { coursesService } from '../../services/courses.service';
+import { registrationsService } from '../../services/registrations.service';
+import { sectionsService } from '../../services/sections.service';
 import styles from './Dean2.module.css';
 
 function computeTermLabel(academicYear, term) {
@@ -28,15 +32,35 @@ export default function Dean2Home() {
   const [policies, setPolicies] = useState({});
   const [activePhase, setActivePhase] = useState(null);
   const [pendingOverridesCount, setPendingOverridesCount] = useState(0);
+  const [metrics, setMetrics] = useState({
+    totalEnrolled: 0,
+    yetToEnroll: 0,
+    targetStudents: 0,
+    enrollmentProgress: 0,
+    totalCourses: 0,
+  });
+  const [ugBreakdown, setUgBreakdown] = useState([]);
 
   useEffect(() => {
     async function loadDashboardData() {
       try {
         setLoading(true);
-        const [polData, phasesData, overridesData] = await Promise.allSettled([
+        const [
+          polData,
+          phasesData,
+          overridesData,
+          usersData,
+          coursesData,
+          regsData,
+          sectionsData,
+        ] = await Promise.allSettled([
           policiesService.getPolicies(),
           policiesService.getPhases(),
           overridesService.getAll(),
+          usersService.getAll(),
+          coursesService.getAll(),
+          registrationsService.getAll(),
+          sectionsService.getAll(),
         ]);
 
         if (polData.status === 'fulfilled' && polData.value?.settings) {
@@ -54,6 +78,82 @@ export default function Dean2Home() {
           ).length;
           setPendingOverridesCount(pending);
         }
+
+        const users = usersData.status === 'fulfilled' && Array.isArray(usersData.value) ? usersData.value : [];
+        const courses = coursesData.status === 'fulfilled' && Array.isArray(coursesData.value) ? coursesData.value : [];
+        const registrations = regsData.status === 'fulfilled' && Array.isArray(regsData.value) ? regsData.value : [];
+        const sections = sectionsData.status === 'fulfilled' && Array.isArray(sectionsData.value) ? sectionsData.value : [];
+
+        const students = users.filter((u) => (u.role || u.Role) === 'Student');
+        const enrolledStudentIds = new Set(
+          registrations
+            .filter((r) => (r.status || r.Status || 'Enrolled') === 'Enrolled')
+            .map((r) => r.studentId || r.Student_ID)
+        );
+        const enrolledCount = enrolledStudentIds.size;
+        const totalStudentCount = students.length || enrolledCount || 0;
+        const yetToEnrollCount = Math.max(0, totalStudentCount - enrolledCount);
+        const progressPct = totalStudentCount > 0 ? Math.round((enrolledCount / totalStudentCount) * 100) : 0;
+
+        setMetrics({
+          totalEnrolled: enrolledCount,
+          yetToEnroll: yetToEnrollCount,
+          targetStudents: totalStudentCount,
+          enrollmentProgress: progressPct,
+          totalCourses: courses.length,
+        });
+
+        // Build capacity map by courseId
+        const capacityByCourse = {};
+        sections.forEach((s) => {
+          const cid = s.courseId || s.Course_ID;
+          if (cid) {
+            capacityByCourse[cid] = (capacityByCourse[cid] || 0) + (Number(s.capacity || s.Capacity) || 40);
+          }
+        });
+
+        // Group courses by UG Level and Department
+        const groups = {};
+        courses.forEach((c) => {
+          const cid = c.courseId || c.Course_ID || '';
+          const dept = c.deptId || c.Dept_ID || 'General';
+          const match = cid.match(/\d+/);
+          const num = match ? parseInt(match[0], 10) : 100;
+          const ugLevel = num >= 400 ? 'UG4' : num >= 300 ? 'UG3' : num >= 200 ? 'UG2' : 'UG1';
+          const key = `${ugLevel}_${dept}`;
+
+          if (!groups[key]) {
+            groups[key] = {
+              ugLevel,
+              dept,
+              courseIds: [],
+              seats: 0,
+            };
+          }
+          groups[key].courseIds.push(cid);
+          groups[key].seats += capacityByCourse[cid] || 40;
+        });
+
+        const breakdown = Object.values(groups).map((g) => {
+          const enrolledInGroup = registrations.filter(
+            (r) => g.courseIds.includes(r.courseId || r.Course_ID) && (r.status || r.Status || 'Enrolled') === 'Enrolled'
+          ).length;
+          const fillRate = g.seats > 0 ? Math.min(100, Math.round((enrolledInGroup / g.seats) * 100)) : 0;
+          const status = fillRate >= 75 ? 'Stable' : fillRate >= 40 ? 'Active' : 'On Track';
+
+          return {
+            ugLevel: g.ugLevel,
+            dept: g.dept,
+            coursesCount: g.courseIds.length,
+            totalSeats: g.seats,
+            enrolled: enrolledInGroup,
+            fillRate,
+            status,
+          };
+        });
+
+        breakdown.sort((a, b) => a.ugLevel.localeCompare(b.ugLevel) || a.dept.localeCompare(b.dept));
+        setUgBreakdown(breakdown);
       } catch (err) {
         console.error('Error loading Dean2 dashboard data:', err);
       } finally {
@@ -163,35 +263,48 @@ export default function Dean2Home() {
           <div className={styles.cardTitle}>
             Total Students Enrolled <span className={styles.cardIcon}>👥</span>
           </div>
-          <div className={styles.cardValue}>1,850</div>
-          <p className={`${styles.trend} ${styles.positive}`}>↗ 12% vs last term</p>
+          <div className={styles.cardValue}>{loading ? '...' : metrics.totalEnrolled.toLocaleString()}</div>
+          <p className={`${styles.trend} ${styles.positive}`}>
+            {metrics.targetStudents > 0
+              ? `${Math.round((metrics.totalEnrolled / metrics.targetStudents) * 100)}% of total students`
+              : 'Active term'}
+          </p>
         </div>
 
         <div className={styles.card}>
           <div className={styles.cardTitle}>
             Students Yet to Enroll <span className={styles.cardIcon}>📋</span>
           </div>
-          <div className={styles.cardValue}>550</div>
-          <Link to="/ad2/enrollment" className={styles.actionLink}>
-            Action Required
-          </Link>
+          <div className={styles.cardValue}>{loading ? '...' : metrics.yetToEnroll.toLocaleString()}</div>
+          {metrics.yetToEnroll > 0 ? (
+            <Link to="/ad2/enrollment" className={styles.actionLink}>
+              Action Required
+            </Link>
+          ) : (
+            <span style={{ fontSize: '0.85rem', color: '#059669', fontWeight: 600 }}>All Enrolled</span>
+          )}
         </div>
 
         <div className={styles.card}>
           <div className={`${styles.cardTitle} ${styles.flexBetween}`}>
-            Enrollment Progress <span>77%</span>
+            Enrollment Progress <span>{loading ? '...' : `${metrics.enrollmentProgress}%`}</span>
           </div>
           <div className={styles.progressBarBg}>
-            <div className={styles.progressBarFill} style={{ width: '77%' }}></div>
+            <div
+              className={styles.progressBarFill}
+              style={{ width: `${loading ? 0 : Math.min(100, metrics.enrollmentProgress)}%` }}
+            ></div>
           </div>
-          <p className={styles.subtext}>Target: 2,400 students</p>
+          <p className={styles.subtext}>
+            Target: {loading ? '...' : `${metrics.targetStudents.toLocaleString()} students`}
+          </p>
         </div>
 
         <div className={styles.card}>
           <div className={styles.cardTitle}>
             Total Courses Available <span className={styles.cardIcon}>📘</span>
           </div>
-          <div className={styles.cardValue}>120</div>
+          <div className={styles.cardValue}>{loading ? '...' : metrics.totalCourses}</div>
         </div>
 
         <div className={styles.card}>
@@ -240,50 +353,43 @@ export default function Dean2Home() {
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td>UG1</td>
-              <td>CSE</td>
-              <td>5</td>
-              <td>120</td>
-              <td>70</td>
-              <td style={{ color: '#2563EB', fontWeight: 700 }}>58%</td>
-              <td>
-                <span className={`${styles.badge} ${styles.badgeActive}`}>Active</span>
-              </td>
-            </tr>
-            <tr>
-              <td>UG1</td>
-              <td>ECE</td>
-              <td>5</td>
-              <td>100</td>
-              <td>60</td>
-              <td style={{ color: '#2563EB', fontWeight: 700 }}>60%</td>
-              <td>
-                <span className={`${styles.badge} ${styles.badgeActive}`}>Active</span>
-              </td>
-            </tr>
-            <tr>
-              <td>UG2</td>
-              <td>CSE</td>
-              <td>6</td>
-              <td>120</td>
-              <td>95</td>
-              <td style={{ color: '#059669', fontWeight: 700 }}>79%</td>
-              <td>
-                <span className={`${styles.badge} ${styles.badgeCompleted}`}>Stable</span>
-              </td>
-            </tr>
-            <tr>
-              <td>UG3</td>
-              <td>AI &amp; DS</td>
-              <td>4</td>
-              <td>80</td>
-              <td>50</td>
-              <td style={{ color: '#2563EB', fontWeight: 700 }}>62%</td>
-              <td>
-                <span className={`${styles.badge} ${styles.badgeActive}`}>Active</span>
-              </td>
-            </tr>
+            {loading ? (
+              <tr>
+                <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: 'var(--d2-text-muted)' }}>
+                  Loading enrollment breakdown...
+                </td>
+              </tr>
+            ) : ugBreakdown.length === 0 ? (
+              <tr>
+                <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: 'var(--d2-text-muted)' }}>
+                  No course enrollment data available.
+                </td>
+              </tr>
+            ) : (
+              ugBreakdown.map((row) => {
+                const badgeClass =
+                  row.status === 'Stable'
+                    ? styles.badgeCompleted
+                    : row.status === 'Active'
+                    ? styles.badgeActive
+                    : styles.badgeInfo;
+                const fillRateColor = row.fillRate >= 75 ? '#059669' : '#2563EB';
+
+                return (
+                  <tr key={`${row.ugLevel}-${row.dept}`}>
+                    <td>{row.ugLevel}</td>
+                    <td><strong>{row.dept}</strong></td>
+                    <td>{row.coursesCount}</td>
+                    <td>{row.totalSeats}</td>
+                    <td>{row.enrolled}</td>
+                    <td style={{ color: fillRateColor, fontWeight: 700 }}>{row.fillRate}%</td>
+                    <td>
+                      <span className={`${styles.badge} ${badgeClass}`}>{row.status}</span>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>

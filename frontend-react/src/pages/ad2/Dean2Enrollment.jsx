@@ -179,15 +179,23 @@ export default function Dean2Enrollment() {
     }
   };
 
-  const handleDeletePhase = async (id, name) => {
-    if (!window.confirm(`Are you sure you want to delete phase "${name}"?`)) return;
+  const [confirmDeletePhase, setConfirmDeletePhase] = useState(null);
+  const [isDeletingPhase, setIsDeletingPhase] = useState(false);
+
+  const handleDeletePhase = async () => {
+    if (!confirmDeletePhase) return;
+    const { id, name } = confirmDeletePhase;
     try {
+      setIsDeletingPhase(true);
       await policiesService.deletePhase(id);
       toast.success(`Phase "${name}" deleted`);
       setPhases((prev) => prev.filter((p) => p.id !== id));
+      setConfirmDeletePhase(null);
     } catch (err) {
       console.error('Failed to delete phase:', err);
       toast.error(err.response?.data?.message || 'Failed to delete phase');
+    } finally {
+      setIsDeletingPhase(false);
     }
   };
 
@@ -380,7 +388,7 @@ export default function Dean2Enrollment() {
                       </span>
                       <span
                         title="Delete Phase"
-                        onClick={() => handleDeletePhase(phase.id, phase.name)}
+                        onClick={() => setConfirmDeletePhase({ id: phase.id, name: phase.name })}
                         style={{ cursor: 'pointer', color: 'var(--d2-accent-red)' }}
                       >
                         🗑️
@@ -482,6 +490,43 @@ export default function Dean2Enrollment() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {confirmDeletePhase && (
+        <div
+          className={styles.modalOverlay}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isDeletingPhase) setConfirmDeletePhase(null);
+          }}
+        >
+          <div className={styles.modalBox} role="dialog" aria-modal="true" style={{ maxWidth: '440px' }}>
+            <div className={styles.modalTitle}>Confirm Phase Deletion</div>
+            <p style={{ color: 'var(--d2-text-muted)', fontSize: '0.92rem', marginBottom: '1.25rem', lineHeight: 1.5 }}>
+              Are you sure you want to delete enrollment phase{' '}
+              <strong style={{ color: 'var(--d2-text-dark)' }}>&ldquo;{confirmDeletePhase.name}&rdquo;</strong>?
+              This action cannot be undone.
+            </p>
+            <div className={styles.modalActions}>
+              <button
+                type="button"
+                className={`${styles.btn} ${styles.btnOutline}`}
+                onClick={() => setConfirmDeletePhase(null)}
+                disabled={isDeletingPhase}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className={`${styles.btn} ${styles.btnDanger}`}
+                onClick={handleDeletePhase}
+                disabled={isDeletingPhase}
+              >
+                {isDeletingPhase ? 'Deleting...' : 'Delete Phase'}
+              </button>
+            </div>
           </div>
         </div>
       )}
