@@ -97,7 +97,7 @@ export default function CourseCatalog() {
       else if (data?.courses?.some((c) => c.code === code)) errs.code = 'Course code already exists';
     }
     if (!form.name.trim()) errs.name = 'Course name is required';
-    else if (isAdd && !/^[A-Za-z\s]+$/.test(form.name.trim())) errs.name = 'Name must contain only letters';
+    else if (isAdd && form.name.trim().length < 3) errs.name = 'Course name must be at least 3 characters';
     const maxCredits = isAdd ? 4 : 6;
     if (!form.credits || form.credits < 1 || form.credits > maxCredits) errs.credits = `Credits must be 1-${maxCredits}`;
     if (!form.ugYear) errs.ugYear = 'UG Year is required';

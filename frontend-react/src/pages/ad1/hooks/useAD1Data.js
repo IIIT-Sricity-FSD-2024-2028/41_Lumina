@@ -103,8 +103,6 @@ export default function useAD1Data() {
   const [error, setError] = useState(null);
 
   const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
     try {
       const [
         coursesRaw,
@@ -137,7 +135,7 @@ export default function useAD1Data() {
       const students = buildStudentRecords(registrations, users, sections, appCourses);
       const timetable = buildTimetable(slots, sections, users);
       const rooms = buildRooms(slots);
-      const recentActivities = buildRecentActivities(registrations, []);
+      const recentActivities = buildRecentActivities(registrations, courses, slots, users);
       const departments = [...new Set(courses.map((c) => c.Dept_ID).filter(Boolean))];
 
       setData({
@@ -151,6 +149,7 @@ export default function useAD1Data() {
         // Keep raw data for direct manipulation / re-mapping
         _raw: { courses, users, registrations, sections, slots, requirements, prerequisites },
       });
+      setError(null);
     } catch (err) {
       console.error('AD1 data fetch error:', err);
       setError(err.message || 'Failed to load data');
@@ -159,9 +158,26 @@ export default function useAD1Data() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchData();
+  const refetch = useCallback(() => {
+    setLoading(true);
+    setError(null);
+    return fetchData();
   }, [fetchData]);
 
-  return { data, loading, error, refetch: fetchData, setData };
+  useEffect(() => {
+    let ignore = false;
+    (async () => {
+      try {
+        await fetchData();
+      } catch (err) {
+        if (!ignore) setError(err.message || 'Failed to load data');
+      }
+    })();
+
+    return () => {
+      ignore = true;
+    };
+  }, [fetchData]);
+
+  return { data, loading, error, refetch, setData };
 }

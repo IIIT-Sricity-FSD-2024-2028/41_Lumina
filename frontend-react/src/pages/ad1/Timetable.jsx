@@ -5,6 +5,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import AD1PageLayout from './components/AD1PageLayout';
+import Modal from './components/Modal';
 import useAD1Data from './hooks/useAD1Data';
 import { slotsService } from '../../services/slots.service';
 import {
@@ -26,6 +27,7 @@ export default function Timetable() {
   const [filterSection, setFilterSection] = useState('');
 
   const [editMode, setEditMode] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   // ─── Side Panel ────────────────────────────────────────────
   const [panelOpen, setPanelOpen] = useState(false);
@@ -147,9 +149,14 @@ export default function Timetable() {
     closeSidePanel();
   };
 
-  const handleRemoveAllocation = async () => {
+  const handleRemoveAllocation = () => {
     if (!editingAlloc || !data) return;
-    if (!window.confirm('Remove this course slot?')) return;
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmRemove = async () => {
+    setDeleteConfirmOpen(false);
+    if (!editingAlloc || !data) return;
     try {
       await slotsService.delete(editingAlloc.id);
       setData((prev) => ({ ...prev, timetable: prev.timetable.filter((a) => a.id !== editingAlloc.id) }));
@@ -335,6 +342,19 @@ export default function Timetable() {
           </div>
         </div>
       </div>
+
+      {/* ── Remove Slot Confirmation Modal (replaces browser window.confirm with zero localhost popups) ── */}
+      <Modal open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)} title="Remove Course Slot" maxWidth="450px">
+        <Modal.Body>
+          <p style={{ margin: 0, fontSize: '0.92rem', color: 'var(--text-main, #0f172a)', lineHeight: 1.5 }}>
+            Are you sure you want to remove the allocated slot for <strong>{editingAlloc?.courseCode}</strong> on {editingAlloc?.day} ({editingAlloc?.timeSlot}) in Room {editingAlloc?.room}?
+          </p>
+        </Modal.Body>
+        <Modal.Footer>
+          <button className={shared.btnSecondary} onClick={() => setDeleteConfirmOpen(false)}>Cancel</button>
+          <button className={shared.btnDanger} onClick={handleConfirmRemove}>Remove Slot</button>
+        </Modal.Footer>
+      </Modal>
     </AD1PageLayout>
   );
 }

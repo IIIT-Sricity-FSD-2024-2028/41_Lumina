@@ -315,23 +315,59 @@ export function buildRooms(rawSlots) {
   return allRooms.map((roomName) => ({ name: roomName, capacity: ROOM_CAPACITY }));
 }
 
-export function buildRecentActivities(rawRegistrations, rawOverrides) {
-  const pendingOverrides = (rawOverrides || []).filter(
-    (row) => row.Approval_Status === 'Pending'
-  ).length;
+export function buildRecentActivities(rawRegistrations = [], rawCourses = [], rawSlots = [], rawUsers = []) {
+  const activities = [];
 
-  return [
-    { icon: 'slot', title: 'CS101 Slot Allocated', detail: 'Room 204, Mon 10:00 AM', time: '2 mins ago' },
-    { icon: 'course', title: 'New Course Added', detail: 'Advanced AI Ethics (ETH402)', time: '45 mins ago' },
-    { icon: 'slot', title: 'EC202 Slot Updated', detail: 'Moved to Wed 08:45 AM', time: '1 hour ago' },
-    { icon: 'success', title: 'Section Assignment Saved', detail: 'CS301 - 4 sections', time: '3 hours ago' },
-    { icon: 'slot', title: 'AD401 Slot Allocated', detail: 'G01, Wed 02:15 PM', time: '5 hours ago' },
-    { icon: 'course', title: 'CS102 Course Updated', detail: 'Credits changed to 3', time: '1 day ago' },
-    { icon: 'slot', title: 'CS201 Slot Allocated', detail: 'G07, Tue 02:15 PM', time: '1 day ago' },
-    { icon: 'course', title: 'New Course Added', detail: 'Signals & Systems (EC301)', time: '2 days ago' },
-    { icon: 'success', title: 'Enrollment Synced', detail: `${rawRegistrations.length} registrations mapped`, time: '2 days ago' },
-    { icon: 'course', title: 'Override Requests', detail: `${pendingOverrides} pending override requests`, time: '3 days ago' },
-  ];
+  // 1. Course Slot allocations from active database timetable
+  if (Array.isArray(rawSlots) && rawSlots.length > 0) {
+    const latestSlots = [...rawSlots].reverse().slice(0, 3);
+    latestSlots.forEach((slot, i) => {
+      activities.push({
+        icon: 'slot',
+        title: `${slot.Section_ID || 'Course'} Slot Allocated`,
+        detail: `Room ${slot.Room_Number || 'G01'}, ${slot.Day_of_Week || 'Mon'} ${slot.Start_Time || '08:45'} - ${slot.End_Time || '09:45'}`,
+        time: `${(i + 1) * 20} mins ago`,
+      });
+    });
+  }
+
+  // 2. Active Course Catalog listings
+  if (Array.isArray(rawCourses) && rawCourses.length > 0) {
+    const recentCourses = [...rawCourses].slice(0, 3);
+    recentCourses.forEach((c, i) => {
+      activities.push({
+        icon: 'course',
+        title: `${c.Course_Name} (${c.Course_ID})`,
+        detail: `${c.Credits} Credits • ${c.Dept_ID || 'Institute Core'} • ${c.Status || 'Active'}`,
+        time: `${i + 1} hour ago`,
+      });
+    });
+  }
+
+  // 3. Enrollment database synchronization
+  if (Array.isArray(rawRegistrations) && rawRegistrations.length > 0) {
+    activities.push({
+      icon: 'success',
+      title: 'Enrollment Records Synced',
+      detail: `${rawRegistrations.length} active course enrollments mapped to sections`,
+      time: 'Today',
+    });
+  }
+
+  // 4. Faculty active workload
+  if (Array.isArray(rawUsers)) {
+    const facultyCount = rawUsers.filter((u) => u.Role === 'Faculty').length;
+    if (facultyCount > 0) {
+      activities.push({
+        icon: 'course',
+        title: 'Faculty Workload Verified',
+        detail: `${facultyCount} departmental faculty members active in system`,
+        time: 'Today',
+      });
+    }
+  }
+
+  return activities;
 }
 
 /**
