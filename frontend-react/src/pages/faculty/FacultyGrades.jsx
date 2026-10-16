@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { facultyDataService, getGradeLetter } from '../../services/facultyData';
+import { facultyService, getGradeLetter } from '../../services/faculty.service';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import toast from 'react-hot-toast';
 import styles from './FacultyGrades.module.css';
@@ -24,7 +24,7 @@ export default function FacultyGrades() {
     async function initCourses() {
       setLoading(true);
       try {
-        const cList = await facultyDataService.getCourses(user);
+        const cList = await facultyService.getCourses(user);
         setCourses(cList);
       } catch (err) {
         console.error('Failed to load courses for grading', err);
@@ -57,7 +57,7 @@ export default function FacultyGrades() {
 
     async function loadGrades() {
       try {
-        const list = await facultyDataService.getStudentsForCourse(selectedCourseId);
+        const list = await facultyService.getStudentsForCourse(selectedCourseId);
         setGradesData(list);
       } catch (err) {
         console.error('Failed to load students for course', err);
@@ -105,7 +105,7 @@ export default function FacultyGrades() {
   // Save Draft
   async function handleSaveDraft() {
     try {
-      await facultyDataService.saveDraftGrades(selectedCourseId, gradesData);
+      await facultyService.saveDraftGrades(selectedCourseId, gradesData);
       toast.success('Draft marks saved successfully!');
     } catch {
       toast.error('Failed to save draft');
@@ -126,7 +126,7 @@ export default function FacultyGrades() {
     setShowSubmitModal(false);
     setIsSubmitting(true);
     try {
-      const result = await facultyDataService.submitFinalGrades(selectedCourseId, gradesData);
+      const result = await facultyService.submitFinalGrades(selectedCourseId, gradesData);
       setGradesData(result.grades);
       if (result.backendSuccess) {
         toast.success(`Official grades persisted to server for ${result.syncedCount} students! 🎉`);

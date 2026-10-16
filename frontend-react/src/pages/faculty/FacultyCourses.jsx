@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { facultyDataService } from '../../services/facultyData';
+import { facultyService } from '../../services/faculty.service';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import toast from 'react-hot-toast';
 import styles from './FacultyCourses.module.css';
@@ -28,7 +28,7 @@ export default function FacultyCourses() {
     async function loadCourses() {
       setLoading(true);
       try {
-        const list = await facultyDataService.getCourses(user);
+        const list = await facultyService.getCourses(user);
         setCourses(list);
       } catch (err) {
         console.error('Failed to load courses', err);
@@ -45,7 +45,7 @@ export default function FacultyCourses() {
   async function handleOpenMaterials(course) {
     setActiveCourseForModal(course);
     try {
-      const mats = await facultyDataService.getMaterials(course.id);
+      const mats = await facultyService.getMaterials(course.id);
       setMaterials(mats);
     } catch {
       setMaterials([]);
@@ -109,7 +109,7 @@ export default function FacultyCourses() {
 
     setUploading(true);
     try {
-      const added = await facultyDataService.addMaterial(
+      const added = await facultyService.addMaterial(
         activeCourseForModal.id,
         { name: newMatTitle, type: newMatType, slotId: activeCourseForModal.slotId || 1 },
         selectedFile

@@ -1,7 +1,7 @@
 /**
- * facultyData.js
+ * faculty.service.js
  *
- * Unified data layer for Faculty portal:
+ * Unified API service for Faculty portal:
  * - Fetches live backend data dynamically (courses, sections, course-slots, registrations, users, announcements).
  * - Real course IDs: PC402, PC601, PC201, PC403, PE503, PC401, IC401, SEED05, etc.
  * - Real students: S2024001, S2024002, S2024003, etc. from live database.
@@ -66,7 +66,7 @@ function writeStorage(key, data) {
   }
 }
 
-export const facultyDataService = {
+export const facultyService = {
   /**
    * Get Faculty profile information
    */
@@ -568,3 +568,6 @@ export const facultyDataService = {
     };
   },
 };
+
+export const facultyDataService = facultyService;
+export default facultyService;

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { facultyDataService, getColorForString, getInitials } from '../../services/facultyData';
+import { facultyService, getColorForString, getInitials } from '../../services/faculty.service';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import toast from 'react-hot-toast';
 import styles from './FacultyRosters.module.css';
@@ -25,7 +25,7 @@ export default function FacultyRosters() {
     async function initCourses() {
       setLoading(true);
       try {
-        const cList = await facultyDataService.getCourses(user);
+        const cList = await facultyService.getCourses(user);
         setCourses(cList);
       } catch (err) {
         console.error('Failed to load courses', err);
@@ -58,7 +58,7 @@ export default function FacultyRosters() {
 
     async function loadRoster() {
       try {
-        const list = await facultyDataService.getStudentsForCourse(selectedCourseId);
+        const list = await facultyService.getStudentsForCourse(selectedCourseId);
         setStudents(list);
         setCurrentPage(1);
       } catch (err) {

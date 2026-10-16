@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { facultyDataService } from '../../services/facultyData';
+import { facultyService } from '../../services/faculty.service';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import styles from './FacultyHome.module.css';
 
@@ -20,13 +20,13 @@ export default function FacultyHome() {
     async function loadDashboardData() {
       setLoading(true);
       try {
-        const prof = facultyDataService.getProfile(user);
+        const prof = facultyService.getProfile(user);
         setProfile(prof);
 
         const [cList, classes, students] = await Promise.all([
-          facultyDataService.getCourses(user),
-          facultyDataService.getTodaysClasses(user),
-          facultyDataService.getAllEnrolledStudents(user),
+          facultyService.getCourses(user),
+          facultyService.getTodaysClasses(user),
+          facultyService.getAllEnrolledStudents(user),
         ]);
 
         setCourses(cList);

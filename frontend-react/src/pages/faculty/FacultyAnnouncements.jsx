@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { facultyDataService } from '../../services/facultyData';
+import { facultyService } from '../../services/faculty.service';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import toast from 'react-hot-toast';
 import styles from './FacultyAnnouncements.module.css';
@@ -63,8 +63,8 @@ export default function FacultyAnnouncements() {
       setLoading(true);
       try {
         const [cList, annList] = await Promise.all([
-          facultyDataService.getCourses(user),
-          facultyDataService.getAnnouncements(),
+          facultyService.getCourses(user),
+          facultyService.getAnnouncements(),
         ]);
         setCourses(cList);
         setAnnouncements(annList);
@@ -133,8 +133,8 @@ export default function FacultyAnnouncements() {
     setSubmitting(true);
     try {
       if (editingId) {
-        // Edit existing announcement via facultyDataService and update backend PUT /announcements/:id
-        const result = await facultyDataService.updateAnnouncement(editingId, {
+        // Edit existing announcement via facultyService and update backend PUT /announcements/:id
+        const result = await facultyService.updateAnnouncement(editingId, {
           courseId: formData.courseId,
           title: formData.title,
           message: formData.message,
@@ -153,7 +153,7 @@ export default function FacultyAnnouncements() {
         }
       } else {
         // Create new announcement
-        const result = await facultyDataService.createAnnouncement(formData, selectedFile);
+        const result = await facultyService.createAnnouncement(formData, selectedFile);
         if (result.backendSuccess) {
           setAnnouncements((prev) => [result.created, ...prev]);
           toast.success('Announcement broadcast and saved to server! 📢');
@@ -180,7 +180,7 @@ export default function FacultyAnnouncements() {
 
     setIsDeleting(true);
     try {
-      const result = await facultyDataService.deleteAnnouncement(deleteTarget.id);
+      const result = await facultyService.deleteAnnouncement(deleteTarget.id);
       setAnnouncements((prev) => prev.filter((a) => a.id !== deleteTarget.id));
       if (result.backendSuccess) {
         toast.success('Announcement deleted from server');
