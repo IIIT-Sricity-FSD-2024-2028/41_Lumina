@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
@@ -12,21 +12,35 @@ import { revenueService } from '../../services/revenue.service';
 import { announcementsService } from '../../services/announcements.service';
 import { coursesService } from '../../services/courses.service';
 import { registrationsService } from '../../services/registrations.service';
+import { slotsService } from '../../services/slots.service';
 
 import styles from './StudentDashboard.module.css';
+
+const GRADE_POINTS = {
+  'A+': 10, 'A': 10, 'A-': 9,
+  'B+': 8, 'B': 8, 'B-': 7,
+  'C+': 6, 'C': 6, 'C-': 5,
+  'D': 4, 'F': 0,
+};
 
 export default function StudentDashboard() {
   const { user } = useAuth();
 
   const studentId = user?.User_ID || 'S2024001';
-  const studentName = user?.Full_Name || 'Mahtab Alam';
+  const studentName = user?.Full_Name || 'Student';
   const department = user?.Dept_ID || 'Computer Science & Engineering';
 
   const [loading, setLoading] = useState(true);
   const [billing, setBilling] = useState(null);
   const [announcements, setAnnouncements] = useState([]);
   const [courses, setCourses] = useState([]);
-  const [registrations, setRegistrations] = useState([]);
+  const [allCatalog, setAllCatalog] = useState([]);
+  const [allUserRegistrations, setAllUserRegistrations] = useState([]);
+  const [slots, setSlots] = useState([]);
+  const [currentSemester, setCurrentSemester] = useState(user?.Current_Semester || 4);
+  const [activeTerm, setActiveTerm] = useState('Spring 2026');
+  const [maxCredits, setMaxCredits] = useState(20);
+
   const [isTuitionModalOpen, setIsTuitionModalOpen] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
 
@@ -34,35 +48,28 @@ export default function StudentDashboard() {
     async function loadDashboardData() {
       setLoading(true);
       try {
-        const [billingRes, annRes, courseRes, regRes, allCoursesRes] = await Promise.allSettled([
-          revenueService.getStudentBilling(studentId),
-          announcementsService.getAll(),
-          coursesService.getForStudent(studentId),
-          registrationsService.getAll(),
-          coursesService.getAll(),
-        ]);
+        const [billingRes, annRes, studentCourseRes, regRes, allCoursesRes, slotsRes] =
+          await Promise.allSettled([
+            revenueService.getStudentBilling(studentId),
+            announcementsService.getAll(),
+            coursesService.getForStudent(studentId),
+            registrationsService.getAll(),
+            coursesService.getAll(),
+            slotsService.getAll(),
+          ]);
 
         if (billingRes.status === 'fulfilled' && billingRes.value) {
           setBilling(billingRes.value);
         } else {
-          // Robust fallback mock data if server offline/unreachable
           setBilling({
             studentId,
             studentName,
-            totalEnrolledCourses: 4,
-            totalCredits: 15,
-            tuitionFee: 3750,
-            campusFee: 150,
-            totalAmountDue: 3900,
+            flatSemesterTuition: 2500,
+            totalAmountDue: 2500,
             amountPaid: 0,
-            balanceDue: 3900,
+            balanceDue: 2500,
             paymentStatus: 'Pending',
-            itemizedCourses: [
-              { courseId: 'CS301', courseName: 'Database Management Systems', credits: 4, cost: 1000 },
-              { courseId: 'CS302', courseName: 'Operating Systems', credits: 4, cost: 1000 },
-              { courseId: 'IC241', courseName: 'Computer Communication Networks', credits: 4, cost: 1000 },
-              { courseId: 'CS304', courseName: 'Formal Languages and Automata Theory', credits: 3, cost: 750 },
-            ],
+            isFinancialHoldActive: true,
           });
         }
 
@@ -70,60 +77,40 @@ export default function StudentDashboard() {
           setAnnouncements(annRes.value);
         }
 
-        let allCatalog = [];
         if (allCoursesRes.status === 'fulfilled' && Array.isArray(allCoursesRes.value)) {
-          allCatalog = allCoursesRes.value;
+          setAllCatalog(allCoursesRes.value);
         }
 
-        let studentSemesterCourses = [];
-        if (courseRes.status === 'fulfilled') {
-          const raw = courseRes.value;
-          if (raw?.courses && Array.isArray(raw.courses)) {
-            studentSemesterCourses = raw.courses.map((item) => ({
-              ...item.course,
-              courseType: item.courseType || item.course?.courseType || 'Program Core',
-              sections: item.sections,
-            }));
+        if (slotsRes.status === 'fulfilled' && Array.isArray(slotsRes.value)) {
+          setSlots(slotsRes.value);
+        }
+
+
+        if (studentCourseRes.status === 'fulfilled' && studentCourseRes.value) {
+          const raw = studentCourseRes.value;
+          if (raw.currentSemester) setCurrentSemester(raw.currentSemester);
+          if (raw.activeTerm) setActiveTerm(raw.activeTerm);
+          if (raw.maxCreditLimit) setMaxCredits(raw.maxCreditLimit);
+
+          if (raw.courses && Array.isArray(raw.courses)) {
+            setCourses(
+              raw.courses.map((item) => ({
+                ...item.course,
+                courseType: item.courseType || item.course?.courseType || 'Program Core',
+                sections: item.sections,
+              }))
+            );
           } else if (Array.isArray(raw)) {
-            studentSemesterCourses = raw;
+            setCourses(raw);
           }
         }
 
-        // Only populate courses with the student's current semester catalog courses
-        if (studentSemesterCourses.length > 0) {
-          setCourses(studentSemesterCourses);
-        } else {
-          setCourses([
-            { courseId: 'PC401', courseName: 'Computer and Communication Networks', credits: 4, courseType: 'Program Core', deptId: 'CSE' },
-            { courseId: 'PC402', courseName: 'Fundamentals of Full Stack Development', credits: 4, courseType: 'Program Core', deptId: 'CSE' },
-            { courseId: 'IC401', courseName: 'Theory of Computation', credits: 4, courseType: 'Institute Core', deptId: 'CSE' },
-            { courseId: 'PC403', courseName: 'Artificial Intelligence', credits: 4, courseType: 'Program Core', deptId: 'CSE' },
-            { courseId: 'SEED05', courseName: 'Advanced Communication Skills', credits: 2, courseType: 'SEED', deptId: 'CSE' },
-          ]);
-        }
-
-        let userRegs = [];
         if (regRes.status === 'fulfilled' && Array.isArray(regRes.value)) {
-          userRegs = regRes.value.filter((r) => r.studentId === studentId || r.Student_ID === studentId);
+          const userRegs = regRes.value.filter(
+            (r) => r.studentId === studentId || r.Student_ID === studentId
+          );
+          setAllUserRegistrations(userRegs);
         }
-
-        // Merge persistent localStorage registrations
-        try {
-          const cached = localStorage.getItem(`Lumina_Regs_${studentId}`);
-          if (cached) {
-            const parsed = JSON.parse(cached);
-            if (Array.isArray(parsed)) {
-              parsed.forEach((cr) => {
-                const cId = cr.courseId || cr.Course_ID;
-                if (cId && !userRegs.some((ur) => (ur.courseId || ur.Course_ID) === cId)) {
-                  userRegs.push(cr);
-                }
-              });
-            }
-          }
-        } catch (e) {}
-
-        setRegistrations(userRegs);
       } catch (err) {
         console.error('Error loading dashboard data:', err);
       } finally {
@@ -138,45 +125,39 @@ export default function StudentDashboard() {
     if (!billing || billing.balanceDue === 0) return;
     setIsPaying(true);
     try {
-      await revenueService.payStudentTuition(studentId, billing.balanceDue);
-      toast.success('Tuition payment cleared successfully!');
+      const res = await revenueService.payStudentTuition(studentId, billing.balanceDue);
+      toast.success(res.message || 'Tuition payment cleared successfully!');
       setBilling((prev) => ({
         ...prev,
-        amountPaid: prev.totalAmountDue,
+        amountPaid: res.amountPaid ?? prev.totalAmountDue ?? 2500,
         balanceDue: 0,
         paymentStatus: 'Cleared',
+        isFinancialHoldActive: false,
+        transactionId: res.transactionId,
+        paymentDate: res.timestamp,
       }));
       setIsTuitionModalOpen(false);
     } catch (err) {
-      // Graceful fallback for UI simulation
-      toast.success('Tuition Payment Cleared Successfully!');
-      setBilling((prev) => ({
-        ...prev,
-        amountPaid: prev ? prev.totalAmountDue : 3900,
-        balanceDue: 0,
-        paymentStatus: 'Cleared',
-      }));
-      setIsTuitionModalOpen(false);
+      toast.error(
+        err?.response?.data?.message || 'Tuition payment could not be processed. Please check your network and try again.'
+      );
     } finally {
       setIsPaying(false);
     }
   }
 
-  // Catalog course IDs of the student's current semester
-  const catalogCourseIds = useMemo(() => {
-    return new Set(courses.map((c) => c.courseId || c.Course_ID).filter(Boolean));
-  }, [courses]);
-
-  // Active registered courses strictly belonging to the current semester catalog
+  // Active registered courses for the current semester catalog
   const activeRegisteredCourses = useMemo(() => {
-    const enrolledRegs = registrations.filter((r) => r.status !== 'Dropped');
+    const enrolledRegs = allUserRegistrations.filter(
+      (r) => r.status === 'Enrolled' || r.status === 'Waitlisted' || r.status === 'Pending_Allocation'
+    );
     return courses.filter((c) => {
       const cId = c.courseId || c.Course_ID;
       return enrolledRegs.some((r) => (r.courseId || r.Course_ID) === cId);
     });
-  }, [courses, registrations]);
+  }, [courses, allUserRegistrations]);
 
-  // Dynamic registered credits changing directly with registered courses
+  // Dynamic registered credits
   const enrolledCredits = useMemo(() => {
     if (activeRegisteredCourses.length === 0) return 0;
     return activeRegisteredCourses.reduce((sum, c) => sum + (c.credits || 4), 0);
@@ -192,15 +173,96 @@ export default function StudentDashboard() {
     (c) => c.courseType?.includes('Elective') || c.courseType === 'SEED'
   ).length;
 
-  const isCleared = billing?.balanceDue === 0 || billing?.paymentStatus === 'Cleared';
-  const firstUpcomingClass = activeRegisteredCourses[0];
+  const isCleared =
+    billing?.balanceDue === 0 ||
+    billing?.paymentStatus === 'Cleared' ||
+    billing?.paymentStatus === 'Waived';
+
+  // Dynamic Cumulative GPA calculated from student's historical graded registrations
+  const cumulativeGPA = useMemo(() => {
+    const gradedRegs = allUserRegistrations.filter(
+      (r) => r.finalGrade && GRADE_POINTS[r.finalGrade] !== undefined
+    );
+    if (gradedRegs.length === 0) return null;
+
+    let totalPoints = 0;
+    let totalGradedCredits = 0;
+
+    gradedRegs.forEach((r) => {
+      const c = allCatalog.find((cat) => cat.courseId === r.courseId) || {};
+      const credits = c.credits || 4;
+      totalPoints += GRADE_POINTS[r.finalGrade] * credits;
+      totalGradedCredits += credits;
+    });
+
+    if (totalGradedCredits === 0) return null;
+    return (totalPoints / totalGradedCredits).toFixed(2);
+  }, [allUserRegistrations, allCatalog]);
+
+  // Primary active assigned section
+  const primarySection = useMemo(() => {
+    const assignedReg = allUserRegistrations.find(
+      (r) =>
+        (r.status === 'Enrolled' || r.status === 'Waitlisted') &&
+        r.sectionId &&
+        courses.some((c) => (c.courseId || c.Course_ID) === r.courseId)
+    );
+    return assignedReg ? assignedReg.sectionId : 'Section Pending Allocation';
+  }, [allUserRegistrations, courses]);
+
+  // Upcoming scheduled class derived from active sections & slots
+  const upcomingClass = useMemo(() => {
+    if (activeRegisteredCourses.length === 0) return null;
+
+    const registeredCourseIds = new Set(
+      activeRegisteredCourses.map((c) => c.courseId || c.Course_ID)
+    );
+
+    // Look for slots matching the student's assigned sections
+    const matchingSlots = slots.filter((s) => {
+      const reg = allUserRegistrations.find((r) => r.sectionId === s.sectionId);
+      if (reg) return true;
+      const prefix = s.sectionId?.split('-')[0];
+      return prefix && registeredCourseIds.has(prefix);
+    });
+
+    if (matchingSlots.length > 0) {
+      const slot = matchingSlots[0];
+      const courseId = slot.sectionId?.split('-')[0];
+      const course =
+        allCatalog.find((c) => c.courseId === courseId) ||
+        courses.find((c) => (c.courseId || c.Course_ID) === courseId) ||
+        activeRegisteredCourses[0];
+
+      return {
+        courseId: course?.courseId || courseId,
+        courseName: course?.courseName || 'Class Lecture',
+        day: slot.dayOfWeek,
+        time: `${slot.startTime} - ${slot.endTime}`,
+        room: `Room ${slot.roomNumber}`,
+        sectionId: slot.sectionId,
+      };
+    }
+
+    const first = activeRegisteredCourses[0];
+    return {
+      courseId: first.courseId || first.Course_ID,
+      courseName: first.courseName,
+      day: 'Schedule TBA',
+      time: 'TBA',
+      room: 'TBA',
+      sectionId: primarySection,
+    };
+  }, [activeRegisteredCourses, slots, allUserRegistrations, allCatalog, courses, primarySection]);
+
+  const yearNumber = Math.ceil(currentSemester / 2);
 
   return (
     <AppShell>
       <div className={styles.container}>
         <PageHeader
           title={`Welcome back, ${studentName.split(' ')[0]}!`}
-          subtitle="Spring 2026 Academic Term • Student Dashboard & Quick Actions"
+          subtitle={`${activeTerm} Academic Term • Student Dashboard & Quick Actions`}
           actions={
             <Link to="/student/registration" className="btn-primary">
               Browse Course Catalog &rarr;
@@ -220,16 +282,16 @@ export default function StudentDashboard() {
                   <h2>{studentName}</h2>
                   <div className={styles.metaTags}>
                     <span className={styles.metaTag}>ID: {studentId}</span>
-                    <span className={styles.metaTag}>UG Year 2</span>
-                    <span className={styles.metaTag}>Semester 4</span>
+                    <span className={styles.metaTag}>UG Year {yearNumber}</span>
+                    <span className={styles.metaTag}>Semester {currentSemester}</span>
                     <span className={styles.metaTag}>{department}</span>
-                    <span className={styles.metaTag}>Section PC402-S1</span>
+                    <span className={styles.metaTag}>{primarySection}</span>
                   </div>
                 </div>
               </div>
               <div>
                 <span className="badge badge-approved" style={{ fontSize: '0.85rem', padding: '6px 14px' }}>
-                  Spring 2026 Registration Active
+                  {activeTerm} Registration Active
                 </span>
               </div>
             </div>
@@ -238,8 +300,8 @@ export default function StudentDashboard() {
             <div className={styles.statsGrid}>
               <div className={styles.statCard}>
                 <span className={styles.statLabel}>Registered Credits</span>
-                <span className={styles.statValue}>{enrolledCredits} / 24</span>
-                <span className={styles.statSub}>Active Term Cap: 24 Credits</span>
+                <span className={styles.statValue}>{enrolledCredits} / {maxCredits}</span>
+                <span className={styles.statSub}>Active Term Cap: {maxCredits} Credits</span>
               </div>
               <div className={styles.statCard}>
                 <span className={styles.statLabel}>Enrolled Courses</span>
@@ -252,7 +314,7 @@ export default function StudentDashboard() {
                   className={styles.statValue}
                   style={{ color: isCleared ? '#15803d' : '#b45309' }}
                 >
-                  {isCleared ? 'CLEARED' : `$${billing?.balanceDue?.toLocaleString() || '3,900'}`}
+                  {isCleared ? 'CLEARED' : `$${billing?.balanceDue?.toLocaleString() || '2,500'}`}
                 </span>
                 <span className={styles.statSub}>
                   {isCleared ? 'Tuition Hold Cleared' : 'Payment Due Before Term'}
@@ -261,7 +323,10 @@ export default function StudentDashboard() {
               <div className={styles.statCard}>
                 <span className={styles.statLabel}>Cumulative GPA</span>
                 <span className={styles.statValue} style={{ color: '#0284c7' }}>
-                  8.9 / 10
+                  {cumulativeGPA ? `${cumulativeGPA} / 10` : 'N/A'}
+                </span>
+                <span className={styles.statSub}>
+                  {cumulativeGPA ? 'Calculated from Past Graded Terms' : 'No Graded Courses Yet'}
                 </span>
               </div>
             </div>
@@ -275,10 +340,10 @@ export default function StudentDashboard() {
                   <div className={styles.tuitionInfo}>
                     <span className={styles.tuitionTitle}>Tuition & Campus Fee Status</span>
                     <span className={styles.tuitionAmount}>
-                      {isCleared ? '$0 Outstanding Balance' : `$${billing?.balanceDue?.toLocaleString() || '3,900'} Due`}
+                      {isCleared ? '$0 Outstanding Balance' : `$${billing?.balanceDue?.toLocaleString() || '2,500'} Due`}
                     </span>
                     <span className={styles.statSub}>
-                      {enrolledCredits} Credits Enrolled • Spring 2026 Semester
+                      {enrolledCredits} Credits Enrolled • {activeTerm} Semester
                     </span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -306,18 +371,27 @@ export default function StudentDashboard() {
                   <div className={styles.sectionHeader}>
                     <h3>Next Upcoming Class</h3>
                     <span className="badge" style={{ background: '#ede9fe', color: '#6d28d9' }}>
-                      Today's Schedule
+                      Schedule Overview
                     </span>
                   </div>
                   <div className={styles.nextClassCard}>
-                    <div style={{ fontWeight: 700, fontSize: '1rem', color: '#4c1d95' }}>
-                      {firstUpcomingClass ? `${firstUpcomingClass.courseId}: ${firstUpcomingClass.courseName}` : 'No Classes Registered Yet'}
-                    </div>
-                    <div style={{ fontSize: '0.88rem', color: '#5b21b6', display: 'flex', gap: '16px' }}>
-                      <span>📅 Monday</span>
-                      <span>⏰ 10:00 AM - 11:30 AM</span>
-                      <span>📍 Room G04 (CS Building)</span>
-                    </div>
+                    {upcomingClass ? (
+                      <>
+                        <div style={{ fontWeight: 700, fontSize: '1rem', color: '#4c1d95' }}>
+                          {upcomingClass.courseId}: {upcomingClass.courseName}
+                        </div>
+                        <div style={{ fontSize: '0.88rem', color: '#5b21b6', display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                          <span>📅 {upcomingClass.day}</span>
+                          <span>⏰ {upcomingClass.time}</span>
+                          <span>📍 {upcomingClass.room}</span>
+                          {upcomingClass.sectionId && <span>🏷 Section {upcomingClass.sectionId}</span>}
+                        </div>
+                      </>
+                    ) : (
+                      <div style={{ color: '#6b21a8', fontSize: '0.9rem' }}>
+                        No enrolled classes scheduled yet. Visit the Registration portal to select courses.
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -331,19 +405,24 @@ export default function StudentDashboard() {
                   </div>
                   <div className={styles.courseList}>
                     {activeRegisteredCourses.length > 0 ? (
-                      activeRegisteredCourses.map((c) => (
-                        <div key={c.courseId} className={styles.courseItem}>
-                          <div>
-                            <div style={{ fontWeight: 700, color: '#0f172a' }}>
-                              {c.courseId}: {c.courseName}
+                      activeRegisteredCourses.map((c) => {
+                        const matchingReg = allUserRegistrations.find(
+                          (r) => (r.courseId || r.Course_ID) === (c.courseId || c.Course_ID)
+                        );
+                        return (
+                          <div key={c.courseId || c.Course_ID} className={styles.courseItem}>
+                            <div>
+                              <div style={{ fontWeight: 700, color: '#0f172a' }}>
+                                {c.courseId || c.Course_ID}: {c.courseName}
+                              </div>
+                              <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                                {c.credits || 4} Credits • Section {matchingReg?.sectionId || 'S1'} • {c.courseType || 'Program Core'}
+                              </div>
                             </div>
-                            <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                              {c.credits} Credits • Section {c.sectionId || 'S1'} • {c.courseType || 'Program Core'}
-                            </div>
+                            <span className="badge badge-approved">Enrolled</span>
                           </div>
-                          <span className="badge badge-approved">Enrolled</span>
-                        </div>
-                      ))
+                        );
+                      })
                     ) : (
                       <div style={{ padding: '24px', textAlign: 'center', color: '#64748b', fontSize: '0.9rem' }}>
                         No courses registered for this semester yet.
@@ -360,37 +439,9 @@ export default function StudentDashboard() {
                 </div>
                 <div className={styles.announcementList}>
                   {announcements.length === 0 ? (
-                    <>
-                      <div className={styles.announcementItem}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                          <span className="badge" style={{ background: '#e0e7ff', color: '#4338ca' }}>
-                            Campus Alert
-                          </span>
-                          <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Today</span>
-                        </div>
-                        <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#1e293b' }}>
-                          Spring 2026 Registration Phase 2 Open
-                        </div>
-                        <div style={{ fontSize: '0.82rem', color: '#64748b', marginTop: '2px' }}>
-                          Add/drop period is live. Verify your timetable for any slot conflicts.
-                        </div>
-                      </div>
-
-                      <div className={styles.announcementItem}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                          <span className="badge" style={{ background: '#fef3c7', color: '#b45309' }}>
-                            CS301 Alert
-                          </span>
-                          <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Yesterday</span>
-                        </div>
-                        <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#1e293b' }}>
-                          Database Systems Lab Workstations Updated
-                        </div>
-                        <div style={{ fontSize: '0.82rem', color: '#64748b', marginTop: '2px' }}>
-                          Prof. Dr. A. Sharma: Lab 3 PostgreSQL instances have been upgraded to v16.
-                        </div>
-                      </div>
-                    </>
+                    <div style={{ padding: '32px', textAlign: 'center', color: '#64748b', fontSize: '0.9rem' }}>
+                      No active campus announcements at this time.
+                    </div>
                   ) : (
                     announcements.slice(0, 5).map((ann) => (
                       <div key={ann.announcementId || ann.id} className={styles.announcementItem}>
@@ -446,7 +497,7 @@ export default function StudentDashboard() {
             <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
                 <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a' }}>
-                  Spring 2026 Tuition Breakdown
+                  {activeTerm} Semester Tuition Ledger
                 </h3>
                 <button
                   type="button"
@@ -458,37 +509,55 @@ export default function StudentDashboard() {
               </div>
 
               <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px', fontSize: '0.85rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontWeight: 600, color: '#475569' }}>
-                  <span>Base Credit Fee ($250 / Credit)</span>
-                  <span>${(enrolledCredits * 250).toLocaleString()}</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontWeight: 600, color: '#475569' }}>
+                  <span>Flat Semester Tuition (Institutional B2C)</span>
+                  <span>${(billing?.flatSemesterTuition || 2500).toLocaleString()}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontWeight: 600, color: '#475569' }}>
+                  <span>Amount Paid to Date</span>
+                  <span style={{ color: '#16a34a' }}>${(billing?.amountPaid || 0).toLocaleString()}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600, color: '#475569' }}>
-                  <span>Campus & Tech Maintenance Fee</span>
-                  <span>$150</span>
+                  <span>Payment Status</span>
+                  <span style={{ color: isCleared ? '#15803d' : '#b45309', fontWeight: 700 }}>
+                    {billing?.paymentStatus || (isCleared ? 'Cleared' : 'Pending')}
+                  </span>
                 </div>
+                {billing?.transactionId && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px', fontSize: '0.78rem', color: '#64748b' }}>
+                    <span>Ref Transaction ID</span>
+                    <span style={{ fontFamily: 'monospace' }}>{billing.transactionId}</span>
+                  </div>
+                )}
               </div>
 
               <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#1e293b' }}>
-                Itemized Enrolled Courses:
+                Itemized Enrolled Courses ({enrolledCount} Courses • {enrolledCredits} Credits):
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '200px', overflowY: 'auto' }}>
-                {activeRegisteredCourses.map((c) => (
-                  <div key={c.courseId} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9', fontSize: '0.88rem' }}>
-                    <div>
-                      <strong>{c.courseId}</strong>: {c.courseName}
-                      <div style={{ fontSize: '0.78rem', color: '#64748b' }}>{c.credits} Credits</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '180px', overflowY: 'auto' }}>
+                {activeRegisteredCourses.length > 0 ? (
+                  activeRegisteredCourses.map((c) => (
+                    <div key={c.courseId || c.Course_ID} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9', fontSize: '0.88rem' }}>
+                      <div>
+                        <strong>{c.courseId || c.Course_ID}</strong>: {c.courseName}
+                        <div style={{ fontSize: '0.78rem', color: '#64748b' }}>{c.credits || 4} Credits • {c.courseType || 'Program Core'}</div>
+                      </div>
+                      <span className="badge badge-approved" style={{ fontSize: '0.75rem' }}>Covered</span>
                     </div>
-                    <span style={{ fontWeight: 700, color: '#0f172a' }}>${((c.credits || 4) * 250).toLocaleString()}</span>
+                  ))
+                ) : (
+                  <div style={{ padding: '12px', textAlign: 'center', color: '#94a3b8', fontSize: '0.85rem' }}>
+                    No courses enrolled for this term.
                   </div>
-                ))}
+                )}
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '2px solid #e2e8f0', paddingTop: '12px' }}>
                 <div>
-                  <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Total Balance Due</div>
+                  <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Outstanding Balance Due</div>
                   <div style={{ fontSize: '1.4rem', fontWeight: 800, color: isCleared ? '#15803d' : '#0f172a' }}>
-                    {isCleared ? '$0 (Fully Cleared)' : `$${billing?.balanceDue?.toLocaleString() || '3,900'}`}
+                    {isCleared ? '$0 (Cleared)' : `$${(billing?.balanceDue || 2500).toLocaleString()}`}
                   </div>
                 </div>
                 {isCleared ? (
@@ -503,7 +572,7 @@ export default function StudentDashboard() {
                     disabled={isPaying}
                     style={{ background: '#0284c7' }}
                   >
-                    {isPaying ? 'Processing...' : `Pay $${billing?.balanceDue?.toLocaleString() || '3,900'}`}
+                    {isPaying ? 'Processing...' : `Pay $${(billing?.balanceDue || 2500).toLocaleString()}`}
                   </button>
                 )}
               </div>

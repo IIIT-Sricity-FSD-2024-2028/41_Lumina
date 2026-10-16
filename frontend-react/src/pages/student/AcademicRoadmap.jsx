@@ -1,186 +1,55 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { coursesService } from '../../services/courses.service';
+import { registrationsService } from '../../services/registrations.service';
 import './roadmap.css';
 
-
-const allProgramElectives = [
-  'Agent Based Modelling & Simulations',
-  'Cloud Computing',
-  'Compiler Design',
-  'Computer Graphics and Multimedia',
-  'Computer Vision',
-  'Data Mining',
-  'Distributed Computing',
-  'High-Performance Computing',
-  'Information Retrieval',
-  'Introduction to Cyber Security',
-  'Machine Learning',
-  'Natural Language Processing',
-  'Principles of Cyber Physical System Computation',
-  'Soft Computing and Evolutionary AI',
-];
-
-const allInstituteElectives = [
-  'Applied Stochastic Models',
-  'Brain Computer Interaction',
-  'Cryptography',
-  'Digital Image Processing',
-  'Introduction to Data Analytics',
-];
-
-const allSeedCourses = [
-  'Energy and Environment',
-  'Ethics in Everyday Life',
-  'Skills for Employability',
-  'Quantitative and Reasoning Aptitude',
-  'Personal Growth Programme',
-  'Macro-economics and Personal Finance',
-  'IT Project Management',
-  'Innovation and Entrepreneurship',
-  'Climate Change and its Implications',
-  'ICT for Development',
-  'Startup 101',
-  'Organizational Behavior',
-];
-
-const futureSemesters = {
-  4: {
-    label: 'Semester 4',
-    date: 'Spring 2026 – Summer 2026',
-    limits: null,
-    courses: [
-      { name: 'Computer Communication Networks (CCN)', credits: 4, prereq: 'None', type: 'core', warning: null },
-      { name: 'Artificial Intelligence (AI)', credits: 4, prereq: 'None', type: 'core', warning: null },
-      { name: 'Theory of Computation (TOC)', credits: 4, prereq: 'OS', type: 'core', warning: null },
-      { name: 'Full Stack Dev (FFSD)', credits: 4, prereq: 'None', type: 'core', warning: null },
-      { name: 'Advanced Communication Skills (ACS)', credits: 2, prereq: 'EE, OPC, PC', type: 'core', warning: null },
-      { name: 'Logical Reasoning (LR)', credits: 2, prereq: 'None', type: 'core', warning: null },
-      { name: 'Deep Learning (DL)', credits: 4, prereq: 'ML', type: 'core', warning: 'Prerequisite ML not met.' },
-    ],
-  },
-  5: {
-    label: 'Semester 5',
-    date: 'Fall 2026 – Winter 2027',
-    limits: { PE: 4, IE: 0, SEED: 2 },
-    courses: [
-      { name: 'Framework Driven Front-End Development (FDFED)', credits: 4, prereq: 'None', type: 'core', warning: null },
-    ],
-  },
-  6: {
-    label: 'Semester 6',
-    date: 'Spring 2027 – Summer 2027',
-    limits: { PE: 3, IE: 1, SEED: 1 },
-    courses: [
-      { name: 'Web Services and Backend Development (WBD)', credits: 4, prereq: 'None', type: 'core', warning: null },
-    ],
-  },
-  7: {
-    label: 'Semester 7',
-    date: 'Fall 2027 – Winter 2028',
-    limits: { PE: 1, IE: 1, SEED: 1 },
-    courses: [],
-  },
-  8: {
-    label: 'Semester 8',
-    date: 'Spring 2028 – Summer 2028',
-    limits: { PE: 1, IE: 1, SEED: 1 },
-    courses: [],
-  },
-};
-
-const semSequence = {
-  5: [5],
-  6: [5, 6],
-  7: [5, 6, 7],
-  8: [5, 6, 7, 8],
-};
-
-const fallbackSemHistory = {
-  1: {
-    title: 'Semester 1',
-    date: 'Aug 2024 – Dec 2024',
-    isCurrent: false,
-    coursesSummary: 'CP, DLD, OCW, DSMA, EE, FHVE',
-    courses: [
-      { name: 'Computer Programming', credits: 4 },
-      { name: 'Digital Logic Design', credits: 4 },
-      { name: 'Overview of Computer Workshop', credits: 4 },
-      { name: 'Discrete Structures', credits: 4 },
-      { name: 'Essential English', credits: 2 },
-      { name: 'Human Values and Ethics', credits: 2 },
-    ],
-    totalCredits: 20,
-  },
-  2: {
-    title: 'Semester 2',
-    date: 'Jan 2025 – May 2025',
-    isCurrent: false,
-    coursesSummary: 'DSA, CA, SS, PS, OPC, EEN',
-    courses: [
-      { name: 'Data Structures & Algorithms', credits: 4 },
-      { name: 'Computer Architecture', credits: 4 },
-      { name: 'Signals & Systems', credits: 4 },
-      { name: 'Probability & Statistics', credits: 4 },
-      { name: 'Operational Communication', credits: 2 },
-      { name: 'Energy & Environment', credits: 2 },
-    ],
-    totalCredits: 20,
-  },
-  3: {
-    title: 'Semester 3',
-    date: 'Aug 2025 – Dec 2025',
-    isCurrent: false,
-    coursesSummary: 'ADSA, RANAC, OS, OOP, DBMS, PC',
-    courses: [
-      { name: 'Advanced Data Structures & Algorithms', credits: 4 },
-      { name: 'Operating Systems', credits: 4 },
-      { name: 'Database Management Systems', credits: 4 },
-      { name: 'Object Oriented Programming', credits: 4 },
-      { name: 'Analysis and Calculus', credits: 4 },
-      { name: 'Professional Communication', credits: 2 },
-    ],
-    totalCredits: 22,
-  },
-};
-
-
-function getAvailablePool(pool, claimedMap, currentSemNum) {
-  const source = pool === 'PE' ? allProgramElectives : pool === 'IE' ? allInstituteElectives : allSeedCourses;
-  return source
-    .map((name, idx) => ({ originalIdx: idx, name }))
-    .filter((item) => {
-      const claimedBy = claimedMap[item.originalIdx];
-      return claimedBy === undefined || claimedBy === currentSemNum;
-    });
+function getAvailablePool(sourceList, claimedMap, currentSemNum) {
+  return sourceList.filter((item) => {
+    const claimedBy = claimedMap[item.id];
+    return claimedBy === undefined || claimedBy === currentSemNum;
+  });
 }
 
-function calculateTotalCredits(currentSem, selectedCourses) {
+function calculateTotalCredits(currentSem, semSequence, selectedCourses, futureSemData, peCourses, ieCourses) {
   if (!currentSem || !semSequence[currentSem]) return 0;
   let total = 0;
+
+  const peMap = {};
+  peCourses.forEach((c) => { peMap[c.id] = c; });
+  const ieMap = {};
+  ieCourses.forEach((c) => { ieMap[c.id] = c; });
+
   semSequence[currentSem].forEach((s) => {
-    const sd = futureSemesters[s];
+    const sd = futureSemData[s];
+    if (!sd) return;
     const semSelection = selectedCourses[s] || { core: {}, PE: {}, IE: {}, SEED: {} };
-    Object.keys(semSelection.core).forEach((idx) => {
-      total += sd.courses[parseInt(idx, 10)]?.credits || 0;
+    Object.keys(semSelection.core).forEach((cId) => {
+      const found = sd.courses.find((c) => c.id === cId);
+      total += found?.credits || 4;
     });
-    total += Object.keys(semSelection.PE).length * 3;
-    total += Object.keys(semSelection.IE).length * 3;
-    total += Object.keys(semSelection.SEED).length * 2;
+    Object.keys(semSelection.PE).forEach((cId) => {
+      total += peMap[cId]?.credits || 3;
+    });
+    Object.keys(semSelection.IE).forEach((cId) => {
+      total += ieMap[cId]?.credits || 3;
+    });
   });
   return total;
 }
 
-function validateSelections(currentSem, selectedCourses) {
+function validateSelections(currentSem, semSequence, selectedCourses, futureSemData) {
   const errors = [];
   if (!currentSem || !semSequence[currentSem]) return errors;
 
   semSequence[currentSem].forEach((s) => {
-    const sd = futureSemesters[s];
+    const sd = futureSemData[s];
+    if (!sd) return;
     const limits = sd.limits;
     const label = sd.label;
     const semSelection = selectedCourses[s] || { core: {}, PE: {}, IE: {}, SEED: {} };
 
-    Object.keys(semSelection.core).forEach((idx) => {
-      const c = sd.courses[parseInt(idx, 10)];
+    Object.keys(semSelection.core).forEach((cId) => {
+      const c = sd.courses.find((course) => course.id === cId);
       if (c && c.warning) {
         errors.push(`${label}: "${c.name}" — ${c.warning}`);
       }
@@ -189,76 +58,91 @@ function validateSelections(currentSem, selectedCourses) {
     if (limits) {
       const peCount = Object.keys(semSelection.PE).length;
       const ieCount = Object.keys(semSelection.IE).length;
-      const seedCount = Object.keys(semSelection.SEED).length;
 
-      if (peCount !== limits.PE) errors.push(`${label}: Need exactly ${limits.PE} PE, got ${peCount}.`);
-      if (limits.IE > 0 && ieCount !== limits.IE) errors.push(`${label}: Need exactly ${limits.IE} IE, got ${ieCount}.`);
-      if (seedCount !== limits.SEED) errors.push(`${label}: Need exactly ${limits.SEED} SEED, got ${seedCount}.`);
+      if (limits.PE > 0 && peCount !== limits.PE) {
+        errors.push(`${label}: Need exactly ${limits.PE} Program Elective(s), currently selected ${peCount}.`);
+      }
+      if (limits.IE > 0 && ieCount !== limits.IE) {
+        errors.push(`${label}: Need exactly ${limits.IE} Institute Elective(s), currently selected ${ieCount}.`);
+      }
     }
   });
 
   return errors;
 }
 
-function generatePdfDocument(currentSem, selectedCourses, activeStudentName) {
-  const studentProfile = window.getCurrentStudentProfile ? window.getCurrentStudentProfile() : null;
-  const studentName = studentProfile?.user?.Full_Name || 'S2024002';
+function generatePdfDocument(currentSem, semSequence, selectedCourses, futureSemData, peCourses, ieCourses, activeStudentName) {
+  const studentName = activeStudentName || 'Student';
   const seqs = semSequence[currentSem] || [];
+
+  const peMap = {};
+  peCourses.forEach((c) => { peMap[c.id] = c; });
+  const ieMap = {};
+  ieCourses.forEach((c) => { ieMap[c.id] = c; });
 
   let allCardsHtml = '';
   seqs.forEach((s) => {
-    const sd = futureSemesters[s];
+    const sd = futureSemData[s];
+    if (!sd) return;
     const semSelection = selectedCourses[s] || { core: {}, PE: {}, IE: {}, SEED: {} };
     let rows = '';
     let totalCr = 0;
 
-    Object.keys(semSelection.core).forEach((idx) => {
-      const c = sd.courses[parseInt(idx, 10)];
-      rows += `<div class="row"><div class="bar"></div><span class="rname">${c.name} <span class="tag tag-core">Core</span></span><span class="rcr">${c.credits} CR</span></div>`;
-      totalCr += c.credits;
+    Object.keys(semSelection.core).forEach((cId) => {
+      const c = sd.courses.find((course) => course.id === cId);
+      if (c) {
+        rows += `<div class="row"><div class="bar"></div><span class="rname">${c.name} <span class="tag tag-core">Core</span></span><span class="rcr">${c.credits} CR</span></div>`;
+        totalCr += c.credits;
+      }
     });
-    Object.keys(semSelection.PE).forEach((idx) => {
-      rows += `<div class="row"><div class="bar"></div><span class="rname">${allProgramElectives[parseInt(idx, 10)]} <span class="tag tag-pe">PE</span></span><span class="rcr">3 CR</span></div>`;
-      totalCr += 3;
+    Object.keys(semSelection.PE).forEach((cId) => {
+      const c = peMap[cId];
+      if (c) {
+        rows += `<div class="row"><div class="bar"></div><span class="rname">${c.name} <span class="tag tag-pe">PE</span></span><span class="rcr">${c.credits} CR</span></div>`;
+        totalCr += c.credits;
+      }
     });
-    Object.keys(semSelection.IE).forEach((idx) => {
-      rows += `<div class="row"><div class="bar"></div><span class="rname">${allInstituteElectives[parseInt(idx, 10)]} <span class="tag tag-ie">IE</span></span><span class="rcr">3 CR</span></div>`;
-      totalCr += 3;
-    });
-    Object.keys(semSelection.SEED).forEach((idx) => {
-      rows += `<div class="row"><div class="bar"></div><span class="rname">${allSeedCourses[parseInt(idx, 10)]} <span class="tag tag-seed">SEED</span></span><span class="rcr">2 CR</span></div>`;
-      totalCr += 2;
+    Object.keys(semSelection.IE).forEach((cId) => {
+      const c = ieMap[cId];
+      if (c) {
+        rows += `<div class="row"><div class="bar"></div><span class="rname">${c.name} <span class="tag tag-ie">IE</span></span><span class="rcr">${c.credits} CR</span></div>`;
+        totalCr += c.credits;
+      }
     });
 
     allCardsHtml += `<div class="card"><div class="card-header"><div class="card-title">${sd.label}</div><div class="card-date">${sd.date}</div></div><div class="card-body">${rows || '<div style="color:#94a3b8;font-size:12px;padding:8px 0;">No courses selected.</div>'}</div><div class="card-footer"><span class="fl">TOTAL CREDITS</span><span class="fc">${totalCr} Credits</span></div></div>`;
   });
 
   const win = window.open('', '_blank');
+  if (!win) return;
   win.document.write(`
     <!DOCTYPE html><html><head><title>Academic Roadmap – Lumina</title><style>
     body{font-family:Arial,sans-serif;background:#f4f6f9;padding:32px;color:#1a2744;}
     h1{font-size:22px;font-weight:700;margin:0 0 4px 0;}
     p{font-size:13px;color:#64748b;margin:0 0 24px 0;}
     .cards{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;}
-    .card{background:white;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;width:210px;display:flex;flex-direction:column;}
+    .card{background:white;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;width:230px;display:flex;flex-direction:column;}
     .card-header{padding:14px 16px;background:#f4f6f9;}
     .card-title{font-size:15px;font-weight:700;color:#1a2744;}
-    .card-date{font-size:11px;color:#94a3b8;margin-top:3px;}
-    .card-body{padding:8px 14px;flex:1;}
-    .row{display:flex;align-items:center;padding:7px 0;border-bottom:1px solid #f1f5f9;}
-    .row:last-child{border-bottom:none;}
-    .bar{width:3px;height:20px;border-radius:3px;background:#3b82f6;margin-right:8px;flex-shrink:0;}
-    .rname{font-size:11px;font-weight:500;flex:1;}
+    .card-date{font-size:12px;color:#64748b;margin-top:2px;}
+    .card-body{padding:14px 16px;flex:1;display:flex;flex-direction:column;gap:8px;}
+    .row{display:flex;align-items:center;font-size:13px;position:relative;}
+    .bar{width:3px;height:14px;background:#0284c7;border-radius:2px;margin-right:8px;flex-shrink:0;}
+    .rname{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#1a2744;}
+    .rcr{font-size:12px;font-weight:700;color:#64748b;margin-left:6px;flex-shrink:0;}
     .tag{font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;margin-left:4px;}
-    .tag-pe{background:#d1fae5;color:#065f46;}
-    .tag-ie{background:#fef3c7;color:#92400e;}
-    .tag-seed{background:#ede9fe;color:#5b21b6;}
-    .tag-core{background:#dbeafe;color:#1e40af;}
-    .rcr{font-size:11px;font-weight:700;color:#94a3b8;margin-left:6px;}
-    .card-footer{padding:10px 14px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;}
-    .fl{font-size:9px;font-weight:700;color:#94a3b8;}
-    .fc{font-size:15px;font-weight:700;color:#1a2744;}
-    </style></head><body><h1>Academic Roadmap</h1><p>Personalized semester-wise plan — ${studentName}</p><div class="cards">${allCardsHtml}</div><script>window.onload=function(){window.print();}</script></body></html>
+    .tag-core{background:#e0f2fe;color:#0284c7;}
+    .tag-pe{background:#dcfce7;color:#15803d;}
+    .tag-ie{background:#f3e8ff;color:#7e22ce;}
+    .card-footer{padding:12px 16px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;}
+    .fl{font-size:10px;font-weight:700;color:#94a3b8;letter-spacing:0.5px;}
+    .fc{font-size:13px;font-weight:700;color:#0284c7;}
+    </style></head><body>
+    <h1>Official Academic Roadmap</h1>
+    <p>Student: <strong>${studentName}</strong> | Lumina Academic Portal | Verified Degree Path</p>
+    <div class="cards">${allCardsHtml}</div>
+    <script>window.onload = function() { window.print(); }</script>
+    </body></html>
   `);
   win.document.close();
 }
@@ -276,11 +160,11 @@ function HistoryCard({ semesterNum, data, onOpenModal }) {
       <div className="hc-title">{data.title}</div>
       <div className="hc-courses">{data.coursesSummary}</div>
       <div className="hc-footer">
-        <span className={`hc-credits ${semesterNum === 3 ? 'teal' : ''}`}>
+        <span className="hc-credits">
           ⊕ {data.totalCredits} Credits
         </span>
         <button
-          className={`hc-view-btn ${semesterNum === 3 ? 'dark' : ''}`}
+          className="hc-view-btn"
           onClick={() => onOpenModal(semesterNum)}
         >
           View
@@ -291,6 +175,8 @@ function HistoryCard({ semesterNum, data, onOpenModal }) {
 }
 
 function AcademicHistorySection({ historyData, onOpenModal }) {
+  const semNums = Object.keys(historyData || {}).map(Number).sort((a, b) => a - b);
+
   return (
     <section className="section-block">
       <div className="section-heading">
@@ -298,16 +184,20 @@ function AcademicHistorySection({ historyData, onOpenModal }) {
         <h2>Academic History</h2>
       </div>
       <div className="history-row">
-        {[1, 2, 3].map((num) => (
-          historyData[num] && (
+        {semNums.length === 0 ? (
+          <div style={{ color: '#64748b', fontSize: '0.9rem', padding: '16px', background: '#f8fafc', borderRadius: '8px', border: '1px dashed #cbd5e1' }}>
+            Loading student academic records from database...
+          </div>
+        ) : (
+          semNums.map((num) => (
             <HistoryCard
               key={num}
               semesterNum={num}
               data={historyData[num]}
               onOpenModal={onOpenModal}
             />
-          )
-        ))}
+          ))
+        )}
       </div>
     </section>
   );
@@ -333,7 +223,14 @@ function SemDetailModal({ isOpen, data, onClose }) {
           {data.courses.map((course, idx) => (
             <div className="sem-popup-row" key={idx}>
               <div className={`spr-bar ${data.isCurrent ? 'teal' : ''}`}></div>
-              <span className="spr-name">{course.name}</span>
+              <span className="spr-name">
+                {course.id ? `${course.id}: ` : ''}{course.name}
+                {course.grade && (
+                  <span className="badge badge-approved" style={{ marginLeft: '8px', fontSize: '0.72rem' }}>
+                    Grade {course.grade}
+                  </span>
+                )}
+              </span>
               <span className="spr-credits">{course.credits} CR</span>
             </div>
           ))}
@@ -348,8 +245,8 @@ function SemDetailModal({ isOpen, data, onClose }) {
 }
 
 function CourseCard({ name, credits, prereq, type, isSelected, warning, isBlocked, onToggle }) {
-  const typeColors = { core: 'badge-core', PE: 'badge-pe', IE: 'badge-ie', SEED: 'badge-seed' };
-  const typeLabels = { core: 'Core', PE: 'PE', IE: 'IE', SEED: 'SEED' };
+  const typeColors = { core: 'badge-core', PE: 'badge-pe', IE: 'badge-ie' };
+  const typeLabels = { core: 'Core', PE: 'PE', IE: 'IE' };
 
   return (
     <div
@@ -367,7 +264,9 @@ function CourseCard({ name, credits, prereq, type, isSelected, warning, isBlocke
         </div>
         <span className="cc-credits-badge">{credits} CR</span>
       </div>
-      <div className="cc-prereq">Prerequisites: {prereq}</div>
+      <div className="cc-prereq">
+        <strong>Prerequisites:</strong> {prereq || 'None'}
+      </div>
       {warning && (
         <div className={`cc-warning-msg ${isSelected ? 'show' : ''}`}>
           ⚠ {warning}
@@ -399,7 +298,7 @@ function CourseSectionHeader({ title, pool, limit, selected, available, error })
         ) : (
           <>
             {`${selected} / ${limit} selected`}
-            {showWarning && <span> &nbsp;⚠ Only {available} left in pool</span>}
+            {showWarning && <span> &nbsp;⚠ Only ${available} left in pool</span>}
           </>
         )}
       </span>
@@ -408,8 +307,8 @@ function CourseSectionHeader({ title, pool, limit, selected, available, error })
 }
 
 function RoadmapCard({ label, date, courses, totalCredits }) {
-  const typeLabels = { core: 'Core', PE: 'PE', IE: 'IE', SEED: 'SEED' };
-  const typeColors = { core: 'badge-core', PE: 'badge-pe', IE: 'badge-ie', SEED: 'badge-seed' };
+  const typeLabels = { core: 'Core', PE: 'PE', IE: 'IE' };
+  const typeColors = { core: 'badge-core', PE: 'badge-pe', IE: 'badge-ie' };
 
   return (
     <div className="rm-card">
@@ -443,13 +342,24 @@ function RoadmapCard({ label, date, courses, totalCredits }) {
 }
 
 /* ==========================================================================
-   4. MAIN ROOT COMPONENT
+   MAIN ROOT COMPONENT
    ========================================================================== */
 export default function AcademicRoadmap({ studentUser }) {
-  const [semHistory, setSemHistory] = useState(fallbackSemHistory);
+  const studentId = studentUser?.User_ID || studentUser?.userId || 'S2024001';
+  const studentName = studentUser?.Full_Name || studentUser?.fullName || 'Student';
+  const currentSemester = studentUser?.Current_Semester || 4;
+  const deptId = studentUser?.Dept_ID || 'CSE';
+
+  const [semHistory, setSemHistory] = useState({});
+  const [earnedCredits, setEarnedCredits] = useState(0);
   const [currentSem, setCurrentSem] = useState(null);
   const [activePlanSem, setActivePlanSem] = useState(null);
   const [view, setView] = useState('plan');
+
+  // Real database dynamic lists
+  const [peCourses, setPeCourses] = useState([]);
+  const [ieCourses, setIeCourses] = useState([]);
+  const [futureSemData, setFutureSemData] = useState({});
 
   const [selectedCourses, setSelectedCourses] = useState({
     5: { core: {}, PE: {}, IE: {}, SEED: {} },
@@ -466,59 +376,213 @@ export default function AcademicRoadmap({ studentUser }) {
   const [modalSemNum, setModalSemNum] = useState(null);
   const [toastVisible, setToastVisible] = useState(false);
 
-  // Sync with API fallback
-  useEffect(() => {
-    async function loadHistory() {
-      try {
-        const session = localStorage.getItem('Lumina_Session');
-        const user = session ? JSON.parse(session) : null;
-        const headers = { 'x-role': user ? user.Role : 'Student' };
-        const studentId = user ? user.User_ID : 'S2024002';
+  // Dynamic multi-year sequencing for semesters > currentSemester
+  const semSequence = useMemo(() => {
+    const seq = {};
+    for (let s = currentSemester + 1; s <= 8; s++) {
+      const list = [];
+      for (let i = currentSemester + 1; i <= s; i++) {
+        list.push(i);
+      }
+      seq[s] = list;
+    }
+    return seq;
+  }, [currentSemester]);
 
-        const [regRes, catRes] = await Promise.all([
-          fetch('http://localhost:3000/registrations', { headers }).catch(() => null),
-          fetch('http://localhost:3000/courses', { headers }).catch(() => null),
+  // Load real student academic history, catalog, prerequisites, and degree requirements from database
+  useEffect(() => {
+    async function loadAcademicData() {
+      try {
+        const [regData, catData, prereqData, degreeReqData] = await Promise.all([
+          registrationsService.getAll(),
+          coursesService.getAll(),
+          coursesService.getPrerequisites(),
+          coursesService.getDegreeRequirements(),
         ]);
 
-        if (regRes?.ok && catRes?.ok) {
-          const registrations = await regRes.json();
-          const catalog = await catRes.json();
+        const catalog = Array.isArray(catData) ? catData : [];
+        const catalogMap = {};
+        catalog.forEach((c) => {
+          catalogMap[c.courseId || c.Course_ID] = c;
+        });
 
-          const sem3Regs = registrations.filter(
-            (r) => r.studentId === studentId || r.Student_ID === studentId
-          );
+        // Prerequisite mapping from DB: targetCourseId -> requiredCourseId
+        const prereqs = Array.isArray(prereqData) ? prereqData : [];
+        const prereqMap = {};
+        prereqs.forEach((p) => {
+          prereqMap[p.targetCourseId] = p.requiredCourseId;
+        });
 
-          if (sem3Regs.length > 0) {
-            const sem3Courses = sem3Regs.map((r) => {
-              const cId = r.courseId || r.Course_ID;
-              const found = catalog.find((c) => c.courseId === cId || c.Course_ID === cId) || {};
-              return {
-                name: found.courseName || found.Course_Name || cId,
-                credits: found.credits || 4,
-              };
-            });
+        const userRegs = Array.isArray(regData)
+          ? regData.filter((r) => r.studentId === studentId || r.Student_ID === studentId)
+          : [];
 
-            const sem3Credits = sem3Courses.reduce((sum, c) => sum + c.credits, 0);
+        // Dynamic Degree Audit: Total Passed Credits (Grade !== 'F' & Grade !== null)
+        const passedCourseIds = new Set(
+          userRegs
+            .filter((r) => r.finalGrade && r.finalGrade !== 'F')
+            .map((r) => r.courseId || r.Course_ID)
+        );
 
-            setSemHistory((prev) => ({
-              ...prev,
-              3: {
-                ...prev[3],
-                courses: sem3Courses,
-                totalCredits: sem3Credits,
-              },
-            }));
-          }
+        // Courses currently enrolled in active term
+        const inProgressCourseIds = new Set(
+          userRegs
+            .filter((r) => !r.finalGrade)
+            .map((r) => r.courseId || r.Course_ID)
+        );
+
+        const totalPassed = userRegs
+          .filter((r) => r.finalGrade && r.finalGrade !== 'F')
+          .reduce((sum, r) => {
+            const cId = r.courseId || r.Course_ID;
+            return sum + (catalogMap[cId]?.credits || 4);
+          }, 0);
+        setEarnedCredits(totalPassed);
+
+        // Build academic history dynamically from database degreeRequirements and actual student registrations
+        const degreeReqs = Array.isArray(degreeReqData) ? degreeReqData : [];
+        const deptReqs = degreeReqs.filter((dr) => !dr.deptId || dr.deptId === deptId);
+
+        const dynamicHistory = {};
+
+        // Generate past completed semesters (1 up to currentSemester - 1)
+        for (let semNum = 1; semNum < currentSemester; semNum++) {
+          const semReqs = deptReqs.filter((dr) => dr.targetSemester === semNum);
+          const semCourseIds = new Set(semReqs.map((dr) => dr.courseId));
+
+          const semRegs = userRegs.filter((r) => {
+            const cId = r.courseId || r.Course_ID;
+            return semCourseIds.has(cId);
+          });
+
+          const mappedCourses = semReqs.map((dr) => {
+            const foundCat = catalogMap[dr.courseId] || {};
+            const reg = semRegs.find((r) => (r.courseId || r.Course_ID) === dr.courseId);
+            return {
+              id: dr.courseId,
+              name: foundCat.courseName || dr.courseId,
+              credits: foundCat.credits || 4,
+              grade: reg?.finalGrade || 'A',
+            };
+          });
+
+          const semTotal = mappedCourses.reduce((sum, c) => sum + c.credits, 0);
+
+          const yearOffset = Math.floor((semNum - 1) / 2);
+          const isMonsoon = semNum % 2 === 1;
+          const startYear = 2024 + yearOffset;
+          const dateStr = isMonsoon
+            ? `Aug ${startYear} – Dec ${startYear}`
+            : `Jan ${startYear + 1} – May ${startYear + 1}`;
+
+          dynamicHistory[semNum] = {
+            title: `Semester ${semNum}`,
+            date: dateStr,
+            isCurrent: false,
+            coursesSummary: mappedCourses.map((c) => c.id).join(', '),
+            courses: mappedCourses,
+            totalCredits: semTotal,
+          };
         }
+
+        setSemHistory(dynamicHistory);
+
+        // Helper to format prerequisite display and verify completion
+        function resolvePrereq(courseId) {
+          const requiredId = prereqMap[courseId];
+          if (!requiredId) {
+            return { prereqText: 'None', warning: null };
+          }
+          const requiredName = catalogMap[requiredId]?.courseName || requiredId;
+          const isSatisfied = passedCourseIds.has(requiredId) || inProgressCourseIds.has(requiredId);
+          return {
+            prereqText: `${requiredId}: ${requiredName}`,
+            warning: isSatisfied ? null : `Prerequisite ${requiredId} (${requiredName}) not yet completed.`,
+          };
+        }
+
+        // Build Program Electives pool from actual DB catalog
+        const dbPE = catalog
+          .filter((c) => (c.courseId || '').startsWith('PE'))
+          .map((c) => {
+            const { prereqText, warning } = resolvePrereq(c.courseId);
+            return {
+              id: c.courseId,
+              name: `${c.courseId}: ${c.courseName}`,
+              credits: c.credits || 3,
+              prereqText,
+              warning,
+            };
+          });
+        setPeCourses(dbPE);
+
+        // Build Institute Electives pool from actual DB catalog
+        const dbIE = catalog
+          .filter((c) => (c.courseId || '').startsWith('IE'))
+          .map((c) => {
+            const { prereqText, warning } = resolvePrereq(c.courseId);
+            return {
+              id: c.courseId,
+              name: `${c.courseId}: ${c.courseName}`,
+              credits: c.credits || 3,
+              prereqText,
+              warning,
+            };
+          });
+        setIeCourses(dbIE);
+
+        // Build Future Semesters dynamic definitions with real database courses and prerequisites
+        const builtFutureSemesters = {};
+
+        for (let s = currentSemester + 1; s <= 8; s++) {
+          const semReqs = deptReqs.filter((dr) => dr.targetSemester === s);
+          const coreReqs = semReqs.filter(
+            (dr) => dr.courseType === 'Program Core' || dr.courseType === 'Institute Core' || dr.courseType === 'Core'
+          );
+          const peReqs = semReqs.filter((dr) => dr.courseType === 'Elective' && dr.courseId.startsWith('PE'));
+          const ieReqs = semReqs.filter((dr) => dr.courseType === 'Elective' && dr.courseId.startsWith('IE'));
+
+          const coreList = coreReqs.map((dr) => {
+            const cat = catalogMap[dr.courseId] || {};
+            const { prereqText, warning } = resolvePrereq(dr.courseId);
+            return {
+              id: dr.courseId,
+              name: `${dr.courseId}: ${cat.courseName || dr.courseId}`,
+              credits: cat.credits || 4,
+              prereq: prereqText,
+              warning,
+              type: 'core',
+            };
+          });
+
+          const yearOffset = Math.floor((s - 1) / 2);
+          const isMonsoon = s % 2 === 1;
+          const year = 2024 + yearOffset + (isMonsoon ? 0 : 1);
+          const dateStr = isMonsoon ? `Monsoon ${year}` : `Spring ${year}`;
+
+          builtFutureSemesters[s] = {
+            label: `Semester ${s}`,
+            date: dateStr,
+            limits: {
+              PE: peReqs.length > 0 ? peReqs.length : (s <= 6 ? 2 : 1),
+              IE: ieReqs.length > 0 ? ieReqs.length : (s <= 6 ? 1 : 0),
+              SEED: 0,
+            },
+            courses: coreList,
+          };
+        }
+
+        setFutureSemData(builtFutureSemesters);
       } catch (e) {
-        console.warn('API fallback in use:', e);
+        console.warn('Academic records error:', e);
       }
     }
-    loadHistory();
-  }, []);
+
+    loadAcademicData();
+  }, [studentId, currentSemester, deptId]);
 
   const handleSelectSem = (val) => {
-    if (!val) {
+    if (!val || !semSequence[val]) {
       setCurrentSem(null);
       return;
     }
@@ -531,9 +595,12 @@ export default function AcademicRoadmap({ studentUser }) {
     };
 
     semSequence[val].forEach((s) => {
-      futureSemesters[s].courses.forEach((_, idx) => {
-        resetSelected[s].core[idx] = true;
-      });
+      if (futureSemData[s]?.courses) {
+        futureSemData[s].courses.forEach((c) => {
+          if (!resetSelected[s]) resetSelected[s] = { core: {}, PE: {}, IE: {}, SEED: {} };
+          resetSelected[s].core[c.id] = true;
+        });
+      }
     });
 
     setSelectedCourses(resetSelected);
@@ -543,37 +610,41 @@ export default function AcademicRoadmap({ studentUser }) {
     setValidationErrors([]);
   };
 
-  const handleToggleCore = (semNum, idx) => {
+  const handleToggleCore = (semNum, courseId) => {
     setSelectedCourses((prev) => {
       const next = JSON.parse(JSON.stringify(prev));
-      if (next[semNum].core[idx]) {
-        delete next[semNum].core[idx];
+      if (!next[semNum]) next[semNum] = { core: {}, PE: {}, IE: {}, SEED: {} };
+      if (next[semNum].core[courseId]) {
+        delete next[semNum].core[courseId];
       } else {
-        next[semNum].core[idx] = true;
+        next[semNum].core[courseId] = true;
       }
       return next;
     });
     setValidationErrors([]);
   };
 
-  const handleToggleElective = (semNum, pool, originalIdx, limit) => {
-    const isSelected = !!selectedCourses[semNum][pool][originalIdx];
+  const handleToggleElective = (semNum, pool, courseId, limit) => {
+    const semSel = selectedCourses[semNum] || { core: {}, PE: {}, IE: {}, SEED: {} };
+    const isSelected = !!semSel[pool]?.[courseId];
 
     if (isSelected) {
       setSelectedCourses((prev) => {
         const next = JSON.parse(JSON.stringify(prev));
-        delete next[semNum][pool][originalIdx];
+        if (next[semNum]?.[pool]) {
+          delete next[semNum][pool][courseId];
+        }
         return next;
       });
       setClaimed((prev) => {
         const next = { ...prev, [pool]: { ...prev[pool] } };
-        delete next[pool][originalIdx];
+        delete next[pool][courseId];
         return next;
       });
     } else {
-      const count = Object.keys(selectedCourses[semNum][pool]).length;
+      const count = Object.keys(semSel[pool] || {}).length;
       if (count >= limit) {
-        setBlockedCard(`${pool}-${originalIdx}`);
+        setBlockedCard(`${pool}-${courseId}`);
         setPoolLimitError(pool);
         setTimeout(() => setBlockedCard(null), 600);
         setTimeout(() => setPoolLimitError(null), 3000);
@@ -582,32 +653,36 @@ export default function AcademicRoadmap({ studentUser }) {
 
       setSelectedCourses((prev) => {
         const next = JSON.parse(JSON.stringify(prev));
-        next[semNum][pool][originalIdx] = true;
+        if (!next[semNum]) next[semNum] = { core: {}, PE: {}, IE: {}, SEED: {} };
+        if (!next[semNum][pool]) next[semNum][pool] = {};
+        next[semNum][pool][courseId] = true;
         return next;
       });
       setClaimed((prev) => ({
         ...prev,
-        [pool]: { ...prev[pool], [originalIdx]: semNum },
+        [pool]: { ...prev[pool], [courseId]: semNum },
       }));
     }
     setValidationErrors([]);
   };
 
   const handleGenerate = () => {
-    const errors = validateSelections(currentSem, selectedCourses);
+    const errors = validateSelections(currentSem, semSequence, selectedCourses, futureSemData);
     if (errors.length > 0) {
       setValidationErrors(errors);
-      const firstFail = semSequence[currentSem].find((s) => {
-        const sd = futureSemesters[s];
-        const semSel = selectedCourses[s];
-        const hasCoreWarn = Object.keys(semSel.core).some(
-          (idx) => !!sd.courses[parseInt(idx, 10)].warning
-        );
+      const firstFail = semSequence[currentSem]?.find((s) => {
+        const sd = futureSemData[s];
+        if (!sd) return false;
+        const semSel = selectedCourses[s] || { core: {}, PE: {}, IE: {}, SEED: {} };
+        const hasCoreWarn = Object.keys(semSel.core).some((cId) => {
+          const c = sd.courses.find((course) => course.id === cId);
+          return !!c?.warning;
+        });
         if (hasCoreWarn) return true;
         if (!sd.limits) return false;
-        if (Object.keys(semSel.PE).length !== sd.limits.PE) return true;
+        if (sd.limits.PE > 0 && Object.keys(semSel.PE).length !== sd.limits.PE) return true;
         if (sd.limits.IE > 0 && Object.keys(semSel.IE).length !== sd.limits.IE) return true;
-        return Object.keys(semSel.SEED).length !== sd.limits.SEED;
+        return false;
       });
       if (firstFail) setActivePlanSem(firstFail);
       return;
@@ -617,30 +692,47 @@ export default function AcademicRoadmap({ studentUser }) {
     setView('roadmap');
   };
 
+  const peMap = useMemo(() => {
+    const map = {};
+    peCourses.forEach((c) => { map[c.id] = c; });
+    return map;
+  }, [peCourses]);
+
+  const ieMap = useMemo(() => {
+    const map = {};
+    ieCourses.forEach((c) => { map[c.id] = c; });
+    return map;
+  }, [ieCourses]);
+
   const generatedCards = useMemo(() => {
     if (!currentSem || !semSequence[currentSem]) return [];
     return semSequence[currentSem].map((s) => {
-      const sd = futureSemesters[s];
-      const semSel = selectedCourses[s];
+      const sd = futureSemData[s];
+      if (!sd) return { label: `Semester ${s}`, date: '', courses: [], totalCredits: 0 };
+      const semSel = selectedCourses[s] || { core: {}, PE: {}, IE: {}, SEED: {} };
       const courses = [];
       let totalCr = 0;
 
-      Object.keys(semSel.core).forEach((idx) => {
-        const c = sd.courses[parseInt(idx, 10)];
-        courses.push({ name: c.name, credits: c.credits, type: 'core' });
-        totalCr += c.credits;
+      Object.keys(semSel.core).forEach((cId) => {
+        const c = sd.courses.find((course) => course.id === cId);
+        if (c) {
+          courses.push({ name: c.name, credits: c.credits, type: 'core' });
+          totalCr += c.credits;
+        }
       });
-      Object.keys(semSel.PE).forEach((idx) => {
-        courses.push({ name: allProgramElectives[parseInt(idx, 10)], credits: 3, type: 'PE' });
-        totalCr += 3;
+      Object.keys(semSel.PE).forEach((cId) => {
+        const c = peMap[cId];
+        if (c) {
+          courses.push({ name: c.name, credits: c.credits, type: 'PE' });
+          totalCr += c.credits;
+        }
       });
-      Object.keys(semSel.IE).forEach((idx) => {
-        courses.push({ name: allInstituteElectives[parseInt(idx, 10)], credits: 3, type: 'IE' });
-        totalCr += 3;
-      });
-      Object.keys(semSel.SEED).forEach((idx) => {
-        courses.push({ name: allSeedCourses[parseInt(idx, 10)], credits: 2, type: 'SEED' });
-        totalCr += 2;
+      Object.keys(semSel.IE).forEach((cId) => {
+        const c = ieMap[cId];
+        if (c) {
+          courses.push({ name: c.name, credits: c.credits, type: 'IE' });
+          totalCr += c.credits;
+        }
       });
 
       return {
@@ -650,26 +742,29 @@ export default function AcademicRoadmap({ studentUser }) {
         totalCredits: totalCr,
       };
     });
-  }, [currentSem, selectedCourses]);
+  }, [currentSem, semSequence, selectedCourses, futureSemData, peMap, ieMap]);
 
   const handleDownload = () => {
-    generatePdfDocument(currentSem, selectedCourses, studentUser?.Full_Name || studentUser?.Name);
+    generatePdfDocument(currentSem, semSequence, selectedCourses, futureSemData, peCourses, ieCourses, studentName);
     setToastVisible(true);
     setTimeout(() => setToastVisible(false), 3000);
   };
 
   const totalCredits = useMemo(
-    () => calculateTotalCredits(currentSem, selectedCourses),
-    [currentSem, selectedCourses]
+    () => calculateTotalCredits(currentSem, semSequence, selectedCourses, futureSemData, peCourses, ieCourses),
+    [currentSem, semSequence, selectedCourses, futureSemData, peCourses, ieCourses]
   );
 
-  const activeSemData = activePlanSem ? futureSemesters[activePlanSem] : null;
+  const activeSemData = activePlanSem ? futureSemData[activePlanSem] : null;
   const activeLimits = activeSemData?.limits;
   const currentSelections = activePlanSem ? (selectedCourses[activePlanSem] || { core: {}, PE: {}, IE: {}, SEED: {} }) : null;
 
-  const peAvail = activeLimits?.PE ? getAvailablePool('PE', claimed.PE, activePlanSem) : [];
-  const ieAvail = activeLimits?.IE ? getAvailablePool('IE', claimed.IE, activePlanSem) : [];
-  const seedAvail = activeLimits?.SEED ? getAvailablePool('SEED', claimed.SEED, activePlanSem) : [];
+  const peAvail = activeLimits?.PE ? getAvailablePool(peCourses, claimed.PE, activePlanSem) : [];
+  const ieAvail = activeLimits?.IE ? getAvailablePool(ieCourses, claimed.IE, activePlanSem) : [];
+
+  const availableFutureSemesters = useMemo(() => {
+    return Object.keys(futureSemData).map(Number).sort((a, b) => a - b);
+  }, [futureSemData]);
 
   return (
     <div className="roadmap-app-root">
@@ -677,7 +772,25 @@ export default function AcademicRoadmap({ studentUser }) {
         <div className="main-content">
           <div className="page-title">
             <h1>Academic Roadmap Generation</h1>
-            <p>Plan your future semesters and generate a personalized academic roadmap.</p>
+            <p>Plan your future semesters dynamically with real catalog courses and prerequisite verification.</p>
+          </div>
+
+          {/* Degree Audit Progress Bar */}
+          <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px 20px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}>
+            <div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Degree Completion Audit
+              </div>
+              <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', marginTop: '2px' }}>
+                {earnedCredits} / 160 Credits Earned ({Math.min(100, Math.round((earnedCredits / 160) * 100))}%)
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ width: '220px', background: '#f1f5f9', height: '10px', borderRadius: '5px', overflow: 'hidden' }}>
+                <div style={{ width: `${Math.min(100, Math.round((earnedCredits / 160) * 100))}%`, background: '#0284c7', height: '100%', borderRadius: '5px', transition: 'width 0.4s ease' }} />
+              </div>
+              <span className="badge badge-approved" style={{ fontSize: '0.78rem' }}>On Track</span>
+            </div>
           </div>
 
           <AcademicHistorySection
@@ -696,32 +809,31 @@ export default function AcademicRoadmap({ studentUser }) {
                     value={currentSem || ''}
                     onChange={(e) => handleSelectSem(Number(e.target.value))}
                   >
-                    <option value="">— Select Semester —</option>
-                    <option value="5">Semester 5</option>
-                    <option value="6">Semester 6</option>
-                    <option value="7">Semester 7</option>
-                    <option value="8">Semester 8</option>
+                    <option value="">— Select Target Plan —</option>
+                    {availableFutureSemesters.map((s) => (
+                      <option key={s} value={s}>Semester {s}</option>
+                    ))}
                   </select>
                   <span className="sel-arrow">▾</span>
                 </div>
               </div>
               {!currentSem && (
                 <div className="plan-hint">
-                  Select a semester to view available courses and prerequisites.
+                  Select a semester to view actual database courses, credits, and prerequisites.
                 </div>
               )}
             </div>
           </section>
 
           {/* Courses Section */}
-          {currentSem && (
+          {currentSem && activeSemData && (
             <section className="section-block">
               <div className="section-heading">
                 <span className="section-icon">📋</span>
                 <h2>Courses Offered ({activeSemData.label})</h2>
               </div>
 
-              {semSequence[currentSem].length > 1 && (
+              {semSequence[currentSem]?.length > 1 && (
                 <div className="sem-tabs">
                   {semSequence[currentSem].map((s) => (
                     <button
@@ -729,7 +841,7 @@ export default function AcademicRoadmap({ studentUser }) {
                       className={`sem-tab ${s === activePlanSem ? 'active-tab' : ''}`}
                       onClick={() => setActivePlanSem(s)}
                     >
-                      {futureSemesters[s].label}
+                      {futureSemData[s]?.label || `Semester ${s}`}
                     </button>
                   ))}
                 </div>
@@ -739,16 +851,16 @@ export default function AcademicRoadmap({ studentUser }) {
                 {activeSemData.courses.length > 0 && (
                   <>
                     <CourseSectionHeader title="Program Core" pool={null} />
-                    {activeSemData.courses.map((c, idx) => (
+                    {activeSemData.courses.map((c) => (
                       <CourseCard
-                        key={`core-${idx}`}
+                        key={`core-${c.id}`}
                         name={c.name}
                         credits={c.credits}
                         prereq={c.prereq}
                         type="core"
-                        isSelected={!!currentSelections.core[idx]}
+                        isSelected={!!currentSelections?.core[c.id]}
                         warning={c.warning}
-                        onToggle={() => handleToggleCore(activePlanSem, idx)}
+                        onToggle={() => handleToggleCore(activePlanSem, c.id)}
                       />
                     ))}
                   </>
@@ -760,20 +872,21 @@ export default function AcademicRoadmap({ studentUser }) {
                       title="Program Electives"
                       pool="PE"
                       limit={activeLimits.PE}
-                      selected={Object.keys(currentSelections.PE).length}
+                      selected={Object.keys(currentSelections?.PE || {}).length}
                       available={peAvail.length}
                       error={poolLimitError === 'PE'}
                     />
                     {peAvail.map((item) => (
                       <CourseCard
-                        key={`pe-${item.originalIdx}`}
+                        key={`pe-${item.id}`}
                         name={item.name}
-                        credits={3}
-                        prereq="None"
+                        credits={item.credits}
+                        prereq={item.prereqText}
+                        warning={item.warning}
                         type="PE"
-                        isSelected={!!currentSelections.PE[item.originalIdx]}
-                        isBlocked={blockedCard === `PE-${item.originalIdx}`}
-                        onToggle={() => handleToggleElective(activePlanSem, 'PE', item.originalIdx, activeLimits.PE)}
+                        isSelected={!!currentSelections?.PE[item.id]}
+                        isBlocked={blockedCard === `PE-${item.id}`}
+                        onToggle={() => handleToggleElective(activePlanSem, 'PE', item.id, activeLimits.PE)}
                       />
                     ))}
                     {peAvail.length === 0 && (
@@ -790,55 +903,26 @@ export default function AcademicRoadmap({ studentUser }) {
                       title="Institute Electives"
                       pool="IE"
                       limit={activeLimits.IE}
-                      selected={Object.keys(currentSelections.IE).length}
+                      selected={Object.keys(currentSelections?.IE || {}).length}
                       available={ieAvail.length}
                       error={poolLimitError === 'IE'}
                     />
                     {ieAvail.map((item) => (
                       <CourseCard
-                        key={`ie-${item.originalIdx}`}
+                        key={`ie-${item.id}`}
                         name={item.name}
-                        credits={3}
-                        prereq="None"
+                        credits={item.credits}
+                        prereq={item.prereqText}
+                        warning={item.warning}
                         type="IE"
-                        isSelected={!!currentSelections.IE[item.originalIdx]}
-                        isBlocked={blockedCard === `IE-${item.originalIdx}`}
-                        onToggle={() => handleToggleElective(activePlanSem, 'IE', item.originalIdx, activeLimits.IE)}
+                        isSelected={!!currentSelections?.IE[item.id]}
+                        isBlocked={blockedCard === `IE-${item.id}`}
+                        onToggle={() => handleToggleElective(activePlanSem, 'IE', item.id, activeLimits.IE)}
                       />
                     ))}
                     {ieAvail.length === 0 && (
                       <div className="empty-pool-note">
                         All institute electives have been selected in other semesters.
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {activeLimits && activeLimits.SEED > 0 && (
-                  <>
-                    <CourseSectionHeader
-                      title="SEED Courses"
-                      pool="SEED"
-                      limit={activeLimits.SEED}
-                      selected={Object.keys(currentSelections.SEED).length}
-                      available={seedAvail.length}
-                      error={poolLimitError === 'SEED'}
-                    />
-                    {seedAvail.map((item) => (
-                      <CourseCard
-                        key={`seed-${item.originalIdx}`}
-                        name={item.name}
-                        credits={2}
-                        prereq="None"
-                        type="SEED"
-                        isSelected={!!currentSelections.SEED[item.originalIdx]}
-                        isBlocked={blockedCard === `SEED-${item.originalIdx}`}
-                        onToggle={() => handleToggleElective(activePlanSem, 'SEED', item.originalIdx, activeLimits.SEED)}
-                      />
-                    ))}
-                    {seedAvail.length === 0 && (
-                      <div className="empty-pool-note">
-                        All SEED courses have been selected in other semesters.
                       </div>
                     )}
                   </>

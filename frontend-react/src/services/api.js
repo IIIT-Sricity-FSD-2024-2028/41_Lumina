@@ -21,8 +21,9 @@ api.interceptors.request.use(
           config.headers['x-role'] = user.Role;
         }
         // If there's an auth token, attach it too
-        if (user.token) {
-          config.headers['Authorization'] = `Bearer ${user.token}`;
+        const token = user.token || user.accessToken;
+        if (token) {
+          config.headers['Authorization'] = `Bearer ${token}`;
         }
       } catch (e) {
         console.error('Failed to parse Lumina_Session', e);

@@ -100,6 +100,9 @@ export class CoursesService {
   getCoursesForStudent(studentId: string): {
     currentSemester: number;
     activeTerm: string;
+    termId?: string;
+    minCreditLimit?: number;
+    maxCreditLimit?: number;
     courses: {
       course: CourseCatalog;
       sections: import('../database/interfaces').Section[];
@@ -155,8 +158,16 @@ export class CoursesService {
         sectionsInTerm = this.db.sections.filter(s => s.courseId === req.courseId);
       }
 
+      const prereq = this.db.coursePrerequisites.find(p => p.targetCourseId === req.courseId);
+      const prereqCourse = prereq ? this.db.courseCatalog.find(c => c.courseId === prereq.requiredCourseId) : null;
+      const courseWithPrereq = {
+        ...course,
+        prerequisite: prereq ? `${prereq.requiredCourseId}${prereqCourse ? ` - ${prereqCourse.courseName}` : ''}` : null,
+        prerequisiteCourseId: prereq?.requiredCourseId || null,
+      };
+
       result.push({
-        course,
+        course: courseWithPrereq as any,
         sections: sectionsInTerm.length > 0 ? sectionsInTerm : [
           { sectionId: `${course.courseId}-S1`, sectionName: 'S1', courseId: course.courseId, termId: activeTerm.termId }
         ],
@@ -182,6 +193,9 @@ export class CoursesService {
     return {
       currentSemester: student.currentSemester || 4,
       activeTerm: activeTerm.termName,
+      termId: activeTerm.termId,
+      minCreditLimit: activeTerm.minCreditLimit || 12,
+      maxCreditLimit: activeTerm.maxCreditLimit || 20,
       courses: result,
     };
   }

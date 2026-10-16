@@ -281,6 +281,12 @@ export class DatabaseService implements OnModuleInit {
       { courseId: 'PE505', courseName: 'Network and Data Security', credits: 3, courseCapacity: 60, status: 'Active', deptId: 'CSE' },
       { courseId: 'IE501', courseName: 'Applied Stochastic Models', credits: 3, courseCapacity: 60, status: 'Active', deptId: 'CSE' },
       { courseId: 'IE502', courseName: 'Introduction to Data Analytics', credits: 3, courseCapacity: 60, status: 'Active', deptId: 'AIDS' },
+      { courseId: 'PC701', courseName: 'B.Tech Capstone Project (Phase 1)', credits: 4, courseCapacity: 60, status: 'Active', deptId: 'CSE' },
+      { courseId: 'PE701', courseName: 'Distributed Systems', credits: 3, courseCapacity: 60, status: 'Active', deptId: 'CSE' },
+      { courseId: 'PE702', courseName: 'Natural Language Processing', credits: 3, courseCapacity: 60, status: 'Active', deptId: 'CSE' },
+      { courseId: 'IE701', courseName: 'Technology Entrepreneurship', credits: 3, courseCapacity: 60, status: 'Active', deptId: 'CSE' },
+      { courseId: 'PC801', courseName: 'B.Tech Capstone Project (Phase 2) / Industrial Internship', credits: 8, courseCapacity: 60, status: 'Active', deptId: 'CSE' },
+      { courseId: 'PE801', courseName: 'High Performance Computing', credits: 3, courseCapacity: 60, status: 'Active', deptId: 'CSE' },
     ];
 
     this.coursePrerequisites = [
@@ -289,10 +295,18 @@ export class DatabaseService implements OnModuleInit {
       { targetCourseId: 'IC203', requiredCourseId: 'IC104' },
       { targetCourseId: 'PC303', requiredCourseId: 'IC203' },
       { targetCourseId: 'IC201', requiredCourseId: 'IC102' },
+      { targetCourseId: 'PC401', requiredCourseId: 'PC303' },
+      { targetCourseId: 'PC402', requiredCourseId: 'PC304' },
+      { targetCourseId: 'IC401', requiredCourseId: 'IC102' },
+      { targetCourseId: 'PC403', requiredCourseId: 'PC201' },
+      { targetCourseId: 'SEED05', requiredCourseId: 'SEED04' },
       { targetCourseId: 'PC501', requiredCourseId: 'PC402' },
       { targetCourseId: 'PC601', requiredCourseId: 'PC501' },
       { targetCourseId: 'PE503', requiredCourseId: 'PC403' },
       { targetCourseId: 'PE504', requiredCourseId: 'PE503' },
+      { targetCourseId: 'PC701', requiredCourseId: 'PC601' },
+      { targetCourseId: 'PC801', requiredCourseId: 'PC701' },
+      { targetCourseId: 'PE702', requiredCourseId: 'PE503' },
     ];
 
     this.degreeRequirements = [
@@ -327,6 +341,12 @@ export class DatabaseService implements OnModuleInit {
       { requirementId: 29, deptId: 'CSE', courseId: 'PE505', targetSemester: 6, courseType: 'Elective' },
       { requirementId: 30, deptId: 'CSE', courseId: 'IE501', targetSemester: 5, courseType: 'Elective' },
       { requirementId: 31, deptId: 'CSE', courseId: 'IE502', targetSemester: 6, courseType: 'Elective' },
+      { requirementId: 32, deptId: 'CSE', courseId: 'PC701', targetSemester: 7, courseType: 'Program Core' },
+      { requirementId: 33, deptId: 'CSE', courseId: 'PE701', targetSemester: 7, courseType: 'Elective' },
+      { requirementId: 34, deptId: 'CSE', courseId: 'PE702', targetSemester: 7, courseType: 'Elective' },
+      { requirementId: 35, deptId: 'CSE', courseId: 'IE701', targetSemester: 7, courseType: 'Elective' },
+      { requirementId: 36, deptId: 'CSE', courseId: 'PC801', targetSemester: 8, courseType: 'Program Core' },
+      { requirementId: 37, deptId: 'CSE', courseId: 'PE801', targetSemester: 8, courseType: 'Elective' },
     ];
 
     this.sections = [
@@ -361,13 +381,13 @@ export class DatabaseService implements OnModuleInit {
       { slotId: 9, sectionId: 'PE503-S1', facultyId: 'F2024002', roomNumber: 'G03', dayOfWeek: 'Thursday', startTime: '11:00', endTime: '12:00', syllabus: null },
       { slotId: 10, sectionId: 'PC201-S2', facultyId: 'F2024002', roomNumber: 'G04', dayOfWeek: 'Friday', startTime: '11:00', endTime: '12:00', syllabus: null },
       { slotId: 11, sectionId: 'IC201-S1', facultyId: 'F2024002', roomNumber: 'G04', dayOfWeek: 'Monday', startTime: '14:15', endTime: '15:15', syllabus: null },
-      { slotId: 12, sectionId: 'PC401-S1', facultyId: 'F2024003', roomNumber: 'G04', dayOfWeek: 'Monday', startTime: '08:45', endTime: '09:45', syllabus: null },
-      { slotId: 13, sectionId: 'PC401-S1', facultyId: 'F2024003', roomNumber: 'G04', dayOfWeek: 'Wednesday', startTime: '08:45', endTime: '09:45', syllabus: null },
+      { slotId: 12, sectionId: 'PC401-S1', facultyId: 'F2024003', roomNumber: 'G04', dayOfWeek: 'Monday', startTime: '10:00', endTime: '11:00', syllabus: null },
+      { slotId: 13, sectionId: 'PC401-S1', facultyId: 'F2024003', roomNumber: 'G04', dayOfWeek: 'Wednesday', startTime: '10:00', endTime: '11:00', syllabus: null },
       { slotId: 14, sectionId: 'PC401-S2', facultyId: 'F2024003', roomNumber: 'G04', dayOfWeek: 'Tuesday', startTime: '08:45', endTime: '09:45', syllabus: null },
       { slotId: 15, sectionId: 'PE504-S1', facultyId: 'F2024003', roomNumber: 'G03', dayOfWeek: 'Friday', startTime: '14:15', endTime: '15:15', syllabus: null },
       { slotId: 16, sectionId: 'IC203-S1', facultyId: 'F2024003', roomNumber: 'G04', dayOfWeek: 'Thursday', startTime: '14:15', endTime: '15:15', syllabus: null },
-      { slotId: 17, sectionId: 'IC401-S1', facultyId: 'F2024004', roomNumber: 'G05', dayOfWeek: 'Tuesday', startTime: '14:15', endTime: '15:15', syllabus: null },
-      { slotId: 18, sectionId: 'IC401-S1', facultyId: 'F2024004', roomNumber: 'G05', dayOfWeek: 'Thursday', startTime: '14:15', endTime: '15:15', syllabus: null },
+      { slotId: 17, sectionId: 'IC401-S1', facultyId: 'F2024004', roomNumber: 'G05', dayOfWeek: 'Tuesday', startTime: '10:00', endTime: '11:00', syllabus: null },
+      { slotId: 18, sectionId: 'IC401-S1', facultyId: 'F2024004', roomNumber: 'G05', dayOfWeek: 'Thursday', startTime: '10:00', endTime: '11:00', syllabus: null },
       { slotId: 19, sectionId: 'PC601-S2', facultyId: 'F2024004', roomNumber: 'G05', dayOfWeek: 'Monday', startTime: '11:00', endTime: '12:00', syllabus: null },
       { slotId: 20, sectionId: 'PC402-S2', facultyId: 'F2024004', roomNumber: 'G05', dayOfWeek: 'Wednesday', startTime: '14:15', endTime: '15:15', syllabus: null },
       { slotId: 21, sectionId: 'SEED05-S1', facultyId: 'F2024005', roomNumber: 'G06', dayOfWeek: 'Tuesday', startTime: '14:15', endTime: '15:15', syllabus: null },
