@@ -58,12 +58,53 @@ export default function FacultyCourses() {
     setSelectedFile(null);
   }
 
+  // File upload security & format constraints matching backend Multer rules
+  const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx', '.txt', '.csv', '.xls', '.xlsx', '.jpg', '.jpeg', '.png'];
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+
+  function handleFileSelect(e) {
+    const file = e.target.files?.[0];
+    if (!file) {
+      setSelectedFile(null);
+      return;
+    }
+
+    const ext = '.' + file.name.split('.').pop().toLowerCase();
+    if (!ALLOWED_EXTENSIONS.includes(ext)) {
+      toast.error(`Unsupported format "${ext}". Allowed formats: PDF, DOC, DOCX, TXT, CSV, XLS, XLSX, JPG, PNG.`);
+      e.target.value = '';
+      setSelectedFile(null);
+      return;
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error(`File size exceeds 5MB limit (${(file.size / (1024 * 1024)).toFixed(1)} MB).`);
+      e.target.value = '';
+      setSelectedFile(null);
+      return;
+    }
+
+    setSelectedFile(file);
+  }
+
   // Handle Material Upload
   async function handleAddMaterial(e) {
     e.preventDefault();
     if (!newMatTitle.trim()) {
       toast.error('Please enter a material title');
       return;
+    }
+
+    if (selectedFile) {
+      const ext = '.' + selectedFile.name.split('.').pop().toLowerCase();
+      if (!ALLOWED_EXTENSIONS.includes(ext)) {
+        toast.error(`Unsupported format "${ext}". Allowed formats: PDF, DOC, DOCX, TXT, CSV, XLS, XLSX, JPG, PNG.`);
+        return;
+      }
+      if (selectedFile.size > MAX_FILE_SIZE) {
+        toast.error('File size exceeds the 5MB limit.');
+        return;
+      }
     }
 
     setUploading(true);
@@ -326,9 +367,35 @@ export default function FacultyCourses() {
                     <input
                       type="file"
                       hidden
-                      onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                      accept=".pdf,.doc,.docx,.txt,.csv,.xls,.xlsx,.png,.jpg,.jpeg"
+                      onChange={handleFileSelect}
                     />
-                    {selectedFile ? `📎 ${selectedFile.name}` : '+ Choose File (.pdf, .zip, .docx)'}
+                    {selectedFile ? (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                        <span>📎 {selectedFile.name} ({(selectedFile.size / 1024).toFixed(0)} KB)</span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setSelectedFile(null);
+                          }}
+                          style={{
+                            background: 'transparent',
+                            border: 'none',
+                            color: '#ef4444',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            fontSize: '0.8rem',
+                            padding: '2px 6px',
+                          }}
+                        >
+                          ✕ Remove
+                        </button>
+                      </div>
+                    ) : (
+                      '+ Choose File (.pdf, .doc, .docx, .txt, .csv, .xls, .png, .jpg)'
+                    )}
                   </label>
 
                   <button

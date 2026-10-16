@@ -25,6 +25,39 @@ export default function FacultyAnnouncements() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
+  // Custom Delete Modal State (replaces browser window.confirm with zero localhost popups)
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // File upload security & format constraints matching backend Multer rules
+  const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx', '.txt', '.csv', '.xls', '.xlsx', '.jpg', '.jpeg', '.png'];
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+
+  function handleFileSelect(e) {
+    const file = e.target.files?.[0];
+    if (!file) {
+      setSelectedFile(null);
+      return;
+    }
+
+    const ext = '.' + file.name.split('.').pop().toLowerCase();
+    if (!ALLOWED_EXTENSIONS.includes(ext)) {
+      toast.error(`Unsupported format "${ext}". Allowed formats: PDF, DOC, DOCX, TXT, CSV, XLS, XLSX, JPG, PNG.`);
+      e.target.value = '';
+      setSelectedFile(null);
+      return;
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error(`File size exceeds 5MB limit (${(file.size / (1024 * 1024)).toFixed(1)} MB).`);
+      e.target.value = '';
+      setSelectedFile(null);
+      return;
+    }
+
+    setSelectedFile(file);
+  }
+
   useEffect(() => {
     async function loadData() {
       setLoading(true);
@@ -85,6 +118,18 @@ export default function FacultyAnnouncements() {
       return;
     }
 
+    if (selectedFile) {
+      const ext = '.' + selectedFile.name.split('.').pop().toLowerCase();
+      if (!ALLOWED_EXTENSIONS.includes(ext)) {
+        toast.error(`Unsupported file format "${ext}". Please attach a valid document.`);
+        return;
+      }
+      if (selectedFile.size > MAX_FILE_SIZE) {
+        toast.error('File size exceeds the 5MB limit.');
+        return;
+      }
+    }
+
     setSubmitting(true);
     try {
       if (editingId) {
@@ -102,20 +147,22 @@ export default function FacultyAnnouncements() {
         if (result.backendSuccess) {
           toast.success('Announcement updated and synced with server!');
         } else if (result.backendError) {
-          toast.error(`Server update failed: ${result.backendError}. Saved locally.`);
+          toast.error(`Server update failed: ${result.backendError}`);
         } else {
-          toast.success('Announcement updated in local workspace (Server offline)');
+          toast.success('Announcement updated');
         }
       } else {
         // Create new announcement
         const result = await facultyDataService.createAnnouncement(formData, selectedFile);
-        setAnnouncements((prev) => [result.created, ...prev]);
         if (result.backendSuccess) {
+          setAnnouncements((prev) => [result.created, ...prev]);
           toast.success('Announcement broadcast and saved to server! 📢');
         } else if (result.backendError) {
-          toast.error(`Server save failed: ${result.backendError}. Saved locally.`);
+          toast.error(`Server rejected announcement: ${result.backendError}`);
+          return;
         } else {
-          toast.success('Announcement broadcast locally 📢 (Server offline)');
+          setAnnouncements((prev) => [result.created, ...prev]);
+          toast.success('Announcement broadcast successfully 📢');
         }
       }
 
@@ -128,22 +175,25 @@ export default function FacultyAnnouncements() {
     }
   }
 
-  async function handleDeleteAnnouncement(id) {
-    const confirm = window.confirm('Are you sure you want to delete this announcement?');
-    if (!confirm) return;
+  async function confirmDeleteAnnouncement() {
+    if (!deleteTarget) return;
 
+    setIsDeleting(true);
     try {
-      const result = await facultyDataService.deleteAnnouncement(id);
-      setAnnouncements((prev) => prev.filter((a) => a.id !== id));
+      const result = await facultyDataService.deleteAnnouncement(deleteTarget.id);
+      setAnnouncements((prev) => prev.filter((a) => a.id !== deleteTarget.id));
       if (result.backendSuccess) {
-        toast.success('Announcement deleted on server');
+        toast.success('Announcement deleted from server');
       } else if (result.backendError) {
-        toast.error(`Server delete failed: ${result.backendError}. Removed locally.`);
+        toast.error(`Server delete failed: ${result.backendError}`);
       } else {
-        toast.success('Announcement deleted locally');
+        toast.success('Announcement deleted');
       }
+      setDeleteTarget(null);
     } catch {
       toast.error('Failed to delete announcement');
+    } finally {
+      setIsDeleting(false);
     }
   }
 
@@ -247,7 +297,7 @@ export default function FacultyAnnouncements() {
 
                 <button
                   className={`${styles.cardActionBtn} ${styles.deleteBtn}`}
-                  onClick={() => handleDeleteAnnouncement(ann.id)}
+                  onClick={() => setDeleteTarget(ann)}
                 >
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <polyline points="3 6 5 6 21 6" />
@@ -323,14 +373,42 @@ export default function FacultyAnnouncements() {
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Document Attachment (Optional)</label>
+                  <label className={styles.formLabel}>
+                    Document Attachment (Optional &bull; Max 5MB)
+                  </label>
                   <label className={styles.filePickBtn}>
                     <input
                       type="file"
                       hidden
-                      onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                      accept=".pdf,.doc,.docx,.txt,.csv,.xls,.xlsx,.png,.jpg,.jpeg"
+                      onChange={handleFileSelect}
                     />
-                    {selectedFile ? `📎 ${selectedFile.name}` : '+ Attach Reference Document (.pdf, .zip, .docx)'}
+                    {selectedFile ? (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                        <span>📎 {selectedFile.name} ({(selectedFile.size / 1024).toFixed(0)} KB)</span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setSelectedFile(null);
+                          }}
+                          style={{
+                            background: 'transparent',
+                            border: 'none',
+                            color: '#ef4444',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            fontSize: '0.8rem',
+                            padding: '2px 6px',
+                          }}
+                        >
+                          ✕ Remove
+                        </button>
+                      </div>
+                    ) : (
+                      '+ Attach Reference Document (.pdf, .doc, .docx, .txt, .csv, .xls, .png, .jpg)'
+                    )}
                   </label>
                 </div>
               </div>
@@ -353,6 +431,73 @@ export default function FacultyAnnouncements() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Custom Delete Confirmation Modal (no browser alert/localhost prompt) ── */}
+      {deleteTarget && (
+        <div
+          className={styles.modalOverlay}
+          onClick={() => !isDeleting && setDeleteTarget(null)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className={styles.modalBox}
+            style={{ maxWidth: '440px' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle} style={{ color: '#ef4444' }}>
+                Delete Announcement
+              </h3>
+              <button
+                className={styles.closeBtn}
+                onClick={() => setDeleteTarget(null)}
+                aria-label="Close modal"
+                disabled={isDeleting}
+              >
+                &times;
+              </button>
+            </div>
+            <div className={styles.modalBody} style={{ padding: '16px 20px' }}>
+              <p style={{ fontSize: '0.92rem', color: 'var(--text-main, #0f172a)', margin: '0 0 8px 0', fontWeight: 600 }}>
+                {deleteTarget.title}
+              </p>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted, #64748b)', margin: 0, lineHeight: 1.5 }}>
+                Are you sure you want to delete this announcement? This action will permanently remove it from all student feeds.
+              </p>
+            </div>
+            <div className={styles.modalFooter}>
+              <button
+                type="button"
+                className={styles.cancelBtn}
+                onClick={() => setDeleteTarget(null)}
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn-danger"
+                style={{
+                  background: '#ef4444',
+                  color: '#fff',
+                  border: 'none',
+                  padding: '8px 18px',
+                  borderRadius: '6px',
+                  fontWeight: 600,
+                  fontSize: '0.85rem',
+                  cursor: isDeleting ? 'not-allowed' : 'pointer',
+                  opacity: isDeleting ? 0.7 : 1,
+                }}
+                onClick={confirmDeleteAnnouncement}
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'Deleting...' : 'Delete Announcement'}
+              </button>
+            </div>
           </div>
         </div>
       )}

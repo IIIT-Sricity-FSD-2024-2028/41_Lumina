@@ -17,6 +17,7 @@ export default function FacultyGrades() {
   const [gradesData, setGradesData] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSubmitModal, setShowSubmitModal] = useState(false);
 
   // Load course list
   useEffect(() => {
@@ -111,13 +112,18 @@ export default function FacultyGrades() {
     }
   }
 
-  // Final Submit
-  async function handleSubmitGrades() {
-    const confirm = window.confirm(
-      `Are you sure you want to finalize and submit grades for ${selectedCourseId}? This will record the official letter grades.`
-    );
-    if (!confirm) return;
+  // Open Confirmation Modal
+  function handleOpenSubmitModal() {
+    if (!gradesData.length) {
+      toast.error('No student grades available to submit');
+      return;
+    }
+    setShowSubmitModal(true);
+  }
 
+  // Final Submit Execution
+  async function executeSubmitGrades() {
+    setShowSubmitModal(false);
     setIsSubmitting(true);
     try {
       const result = await facultyDataService.submitFinalGrades(selectedCourseId, gradesData);
@@ -127,7 +133,7 @@ export default function FacultyGrades() {
       } else if (result.backendError) {
         toast.error(`Server persistence failed: ${result.backendError}. Saved to local draft.`);
       } else {
-        toast.success(`Official grades recorded locally for ${selectedCourseId}. (Server offline)`);
+        toast.success(`Official grades recorded for ${selectedCourseId}.`);
       }
     } catch {
       toast.error('Failed to submit grades');
@@ -418,7 +424,7 @@ export default function FacultyGrades() {
           </button>
           <button
             className={styles.submitGradesBtn}
-            onClick={handleSubmitGrades}
+            onClick={handleOpenSubmitModal}
             disabled={isSubmitting}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -428,6 +434,57 @@ export default function FacultyGrades() {
           </button>
         </div>
       </div>
+
+      {/* ── Submit Confirmation Modal (replaces browser window.confirm with zero localhost popups) ── */}
+      {showSubmitModal && (
+        <div
+          className={styles.modalOverlay}
+          onClick={() => setShowSubmitModal(false)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className={styles.modalBox}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>Finalize & Submit Official Grades</h3>
+              <button
+                className={styles.closeBtn}
+                onClick={() => setShowSubmitModal(false)}
+                aria-label="Close modal"
+              >
+                &times;
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              <p style={{ fontSize: '0.92rem', color: 'var(--text-main, #0f172a)', margin: '0 0 8px 0', fontWeight: 600 }}>
+                {selectedCourseId} &ndash; {selectedCourseObj?.name || 'Selected Course'}
+              </p>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted, #64748b)', margin: 0, lineHeight: 1.5 }}>
+                Are you sure you want to finalize and submit official grades for {gradesData.length} students? This will record official letter grades on students&apos; academic records and notify the Dean&apos;s office.
+              </p>
+            </div>
+            <div className={styles.modalFooter}>
+              <button
+                type="button"
+                className={styles.cancelBtn}
+                onClick={() => setShowSubmitModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn-primary"
+                style={{ padding: '8px 18px', fontSize: '0.85rem' }}
+                onClick={executeSubmitGrades}
+              >
+                Confirm & Submit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
