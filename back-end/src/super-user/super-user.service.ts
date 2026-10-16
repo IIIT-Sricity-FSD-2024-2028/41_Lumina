@@ -136,6 +136,39 @@ export class SuperUserService {
   }
 
   /**
+   * Removes / offboards a Lumina Admin SPOC from the operations staff
+   */
+  deleteAdminSpoc(adminId: string): { success: boolean; message: string; adminId: string } {
+    const idx = this.db.adminTeam.findIndex((a) => a.adminId === adminId);
+    if (idx === -1) {
+      throw new NotFoundException(`Admin SPOC with ID ${adminId} not found.`);
+    }
+
+    const spoc = this.db.adminTeam[idx];
+    this.db.adminTeam.splice(idx, 1);
+
+    // Reassign any institutes assigned to this SPOC to floating support queue or backup SPOC
+    const fallbackSpoc = this.db.adminTeam[0];
+    for (const inst of this.db.institutes) {
+      if (inst.spocAdminId === adminId) {
+        if (fallbackSpoc) {
+          inst.spocAdminId = fallbackSpoc.adminId;
+          inst.spocName = fallbackSpoc.fullName;
+        } else {
+          inst.spocAdminId = 'UNASSIGNED';
+          inst.spocName = 'Floating Support Queue';
+        }
+      }
+    }
+
+    return {
+      success: true,
+      message: `Lumina SPOC ${spoc.fullName} (${adminId}) has been offboarded successfully.`,
+      adminId,
+    };
+  }
+
+  /**
    * Returns all onboarded client institutions with dynamic tenant lifecycle state
    */
   getInstitutes(): ClientInstitute[] {

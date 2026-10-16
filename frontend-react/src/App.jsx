@@ -14,6 +14,7 @@ import Dean2Analytics from './pages/ad2/Dean2Analytics';
 import Dean2Gradesheets from './pages/ad2/Dean2Gradesheets';
 import Dean2GradesheetDetail from './pages/ad2/Dean2GradesheetDetail';
 import SuperUserDashboard from './pages/superuser/SuperUserDashboard';
+import DeanDashboard from './pages/dean/DeanDashboard';
 
 export default function App() {
   return (
@@ -31,7 +32,7 @@ export default function App() {
           <Route
             path="/ad2"
             element={
-              <ProtectedRoute allowedRoles={['Assistant_Dean_2', 'Dean']}>
+              <ProtectedRoute allowedRoles={['Assistant_Dean_2']}>
                 <Dean2Home />
               </ProtectedRoute>
             }
@@ -39,7 +40,7 @@ export default function App() {
           <Route
             path="/ad2/policies"
             element={
-              <ProtectedRoute allowedRoles={['Assistant_Dean_2', 'Dean']}>
+              <ProtectedRoute allowedRoles={['Assistant_Dean_2']}>
                 <Dean2Policies />
               </ProtectedRoute>
             }
@@ -47,7 +48,7 @@ export default function App() {
           <Route
             path="/ad2/enrollment"
             element={
-              <ProtectedRoute allowedRoles={['Assistant_Dean_2', 'Dean']}>
+              <ProtectedRoute allowedRoles={['Assistant_Dean_2']}>
                 <Dean2Enrollment />
               </ProtectedRoute>
             }
@@ -55,7 +56,7 @@ export default function App() {
           <Route
             path="/ad2/overrides"
             element={
-              <ProtectedRoute allowedRoles={['Assistant_Dean_2', 'Dean']}>
+              <ProtectedRoute allowedRoles={['Assistant_Dean_2']}>
                 <Dean2Overrides />
               </ProtectedRoute>
             }
@@ -63,7 +64,7 @@ export default function App() {
           <Route
             path="/ad2/analytics"
             element={
-              <ProtectedRoute allowedRoles={['Assistant_Dean_2', 'Dean']}>
+              <ProtectedRoute allowedRoles={['Assistant_Dean_2']}>
                 <Dean2Analytics />
               </ProtectedRoute>
             }
@@ -71,7 +72,7 @@ export default function App() {
           <Route
             path="/ad2/gradesheets"
             element={
-              <ProtectedRoute allowedRoles={['Assistant_Dean_2', 'Dean']}>
+              <ProtectedRoute allowedRoles={['Assistant_Dean_2']}>
                 <Dean2Gradesheets />
               </ProtectedRoute>
             }
@@ -79,7 +80,7 @@ export default function App() {
           <Route
             path="/ad2/gradesheets/:courseId/:termId"
             element={
-              <ProtectedRoute allowedRoles={['Assistant_Dean_2', 'Dean']}>
+              <ProtectedRoute allowedRoles={['Assistant_Dean_2']}>
                 <Dean2GradesheetDetail />
               </ProtectedRoute>
             }
@@ -87,7 +88,7 @@ export default function App() {
           <Route
             path="/ad2/gradesheets/detail"
             element={
-              <ProtectedRoute allowedRoles={['Assistant_Dean_2', 'Dean']}>
+              <ProtectedRoute allowedRoles={['Assistant_Dean_2']}>
                 <Dean2GradesheetDetail />
               </ProtectedRoute>
             }
@@ -107,6 +108,24 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={['Super_User']}>
                 <SuperUserDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Dean Executive Console Route */}
+          <Route
+            path="/dean"
+            element={
+              <ProtectedRoute allowedRoles={['Dean']}>
+                <DeanDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dean/*"
+            element={
+              <ProtectedRoute allowedRoles={['Dean']}>
+                <DeanDashboard />
               </ProtectedRoute>
             }
           />

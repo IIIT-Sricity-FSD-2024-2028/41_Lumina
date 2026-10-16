@@ -676,42 +676,329 @@
   border-color: #3b82f6 !important;
 }
 
+.liveBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.liveBadgeActive {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.liveBadgePaused {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.pulsingDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: currentColor;
+  box-shadow: 0 0 8px currentColor;
+  animation: pulseDot 1.5s infinite ease-in-out;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+/* Terminal Column Header Bar */
+.terminalColHeaders {
+  display: grid;
+  grid-template-columns: 100px 52px 52px 64px 50px 95px minmax(180px, 1.2fr) minmax(200px, 1fr) 20px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #0b1120;
+  border-bottom: 1px solid #1e293b;
+  font-family: inherit;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  text-transform: uppercase;
+  user-select: none;
+}
+
 .terminalViewport {
-  height: 480px;
+  height: 520px;
   overflow-y: auto;
-  padding: 16px 20px;
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
-  font-size: 0.8rem;
-  line-height: 1.6;
-  background: #090d16;
+  padding: 6px 10px;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  background: #070b14;
+}
+
+.logRowContainer {
+  margin-bottom: 2px;
 }
 
 .logLine {
-  display: flex;
+  display: grid;
+  grid-template-columns: 100px 52px 52px 64px 50px 95px minmax(180px, 1.2fr) minmax(200px, 1fr) 20px;
+  align-items: center;
   gap: 12px;
-  margin-bottom: 4px;
-  word-break: break-all;
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  transition: all 0.12s ease;
+  cursor: pointer;
+  border: 1px solid transparent;
+  user-select: text;
+}
+
+.logLine:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.logLineExpanded {
+  background: rgba(30, 41, 59, 0.45);
+  border-color: rgba(59, 130, 246, 0.35);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
 .logTime {
-  color: #64748b;
+  color: #94a3b8;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  letter-spacing: -0.01em;
   user-select: none;
-  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 
-.logLevelInfo { color: #38bdf8; font-weight: 700; flex-shrink: 0; }
-.logLevelWarn { color: #fbbf24; font-weight: 700; flex-shrink: 0; }
-.logLevelError { color: #f87171; font-weight: 700; flex-shrink: 0; }
-.logLevelDebug { color: #a78bfa; font-weight: 700; flex-shrink: 0; }
+.logBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-align: center;
+  width: 100%;
+}
 
-.logModule {
-  color: #94a3b8;
+.logBadgeLevel {
+  width: 100%;
+}
+
+.logBadgeMethod {
+  width: 100%;
+}
+
+.logLevelInfo { background: rgba(56, 189, 248, 0.12); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.28); }
+.logLevelWarn { background: rgba(245, 158, 11, 0.12); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.28); }
+.logLevelError { background: rgba(248, 113, 113, 0.15); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.32); }
+.logLevelDebug { background: rgba(192, 132, 252, 0.12); color: #c084fc; border: 1px solid rgba(192, 132, 252, 0.28); }
+
+.logMethodGet { background: rgba(52, 211, 153, 0.12); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.28); }
+.logMethodPost { background: rgba(96, 165, 250, 0.12); color: #60a5fa; border: 1px solid rgba(96, 165, 250, 0.28); }
+.logMethodPut { background: rgba(251, 146, 60, 0.12); color: #fb923c; border: 1px solid rgba(251, 146, 60, 0.28); }
+.logMethodDelete { background: rgba(244, 63, 94, 0.15); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.32); }
+.logMethodOther { background: rgba(148, 163, 184, 0.12); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.22); }
+
+.logStatusBadge {
+  width: 100%;
+  text-align: center;
+  font-size: 0.72rem;
   font-weight: 600;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-variant-numeric: tabular-nums;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.logStatusOk { color: #34d399; border-color: rgba(52, 211, 153, 0.28); }
+.logStatusInfo { color: #38bdf8; border-color: rgba(56, 189, 248, 0.28); }
+.logStatusWarn { color: #fbbf24; border-color: rgba(245, 158, 11, 0.28); }
+.logStatusError { color: #f87171; border-color: rgba(248, 113, 113, 0.32); }
+
+.logDuration {
+  color: #94a3b8;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  font-weight: 500;
+}
+
+.logRole {
+  background: rgba(51, 65, 85, 0.45);
+  color: #cbd5e1;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logPath {
+  color: #f8fafc;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logClientMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 0.74rem;
+}
+
+.logIp {
+  color: #94a3b8;
+  background: rgba(15, 23, 42, 0.7);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #1e293b;
   flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.logUa {
+  color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logExpandChevron {
+  color: #475569;
+  font-size: 0.6875rem;
+  text-align: center;
+  user-select: none;
+}
+
+/* Expanded Detail Drawer */
+.logDetailDrawer {
+  background: #090e1a;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  border-top: none;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  padding: 12px 16px;
+  animation: fadeInDrawer 0.15s ease;
+}
+
+@keyframes fadeInDrawer {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.detailDrawerHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #1e293b;
+}
+
+.detailDrawerTitle {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #93c5fd;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.copyLogBtn {
+  background: #1e293b;
+  color: #f1f5f9;
+  border: 1px solid #334155;
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.copyLogBtn:hover {
+  background: #334155;
+  border-color: #64748b;
+}
+
+.detailGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.detailItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.detailLabel {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.detailVal {
+  font-size: 0.76rem;
+  color: #e2e8f0;
+  font-family: inherit;
+}
+
+.rawBox {
+  background: #050811;
+  border: 1px solid #1e293b;
+  border-radius: 4px;
+  padding: 8px 12px;
+}
+
+.rawLabel {
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: #64748b;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.rawCode {
+  margin: 0;
+  color: #38bdf8;
+  font-size: 0.73rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+  font-family: inherit;
 }
 
 .logMsg {
   color: #e2e8f0;
+  flex: 1;
 }
 
 /* Modal Backdrop & Dialog */
@@ -850,4 +1137,79 @@
   height: 48px;
   margin-bottom: 12px;
   opacity: 0.4;
+}
+
+/* Multi-Tenant Privacy & Boundary Notice */
+.privacyBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-left: 4px solid #16a34a;
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  margin-bottom: 24px;
+}
+
+.privacyIcon {
+  font-size: 1.5rem;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.privacyTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #14532d;
+  margin: 0 0 4px 0;
+}
+
+.privacyText {
+  font-size: 0.85rem;
+  color: #166534;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* 2-Column Telemetry Grid */
+.telemetryGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 900px) {
+  .telemetryGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.telemetryList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.telemetryRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: #f8fafc;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  font-size: 0.85rem;
+}
+
+.telemetryLabel {
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.telemetryValue {
+  font-weight: 700;
+  color: var(--text-main);
 }

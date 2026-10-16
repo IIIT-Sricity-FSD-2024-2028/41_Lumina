@@ -77,18 +77,39 @@ export default function TopNavbar({ navLinks = [], notifications = [] }) {
         {/* ── Center: Nav links (role-specific) ── */}
         {navLinks.length > 0 && (
           <nav className={styles.navLinks} aria-label="Main navigation">
-            {navLinks.map((link) => (
-              <NavLink
-                key={link.to}
-                to={link.to}
-                className={({ isActive }) =>
-                  `${styles.navLink} ${isActive ? styles.navLinkActive : ''}`
-                }
-                end={link.end}
-              >
-                {link.label}
-              </NavLink>
-            ))}
+            {navLinks.map((link) => {
+              if (link.onClick) {
+                return (
+                  <button
+                    key={link.label}
+                    type="button"
+                    onClick={link.onClick}
+                    className={`${styles.navLink} ${link.isActive ? styles.navLinkActive : ''}`}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      borderBottom: link.isActive ? '3px solid var(--primary-dark, #071932)' : '3px solid transparent',
+                      cursor: 'pointer',
+                      font: 'inherit',
+                    }}
+                  >
+                    {link.label}
+                  </button>
+                );
+              }
+              return (
+                <NavLink
+                  key={link.to}
+                  to={link.to}
+                  className={({ isActive }) =>
+                    `${styles.navLink} ${isActive ? styles.navLinkActive : ''}`
+                  }
+                  end={link.end}
+                >
+                  {link.label}
+                </NavLink>
+              );
+            })}
           </nav>
         )}
       </div>

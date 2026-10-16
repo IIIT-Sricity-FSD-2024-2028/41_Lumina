@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Query, Body, Param, Patch, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Query, Body, Param, Patch, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiQuery, ApiHeader, ApiResponse } from '@nestjs/swagger';
 import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -106,6 +106,14 @@ export class SuperUserController {
   @ApiResponse({ status: 201, description: 'New Admin SPOC created' })
   addAdminSpoc(@Body() payload: Partial<LuminaAdminSpoc>) {
     return this.superUserService.addAdminSpoc(payload);
+  }
+
+  @Delete('admin-team/:id')
+  @Roles('Super_User')
+  @ApiOperation({ summary: 'Remove/offboard a Lumina Admin SPOC (Super User only)' })
+  @ApiResponse({ status: 200, description: 'Admin SPOC removed' })
+  deleteAdminSpoc(@Param('id') adminId: string) {
+    return this.superUserService.deleteAdminSpoc(adminId);
   }
 
   @Get('institutes')

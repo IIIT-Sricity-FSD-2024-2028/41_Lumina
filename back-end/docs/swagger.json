@@ -1676,6 +1676,30 @@
         ]
       }
     },
+    "/super-user/admin-team/{id}": {
+      "delete": {
+        "operationId": "SuperUserController_deleteAdminSpoc",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Admin SPOC removed"
+          }
+        },
+        "summary": "Remove/offboard a Lumina Admin SPOC (Super User only)",
+        "tags": [
+          "SuperUser"
+        ]
+      }
+    },
     "/super-user/institutes": {
       "get": {
         "operationId": "SuperUserController_getInstitutes",

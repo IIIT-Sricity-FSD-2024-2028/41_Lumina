@@ -68,7 +68,7 @@ export const adminService = {
    */
   async getLogs(type = 'access', lines = 50) {
     const res = await api.get('/super-user/logs', {
-      params: { type, lines },
+      params: { type, lines, _t: Date.now() },
     });
     return res.data;
   },
@@ -120,6 +120,15 @@ export const adminService = {
    */
   async addAdminSpoc(payload) {
     const res = await api.post('/super-user/admin-team', payload);
+    return res.data;
+  },
+
+  /**
+   * Remove / offboard a Lumina Admin SPOC (Super User only)
+   * @param {string} adminId
+   */
+  async deleteAdminSpoc(adminId) {
+    const res = await api.delete(`/super-user/admin-team/${adminId}`);
     return res.data;
   },
 

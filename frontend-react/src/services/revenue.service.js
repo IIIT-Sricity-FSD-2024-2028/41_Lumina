@@ -80,7 +80,43 @@ export const revenueService = {
    * @param {string} reason
    */
   async waiveHold(studentId, reason) {
-    const res = await api.post(`/revenue/student/${studentId}/waive-hold`, { reason });
+    const res = await api.post(`/revenue/student/${studentId}/waive-hold`, {
+      waiverReason: reason,
+      reason,
+    });
+    return res.data;
+  },
+
+  /**
+   * Cancel institutional SaaS subscription
+   */
+  async cancelSubscription() {
+    const res = await api.post('/revenue/tier/cancel');
+    return res.data;
+  },
+
+  /**
+   * Get institutional tenant lifecycle and grace period status
+   */
+  async getLifecycle() {
+    const res = await api.get('/revenue/lifecycle');
+    return res.data;
+  },
+
+  /**
+   * Simulate 60-day read-only grace period
+   * @param {boolean} enableGrace
+   */
+  async simulateGracePeriod(enableGrace = true) {
+    const res = await api.post('/revenue/simulate-grace-period', { enableGrace });
+    return res.data;
+  },
+
+  /**
+   * Export complete institutional academic and financial archive
+   */
+  async exportArchive() {
+    const res = await api.get('/revenue/export/archive');
     return res.data;
   },
 };
