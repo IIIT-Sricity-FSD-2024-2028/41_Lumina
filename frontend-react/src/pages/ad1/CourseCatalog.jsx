@@ -3,7 +3,7 @@
  * Refactored to use shared AD1PageLayout, StatCard, Modal, FormGroup,
  * DataTable, Pagination, PrereqDropdown, and shared CSS tokens.
  */
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import AD1PageLayout from './components/AD1PageLayout';
 import StatCard, { StatCardsRow } from './components/StatCard';
@@ -77,7 +77,13 @@ export default function CourseCatalog() {
     setFilterSemester(''); setFilterStatus('');
   }, []);
 
-  useEffect(() => { if (deptDisabled) setFilterDept(''); }, [deptDisabled]);
+  const handleFilterTypeChange = (e) => {
+    const val = e.target.value;
+    setFilterType(val);
+    if (val === 'Institute Core' || val === 'Seed Course') {
+      setFilterDept('');
+    }
+  };
 
   // ─── Type change handlers ─────────────────────────────────
   const handleTypeChange = (form, setForm) => (type) => {
@@ -297,7 +303,7 @@ export default function CourseCatalog() {
           <option value="">Semester</option>
           <option value="Monsoon">Monsoon</option><option value="Spring">Spring</option>
         </select>
-        <select className={styles.filterSelect} value={filterType} onChange={(e) => setFilterType(e.target.value)}>
+        <select className={styles.filterSelect} value={filterType} onChange={handleFilterTypeChange}>
           <option value="">Course Type</option>
           <option value="Institute Core">Institute Core</option><option value="Program Core">Program Core</option>
           <option value="Elective">Elective</option><option value="Seed Course">Seed Course</option>

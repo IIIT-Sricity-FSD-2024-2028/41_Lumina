@@ -12,7 +12,6 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { useAuth } from '../../context/AuthContext';
 import TopNavbar from '../../components/common/TopNavbar';
 import Footer from '../../components/Footer';
 
@@ -29,115 +28,6 @@ import { announcementsService } from '../../services/announcements.service';
 import { revenueService } from '../../services/revenue.service';
 
 import styles from './SuperUser.module.css';
-
-// Default mock tenants and SPOCs matching legacy super_user.js
-const DEFAULT_INSTITUTES = [
-  {
-    instituteId: 'INST-IIITS',
-    name: 'Indian Institute of Information Technology Sri City',
-    tier: 'Enterprise',
-    spocAdminId: 'SPOC-001',
-    spocName: 'Arjun Verma',
-    deanName: 'Dr. Hrishikesh Venkataraman',
-    deanEmail: 'dean.academics@iiits.in',
-    studentCount: 1250,
-    status: 'Grace_Period',
-    annualContractValue: 107988,
-  },
-  {
-    instituteId: 'INST-IITB',
-    name: 'Indian Institute of Technology Bombay',
-    tier: 'Enterprise',
-    spocAdminId: 'SPOC-002',
-    spocName: 'Eswar Prasad',
-    deanName: 'Prof. S. Sudarshan',
-    deanEmail: 'dean.ap@iitb.ac.in',
-    studentCount: 3400,
-    status: 'Active',
-    annualContractValue: 107988,
-  },
-  {
-    instituteId: 'INST-BITS',
-    name: 'Birla Institute of Technology and Science Pilani',
-    tier: 'Campus',
-    spocAdminId: 'SPOC-003',
-    spocName: 'Priya Sharma',
-    deanName: 'Prof. V. Ramgopal Rao',
-    deanEmail: 'dean.wilp@bits-pilani.ac.in',
-    studentCount: 2200,
-    status: 'Active',
-    annualContractValue: 41988,
-  },
-  {
-    instituteId: 'INST-NITK',
-    name: 'National Institute of Technology Karnataka',
-    tier: 'Campus',
-    spocAdminId: 'SPOC-001',
-    spocName: 'Arjun Verma',
-    deanName: 'Prof. K. Vidyadhar',
-    deanEmail: 'dean.acad@nitk.edu.in',
-    studentCount: 1800,
-    status: 'Onboarding',
-    annualContractValue: 41988,
-  },
-  {
-    instituteId: 'INST-IIITH',
-    name: 'International Institute of Information Technology Hyderabad',
-    tier: 'Enterprise',
-    spocAdminId: 'SPOC-002',
-    spocName: 'Eswar Prasad',
-    deanName: 'Prof. P. J. Narayanan',
-    deanEmail: 'director@iiit.ac.in',
-    studentCount: 1950,
-    status: 'Active',
-    annualContractValue: 107988,
-  },
-  {
-    instituteId: 'INST-MANIPAL',
-    name: 'Manipal Academy of Higher Education',
-    tier: 'Starter',
-    spocAdminId: 'SPOC-003',
-    spocName: 'Priya Sharma',
-    deanName: 'Dr. Narayana Sabhahit',
-    deanEmail: 'registrar@manipal.edu',
-    studentCount: 950,
-    status: 'Trial',
-    annualContractValue: 14388,
-  },
-];
-
-const DEFAULT_ADMIN_TEAM = [
-  {
-    adminId: 'SPOC-001',
-    fullName: 'Arjun Verma',
-    email: 'arjun.spoc@lumina.edu',
-    phone: '+91 98765 43210',
-    assignedInstituteId: 'INST-IIITS',
-    assignedInstituteName: 'IIIT Sri City',
-    status: 'Active',
-    slaHealth: '99.99% SLA (Dedicated)',
-  },
-  {
-    adminId: 'SPOC-002',
-    fullName: 'Eswar Prasad',
-    email: 'eswar.spoc@lumina.edu',
-    phone: '+91 98765 43211',
-    assignedInstituteId: 'INST-IITB',
-    assignedInstituteName: 'IIT Bombay',
-    status: 'Active',
-    slaHealth: '99.95% SLA (Portfolio)',
-  },
-  {
-    adminId: 'SPOC-003',
-    fullName: 'Priya Sharma',
-    email: 'priya.spoc@lumina.edu',
-    phone: '+91 98765 43212',
-    assignedInstituteId: 'INST-BITS',
-    assignedInstituteName: 'BITS Pilani',
-    status: 'Active',
-    slaHealth: '99.90% SLA (Standard)',
-  },
-];
 
 const ENTITY_CONFIGS = {
   users: {
@@ -274,7 +164,7 @@ const ENTITY_CONFIGS = {
  */
 function parseUserAgent(ua) {
   if (!ua) return 'Client';
-  let browser = '';
+  let browser;
   let os = '';
 
   if (/Firefox\/(\d+)/i.test(ua)) browser = `Firefox ${RegExp.$1}`;
@@ -382,8 +272,6 @@ function parseLogLine(rawLine) {
 }
 
 export default function SuperUserDashboard() {
-  const { user } = useAuth();
-
   // Active top-level Tab: 'overview' | 'institutes' | 'spocs' | 'queue' | 'logs'
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -395,9 +283,19 @@ export default function SuperUserDashboard() {
   const [filterValue, setFilterValue] = useState('ALL');
 
   // Client Institutes & SPOC state
-  const [institutes, setInstitutes] = useState(DEFAULT_INSTITUTES);
-  const [adminTeam, setAdminTeam] = useState(DEFAULT_ADMIN_TEAM);
+  const [institutes, setInstitutes] = useState([]);
+  const [adminTeam, setAdminTeam] = useState([]);
+  const [systemHealth, setSystemHealth] = useState(null);
   const [onboardDockets, setOnboardDockets] = useState([]);
+
+  // Tier counts derived dynamically from live institutes
+  const tierCounts = useMemo(() => {
+    return {
+      enterprise: institutes.filter(i => i.tier === 'Enterprise').length,
+      campus: institutes.filter(i => i.tier === 'Campus').length,
+      starter: institutes.filter(i => i.tier === 'Starter').length,
+    };
+  }, [institutes]);
 
   // System Logs Real-Time Streaming state
   const [logs, setLogs] = useState([]);
@@ -431,6 +329,7 @@ export default function SuperUserDashboard() {
   useEffect(() => {
     loadInstitutesAndStaff();
     loadDockets();
+    loadEntity('users');
   }, []);
 
   // Real-Time Log Streaming Effect: live polling every 2.5s while logs tab is active
@@ -492,21 +391,25 @@ export default function SuperUserDashboard() {
     }
   }
 
-  // Load Institutes & Admin Team
+  // Load Institutes, Admin Team & System Health
   async function loadInstitutesAndStaff() {
     try {
-      const [instData, teamData] = await Promise.allSettled([
+      const [instData, teamData, healthData] = await Promise.allSettled([
         adminService.getInstitutes(),
         adminService.getAdminTeam(),
+        adminService.getSystemHealth(),
       ]);
-      if (instData.status === 'fulfilled' && Array.isArray(instData.value) && instData.value.length > 0) {
+      if (instData.status === 'fulfilled' && Array.isArray(instData.value)) {
         setInstitutes(instData.value);
       }
-      if (teamData.status === 'fulfilled' && Array.isArray(teamData.value) && teamData.value.length > 0) {
+      if (teamData.status === 'fulfilled' && Array.isArray(teamData.value)) {
         setAdminTeam(teamData.value);
       }
+      if (healthData.status === 'fulfilled' && healthData.value) {
+        setSystemHealth(healthData.value);
+      }
     } catch (err) {
-      console.warn('Using default institutes / admin team:', err);
+      console.warn('Error loading institutes / admin team / health:', err);
     }
   }
 
@@ -516,6 +419,7 @@ export default function SuperUserDashboard() {
       const raw = localStorage.getItem('Lumina_Onboard_Dockets');
       if (raw) setOnboardDockets(JSON.parse(raw));
     } catch (e) {
+      console.warn('Failed to parse onboard dockets:', e);
       setOnboardDockets([]);
     }
   }
@@ -652,7 +556,7 @@ export default function SuperUserDashboard() {
     const headers = config.columns.filter(c => c !== 'Actions');
     const rows = filteredRecords.map(item => {
       return headers.map(header => {
-        let val = '';
+        let val;
         if (header === 'User ID') val = item.userId || item.User_ID;
         else if (header === 'Full Name') val = item.fullName || item.Full_Name;
         else if (header === 'Email') val = item.email || item.Email;
@@ -787,6 +691,7 @@ export default function SuperUserDashboard() {
       setDeleteModal({ isOpen: false, id: null, confirmId: '' });
       loadEntity(selectedEntity);
     } catch (err) {
+      console.error(err);
       toast.error('Failed to delete record');
     }
   }
@@ -799,6 +704,7 @@ export default function SuperUserDashboard() {
       toast.success(`Override ${decision}!`);
       loadEntity('overrides');
     } catch (e) {
+      console.error(e);
       toast.error('Failed to process override');
     }
   }
@@ -811,6 +717,7 @@ export default function SuperUserDashboard() {
       setReassignSpocModal({ isOpen: false, instId: '', instName: '', spocId: '' });
       loadInstitutesAndStaff();
     } catch (e) {
+      console.error(e);
       toast.error('Failed to assign SPOC');
     }
   }
@@ -824,6 +731,7 @@ export default function SuperUserDashboard() {
       setChangeTierModal({ isOpen: false, instId: '', instName: '', tier: 'Campus' });
       loadInstitutesAndStaff();
     } catch (e) {
+      console.error(e);
       toast.error('Failed to change subscription tier');
     }
   }
@@ -836,6 +744,7 @@ export default function SuperUserDashboard() {
       toast.success(`📦 Tenant ${instName} archived. Seats reclaimed.`);
       loadInstitutesAndStaff();
     } catch (e) {
+      console.error(e);
       toast.error('Failed to archive tenant');
     }
   }
@@ -852,6 +761,7 @@ export default function SuperUserDashboard() {
       setEmploySpocModal({ isOpen: false, fullName: '', email: '', phone: '' });
       loadInstitutesAndStaff();
     } catch (e) {
+      console.error(e);
       toast.error('Failed to employ SPOC');
     }
   }
@@ -883,6 +793,7 @@ export default function SuperUserDashboard() {
       setOnboardInstModal({ isOpen: false, name: '', deanName: '', deanEmail: '', studentCount: 2000, tier: 'Campus', spocAdminId: 'SPOC-001' });
       loadInstitutesAndStaff();
     } catch (e) {
+      console.error(e);
       toast.error('Failed to provision institute tenant');
     }
   }
@@ -977,19 +888,27 @@ export default function SuperUserDashboard() {
                 <div className={styles.telemetryList}>
                   <div className={styles.telemetryRow}>
                     <span className={styles.telemetryLabel}>Server Health Status</span>
-                    <span className={styles.telemetryValue} style={{ color: '#16a34a' }}>● 100% Operational</span>
+                    <span className={styles.telemetryValue} style={{ color: '#16a34a' }}>
+                      ● {systemHealth?.server?.status ? `100% ${systemHealth.server.status}` : '100% Operational'}
+                    </span>
                   </div>
                   <div className={styles.telemetryRow}>
                     <span className={styles.telemetryLabel}>Node Runtime</span>
-                    <span className={styles.telemetryValue}>v20.18.0 (Linux x64)</span>
+                    <span className={styles.telemetryValue}>
+                      {systemHealth?.server?.nodeVersion || 'v20.18.0'} ({systemHealth?.server?.platform || 'linux'} {systemHealth?.server?.architecture || 'x64'})
+                    </span>
                   </div>
                   <div className={styles.telemetryRow}>
                     <span className={styles.telemetryLabel}>Process Memory RSS</span>
-                    <span className={styles.telemetryValue}>94 MB / 189 MB Heap</span>
+                    <span className={styles.telemetryValue}>
+                      {systemHealth?.server?.processMemory?.rssMB ? `${systemHealth.server.processMemory.rssMB} MB / ${systemHealth.server.processMemory.heapTotalMB} MB Heap` : '94 MB / 189 MB Heap'}
+                    </span>
                   </div>
                   <div className={styles.telemetryRow}>
                     <span className={styles.telemetryLabel}>Multi-Tenant Isolation</span>
-                    <span className={styles.telemetryValue} style={{ color: '#2563eb' }}>Encrypted SQLite Schemas</span>
+                    <span className={styles.telemetryValue} style={{ color: '#2563eb' }}>
+                      Active Ecosystem &bull; {systemHealth?.ecosystem?.totalUsers || 'Platform'} Users
+                    </span>
                   </div>
                 </div>
                 <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
@@ -1015,15 +934,15 @@ export default function SuperUserDashboard() {
                 <div className={styles.telemetryList}>
                   <div className={styles.telemetryRow}>
                     <span className={styles.telemetryLabel}>Enterprise Elite ($107,988 / yr)</span>
-                    <span className={styles.telemetryValue}>3 Universities</span>
+                    <span className={styles.telemetryValue}>{tierCounts.enterprise} {tierCounts.enterprise === 1 ? 'University' : 'Universities'}</span>
                   </div>
                   <div className={styles.telemetryRow}>
                     <span className={styles.telemetryLabel}>Campus Growth ($41,988 / yr)</span>
-                    <span className={styles.telemetryValue}>2 Universities</span>
+                    <span className={styles.telemetryValue}>{tierCounts.campus} {tierCounts.campus === 1 ? 'University' : 'Universities'}</span>
                   </div>
                   <div className={styles.telemetryRow}>
                     <span className={styles.telemetryLabel}>Starter Tier ($11,988 / yr)</span>
-                    <span className={styles.telemetryValue}>1 University</span>
+                    <span className={styles.telemetryValue}>{tierCounts.starter} {tierCounts.starter === 1 ? 'University' : 'Universities'}</span>
                   </div>
                   <div className={styles.telemetryRow}>
                     <span className={styles.telemetryLabel}>Total Contract Portfolio</span>
@@ -1072,7 +991,14 @@ export default function SuperUserDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {institutes.map(inst => {
+                    {institutes.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} style={{ textAlign: 'center', padding: '32px', color: '#94a3b8' }}>
+                          No client university tenants onboarded yet.
+                        </td>
+                      </tr>
+                    ) : (
+                      institutes.map(inst => {
                       const isGrace = inst.status === 'Grace_Period';
                       const isArchived = inst.status === 'Archived';
                       return (
@@ -1117,9 +1043,144 @@ export default function SuperUserDashboard() {
                           </td>
                         </tr>
                       );
-                    })}
-                  </tbody>
+                    })
+                  )}
+                </tbody>
                 </table>
+              </div>
+            </div>
+
+            {/* Universal Schema Data Engine */}
+            <div className={styles.entitySelector} style={{ marginTop: '28px' }}>
+              <div className={styles.entityHeader}>
+                <span className={styles.entityTitle}>Institutional Data Schema Engine</span>
+                <span className={styles.entityHint}>Select a core database entity to inspect, filter, export, and manage live records across the tenancy</span>
+              </div>
+              <div className={styles.entityChipsList}>
+                {Object.keys(ENTITY_CONFIGS).map(key => {
+                  const cfg = ENTITY_CONFIGS[key];
+                  const isActive = selectedEntity === key;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      className={`${styles.entityChip} ${isActive ? styles.entityChipActive : ''}`}
+                      onClick={() => handleSelectEntity(key)}
+                    >
+                      <img src="/assets/icons/layers.svg" alt="" width="14" height="14" />
+                      <span>{cfg.title}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Entity Data Table Card */}
+            <div className={styles.card}>
+              <div className={styles.tableToolbar}>
+                <div className={styles.toolbarLeft}>
+                  {/* Search box */}
+                  <div className={styles.searchWrapper}>
+                    <img src="/assets/icons/search.svg" alt="" width="14" height="14" className={styles.searchIcon} />
+                    <input
+                      type="text"
+                      className={styles.searchInput}
+                      placeholder={`Search in ${ENTITY_CONFIGS[selectedEntity]?.title || 'Records'}...`}
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                    {searchQuery && (
+                      <button
+                        type="button"
+                        className={styles.clearSearchBtn}
+                        onClick={() => setSearchQuery('')}
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Filter Dropdown */}
+                  <select
+                    className={styles.filterSelect}
+                    value={filterValue}
+                    onChange={(e) => setFilterValue(e.target.value)}
+                  >
+                    {ENTITY_CONFIGS[selectedEntity]?.filterOptions.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+
+                  <span className={styles.recordsBadge}>
+                    {filteredRecords.length} {filteredRecords.length === 1 ? 'record' : 'records'}
+                  </span>
+                </div>
+
+                <div className={styles.toolbarRight}>
+                  <button
+                    type="button"
+                    className={`${styles.btn} ${styles.btnOutline} ${styles.btnSm}`}
+                    onClick={() => loadEntity(selectedEntity)}
+                  >
+                    <img src="/assets/icons/refresh.svg" alt="" width="14" height="14" />
+                    <span>Refresh</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className={`${styles.btn} ${styles.btnOutline} ${styles.btnSm}`}
+                    onClick={exportCSV}
+                  >
+                    <img src="/assets/icons/download.svg" alt="" width="14" height="14" />
+                    <span>Export CSV</span>
+                  </button>
+
+                  {ENTITY_CONFIGS[selectedEntity]?.canCreate && (
+                    <button
+                      type="button"
+                      className={`${styles.btn} ${styles.btnPrimary} ${styles.btnSm}`}
+                      onClick={() => setCrudModal({ isOpen: true, mode: 'create', data: null })}
+                    >
+                      <img src="/assets/icons/plus.svg" alt="" width="14" height="14" style={{ filter: 'brightness(0) invert(1)' }} />
+                      <span>+ Add New {ENTITY_CONFIGS[selectedEntity]?.singular}</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Table Render */}
+              <div className={styles.tableContainer}>
+                {tableLoading ? (
+                  <div className={styles.emptyState}>Fetching records from server...</div>
+                ) : filteredRecords.length === 0 ? (
+                  <div className={styles.emptyState}>
+                    <img src="/assets/icons/database.svg" alt="" className={styles.emptyIcon} />
+                    <h4>No records found</h4>
+                    <p>There are no records matching your current filter criteria.</p>
+                  </div>
+                ) : (
+                  <table className={styles.table}>
+                    <thead>
+                      <tr>
+                        {ENTITY_CONFIGS[selectedEntity]?.columns.map(col => (
+                          <th key={col}>{col}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredRecords.map((item, idx) => (
+                        <tr key={idx}>
+                          {renderRowCells(selectedEntity, item, {
+                            onEdit: (rec) => setCrudModal({ isOpen: true, mode: 'edit', data: rec }),
+                            onDelete: (id) => setDeleteModal({ isOpen: true, id, confirmId: '' }),
+                            onApprove: (id) => handleOverrideDecision(id, 'Approved'),
+                            onReject: (id) => handleOverrideDecision(id, 'Rejected'),
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
               </div>
             </div>
           </div>
@@ -1159,75 +1220,83 @@ export default function SuperUserDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {institutes.map(inst => {
-                    const isGrace = inst.status === 'Grace_Period';
-                    const isArchived = inst.status === 'Archived';
-                    return (
-                      <tr key={inst.instituteId}>
-                        <td>
-                          <strong>{inst.name}</strong>
-                          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{inst.instituteId}</div>
-                        </td>
-                        <td>
-                          {isGrace ? (
-                            <span className={`${styles.badge} ${styles.badgeGrace}`}>⚠️ Grace Period (29d Left)</span>
-                          ) : isArchived ? (
-                            <span className={`${styles.badge} ${styles.badgeArchived}`}>Archived</span>
-                          ) : (
-                            <span className={`${styles.badge} ${styles.badgeApproved}`}>{inst.tier} Tier</span>
-                          )}
-                        </td>
-                        <td>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <img src="/assets/icons/shield.svg" alt="" width="14" height="14" opacity="0.6" />
-                            <strong>{inst.spocName || 'Unassigned'}</strong>
-                          </div>
-                        </td>
-                        <td>
-                          <div>{inst.deanName}</div>
-                          <a href={`mailto:${inst.deanEmail}`} style={{ fontSize: '0.75rem', color: 'var(--accent-blue)' }}>{inst.deanEmail}</a>
-                        </td>
-                        <td><strong>{Number(inst.studentCount || 0).toLocaleString()}</strong></td>
-                        <td><strong style={{ color: '#166534' }}>${Number(inst.annualContractValue || 0).toLocaleString()} / yr</strong></td>
-                        <td>
-                          {isGrace ? (
-                            <span className={`${styles.badge} ${styles.badgeLocked}`}>🔒 Read-Only Locked</span>
-                          ) : isArchived ? (
-                            <span className={`${styles.badge} ${styles.badgeArchived}`}>Decommissioned</span>
-                          ) : (
-                            <span className={`${styles.badge} ${styles.badgeApproved}`}>● 99.99% SLA</span>
-                          )}
-                        </td>
-                        <td>
-                          <div className={styles.rowActions}>
-                            <button
-                              type="button"
-                              className={styles.actionBtn}
-                              onClick={() => setReassignSpocModal({ isOpen: true, instId: inst.instituteId, instName: inst.name, spocId: inst.spocAdminId })}
-                            >
-                              Reassign SPOC
-                            </button>
-                            <button
-                              type="button"
-                              className={styles.actionBtn}
-                              onClick={() => setChangeTierModal({ isOpen: true, instId: inst.instituteId, instName: inst.name, tier: inst.tier })}
-                            >
-                              Change Tier
-                            </button>
-                            {isGrace && (
+                  {institutes.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} style={{ textAlign: 'center', padding: '32px', color: '#94a3b8' }}>
+                        No client institutes currently registered.
+                      </td>
+                    </tr>
+                  ) : (
+                    institutes.map(inst => {
+                      const isGrace = inst.status === 'Grace_Period';
+                      const isArchived = inst.status === 'Archived';
+                      return (
+                        <tr key={inst.instituteId}>
+                          <td>
+                            <strong>{inst.name}</strong>
+                            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{inst.instituteId}</div>
+                          </td>
+                          <td>
+                            {isGrace ? (
+                              <span className={`${styles.badge} ${styles.badgeGrace}`}>⚠️ Grace Period (29d Left)</span>
+                            ) : isArchived ? (
+                              <span className={`${styles.badge} ${styles.badgeArchived}`}>Archived</span>
+                            ) : (
+                              <span className={`${styles.badge} ${styles.badgeApproved}`}>{inst.tier} Tier</span>
+                            )}
+                          </td>
+                          <td>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <img src="/assets/icons/shield.svg" alt="" width="14" height="14" opacity="0.6" />
+                              <strong>{inst.spocName || 'Unassigned'}</strong>
+                            </div>
+                          </td>
+                          <td>
+                            <div>{inst.deanName}</div>
+                            <a href={`mailto:${inst.deanEmail}`} style={{ fontSize: '0.75rem', color: 'var(--accent-blue)' }}>{inst.deanEmail}</a>
+                          </td>
+                          <td><strong>{Number(inst.studentCount || 0).toLocaleString()}</strong></td>
+                          <td><strong style={{ color: '#166534' }}>${Number(inst.annualContractValue || 0).toLocaleString()} / yr</strong></td>
+                          <td>
+                            {isGrace ? (
+                              <span className={`${styles.badge} ${styles.badgeLocked}`}>🔒 Read-Only Locked</span>
+                            ) : isArchived ? (
+                              <span className={`${styles.badge} ${styles.badgeArchived}`}>Decommissioned</span>
+                            ) : (
+                              <span className={`${styles.badge} ${styles.badgeApproved}`}>● 99.99% SLA</span>
+                            )}
+                          </td>
+                          <td>
+                            <div className={styles.rowActions}>
                               <button
                                 type="button"
-                                className={`${styles.btn} ${styles.btnDangerOutline} ${styles.btnXs}`}
-                                onClick={() => setArchiveTenantModal({ isOpen: true, instId: inst.instituteId, instName: inst.name })}
+                                className={styles.actionBtn}
+                                onClick={() => setReassignSpocModal({ isOpen: true, instId: inst.instituteId, instName: inst.name, spocId: inst.spocAdminId })}
                               >
-                                📦 Archive
+                                Reassign SPOC
                               </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                              <button
+                                type="button"
+                                className={styles.actionBtn}
+                                onClick={() => setChangeTierModal({ isOpen: true, instId: inst.instituteId, instName: inst.name, tier: inst.tier })}
+                              >
+                                Change Tier
+                              </button>
+                              {isGrace && (
+                                <button
+                                  type="button"
+                                  className={`${styles.btn} ${styles.btnDangerOutline} ${styles.btnXs}`}
+                                  onClick={() => setArchiveTenantModal({ isOpen: true, instId: inst.instituteId, instName: inst.name })}
+                                >
+                                  📦 Archive
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
                 </tbody>
               </table>
             </div>
@@ -1254,46 +1323,52 @@ export default function SuperUserDashboard() {
             </div>
 
             <div className={styles.spocGrid}>
-              {adminTeam.map(spoc => {
-                const initials = (spoc.fullName || 'Admin').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-                return (
-                  <div key={spoc.adminId} className={styles.spocCard}>
-                    <div className={styles.spocCardHeader}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div className={styles.spocAvatar}>{initials}</div>
-                        <div>
-                          <strong>{spoc.fullName}</strong>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{spoc.adminId}</div>
+              {adminTeam.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '32px', color: '#94a3b8', gridColumn: '1 / -1' }}>
+                  No SPOC staff members currently assigned.
+                </div>
+              ) : (
+                adminTeam.map(spoc => {
+                  const initials = (spoc.fullName || 'Admin').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                  return (
+                    <div key={spoc.adminId} className={styles.spocCard}>
+                      <div className={styles.spocCardHeader}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <div className={styles.spocAvatar}>{initials}</div>
+                          <div>
+                            <strong>{spoc.fullName}</strong>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{spoc.adminId}</div>
+                          </div>
+                        </div>
+                        <span className={`${styles.badge} ${styles.badgeApproved}`}>{spoc.status}</span>
+                      </div>
+
+                      <div className={styles.spocTenantBox}>
+                        <div className={styles.spocTenantLabel}>Assigned University Tenant</div>
+                        <div style={{ fontWeight: '700', color: 'var(--text-main)', fontSize: '0.9rem' }}>
+                          {spoc.assignedInstituteName}
                         </div>
                       </div>
-                      <span className={`${styles.badge} ${styles.badgeApproved}`}>{spoc.status}</span>
-                    </div>
 
-                    <div className={styles.spocTenantBox}>
-                      <div className={styles.spocTenantLabel}>Assigned University Tenant</div>
-                      <div style={{ fontWeight: '700', color: 'var(--text-main)', fontSize: '0.9rem' }}>
-                        {spoc.assignedInstituteName}
+                      <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div>✉️ {spoc.email}</div>
+                        <div>📞 {spoc.phone}</div>
+                        <div style={{ marginTop: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span className={`${styles.badge} ${styles.badgeRole}`}>{spoc.slaHealth}</span>
+                          <button
+                            type="button"
+                            className={`${styles.btn} ${styles.btnDangerOutline} ${styles.btnXs}`}
+                            onClick={() => setDeleteSpocModal({ isOpen: true, adminId: spoc.adminId, spocName: spoc.fullName })}
+                            title={`Offboard SPOC ${spoc.fullName}`}
+                          >
+                            🗑 Delete SPOC
+                          </button>
+                        </div>
                       </div>
                     </div>
-
-                    <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <div>✉️ {spoc.email}</div>
-                      <div>📞 {spoc.phone}</div>
-                      <div style={{ marginTop: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span className={`${styles.badge} ${styles.badgeRole}`}>{spoc.slaHealth}</span>
-                        <button
-                          type="button"
-                          className={`${styles.btn} ${styles.btnDangerOutline} ${styles.btnXs}`}
-                          onClick={() => setDeleteSpocModal({ isOpen: true, adminId: spoc.adminId, spocName: spoc.fullName })}
-                          title={`Offboard SPOC ${spoc.fullName}`}
-                        >
-                          🗑 Delete SPOC
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
           </div>
         )}

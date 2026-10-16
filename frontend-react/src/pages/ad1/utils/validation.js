@@ -12,10 +12,10 @@
 export function validateSlot(draft, timetable) {
   const { day, timeSlot, professor, room, editingAlloc } = draft;
 
-  let facultyOk = true;
-  let roomOk = true;
-  let facultyMsg = 'Faculty Availability';
-  let roomMsg = 'Room Availability';
+  let facultyOk;
+  let roomOk;
+  let facultyMsg;
+  let roomMsg;
 
   if (!professor && !room) {
     return {

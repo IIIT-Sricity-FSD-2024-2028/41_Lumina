@@ -133,13 +133,24 @@ export default function FacultyCourses() {
     }
   }
 
-  // Handle mock download
+  // Handle document download
   function handleDownload(mat) {
-    if (mat.fileUrl) {
+    if (mat.fileUrl && !mat.fileUrl.startsWith('mock:')) {
       window.open(mat.fileUrl, '_blank');
-    } else {
-      toast.success(`Downloading ${mat.name}...`);
+      return;
     }
+    const docContent = `Course Material: ${mat.name || 'Untitled Document'}\nType: ${mat.type || 'Document'}\nDate: ${mat.date || new Date().toISOString().split('T')[0]}\nCourse: ${activeCourseForModal?.name || 'Academic Course'}\n\n[Lumina Academic Portal — Document Repository Archive]`;
+    const blob = new Blob([docContent], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    const safeName = (mat.name || 'document').replace(/[^a-zA-Z0-9_.-]/g, '_');
+    link.download = `${safeName}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success(`Downloaded ${mat.name || 'document'}`);
   }
 
   if (loading) {

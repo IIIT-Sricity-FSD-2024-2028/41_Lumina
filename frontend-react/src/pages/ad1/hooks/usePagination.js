@@ -5,17 +5,18 @@
  * @param {number} pageSize - items per page (default 6)
  * @returns {{ pagedItems, currentPage, totalPages, setPage, info }}
  */
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 
 export default function usePagination(items, pageSize = 6) {
   const [currentPage, setCurrentPage] = useState(1);
+  const [prevLength, setPrevLength] = useState(items.length);
+
+  if (items.length !== prevLength) {
+    setPrevLength(items.length);
+    setCurrentPage(1);
+  }
 
   const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
-
-  // Reset to page 1 when items change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [items.length]);
 
   const pagedItems = useMemo(
     () => items.slice((currentPage - 1) * pageSize, currentPage * pageSize),

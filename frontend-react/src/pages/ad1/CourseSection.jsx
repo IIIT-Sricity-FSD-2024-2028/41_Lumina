@@ -2,7 +2,7 @@
  * CourseSection — Deal1 Page 3
  * Refactored to use shared AD1PageLayout, StatCard, Modal, FormGroup, DataTable.
  */
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import AD1PageLayout from './components/AD1PageLayout';
 import StatCard, { StatCardsRow } from './components/StatCard';
@@ -10,6 +10,7 @@ import Modal from './components/Modal';
 import DataTable from './components/DataTable';
 import useAD1Data from './hooks/useAD1Data';
 import { registrationsService } from '../../services/registrations.service';
+import { sectionsService } from '../../services/sections.service';
 import { normalizeSectionValue, formatSectionLabel, getSemesterFromTerm, MAX_SECTION_CAPACITY } from './utils/dataTransforms';
 import shared from './styles/ad1-shared.module.css';
 import styles from './CourseSection.module.css';
@@ -38,7 +39,6 @@ export default function CourseSection() {
   const [lastSaved, setLastSaved] = useState('');
 
   const deptDisabled = filterType === 'Institute Core' || filterType === 'Seed Course';
-  useEffect(() => { if (deptDisabled) setFilterDept('All Departments'); }, [deptDisabled]);
 
   // ─── Course options ────────────────────────────────────────
   const courseOptions = useMemo(() => {
@@ -54,8 +54,6 @@ export default function CourseSection() {
     return matching;
   }, [data, filterTerm, filterUG, filterType, filterDept]);
 
-  useEffect(() => { setFilterCourse(''); }, [filterTerm, filterUG, filterType, filterDept]);
-
   const currentCourse = useMemo(() => {
     if (!data || !filterCourse) return null;
     return data.courses.find((c) => c.code === filterCourse) || null;
@@ -67,8 +65,6 @@ export default function CourseSection() {
     for (let i = 1; i <= (currentCourse.sections || 1); i++) opts.push(`Section ${i}`);
     return opts;
   }, [currentCourse]);
-
-  useEffect(() => { if (currentCourse) setFilterSection('All Sections'); else setFilterSection(''); }, [currentCourse]);
 
   const allFiltersComplete = filterTerm && filterUG && filterType && (deptDisabled || filterDept) && filterCourse && filterSection;
 
@@ -263,9 +259,9 @@ export default function CourseSection() {
       {/* Filters */}
       <div className={styles.filterBar}>
         {[
-          { label: 'Term', value: filterTerm, onChange: setFilterTerm, options: [{ v: 'Monsoon 2025', l: 'Monsoon 2025' }, { v: 'Spring 2026', l: 'Spring 2026' }] },
-          { label: 'UG Year', value: filterUG, onChange: setFilterUG, options: [{ v: '', l: 'Select Year', disabled: true }, { v: 'UG1', l: 'UG1' }, { v: 'UG2', l: 'UG2' }, { v: 'UG3', l: 'UG3' }, { v: 'UG4', l: 'UG4' }] },
-          { label: 'Course Type', value: filterType, onChange: setFilterType, options: [{ v: '', l: 'Select Type', disabled: true }, { v: 'Institute Core', l: 'Institute Core' }, { v: 'Program Core', l: 'Program Core' }, { v: 'Elective', l: 'Elective' }, { v: 'Seed Course', l: 'Seed Course' }] },
+          { label: 'Term', value: filterTerm, onChange: (v) => { setFilterTerm(v); setFilterCourse(''); }, options: [{ v: 'Monsoon 2025', l: 'Monsoon 2025' }, { v: 'Spring 2026', l: 'Spring 2026' }] },
+          { label: 'UG Year', value: filterUG, onChange: (v) => { setFilterUG(v); setFilterCourse(''); }, options: [{ v: '', l: 'Select Year', disabled: true }, { v: 'UG1', l: 'UG1' }, { v: 'UG2', l: 'UG2' }, { v: 'UG3', l: 'UG3' }, { v: 'UG4', l: 'UG4' }] },
+          { label: 'Course Type', value: filterType, onChange: (v) => { setFilterType(v); if (v === 'Institute Core' || v === 'Seed Course') setFilterDept('All Departments'); setFilterCourse(''); }, options: [{ v: '', l: 'Select Type', disabled: true }, { v: 'Institute Core', l: 'Institute Core' }, { v: 'Program Core', l: 'Program Core' }, { v: 'Elective', l: 'Elective' }, { v: 'Seed Course', l: 'Seed Course' }] },
         ].map((f) => (
           <div className={styles.filterGroup} key={f.label}>
             <label className={styles.filterLabel}>{f.label}</label>
@@ -276,7 +272,7 @@ export default function CourseSection() {
         ))}
         <div className={styles.filterGroup}>
           <label className={styles.filterLabel}>Department</label>
-          <select className={shared.selectField} value={filterDept} disabled={deptDisabled} onChange={(e) => setFilterDept(e.target.value)}>
+          <select className={shared.selectField} value={filterDept} disabled={deptDisabled} onChange={(e) => { setFilterDept(e.target.value); setFilterCourse(''); }}>
             {deptDisabled ? <option value="All Departments">All Departments</option> : (
               <><option value="" disabled>Select Dept</option><option value="CSE">CSE</option><option value="ECE">ECE</option><option value="AIDS">AIDS</option></>
             )}
@@ -284,7 +280,7 @@ export default function CourseSection() {
         </div>
         <div className={styles.filterGroup}>
           <label className={styles.filterLabel}>Course</label>
-          <select className={shared.selectField} value={filterCourse} disabled={courseOptions.length === 0} onChange={(e) => setFilterCourse(e.target.value)}>
+          <select className={shared.selectField} value={filterCourse} disabled={courseOptions.length === 0} onChange={(e) => { setFilterCourse(e.target.value); setFilterSection(e.target.value ? 'All Sections' : ''); }}>
             <option value="" disabled>Select Course</option>
             {courseOptions.map((c) => <option key={c.code} value={c.code}>{c.code} — {c.name}</option>)}
           </select>

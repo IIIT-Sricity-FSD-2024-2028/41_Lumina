@@ -85,39 +85,43 @@ export default function DeanDashboard() {
 
   // Load all initial data dynamically
   useEffect(() => {
-    loadAllData();
-  }, []);
+    let ignore = false;
+    async function fetchData() {
+      try {
+        const [uRes, cRes, rRes, revRes, clearRes, lifeRes, polRes, phasesRes, ovRes] = await Promise.allSettled([
+          usersService.getAll(),
+          coursesService.getAll(),
+          registrationsService.getAll(),
+          revenueService.getSummary(),
+          revenueService.getClearanceRoster(),
+          revenueService.getLifecycle(),
+          policiesService.getPolicies(),
+          policiesService.getPhases(),
+          overridesService.getAll(),
+        ]);
 
-  async function loadAllData() {
-    setLoading(true);
-    try {
-      const [uRes, cRes, rRes, revRes, clearRes, lifeRes, polRes, phasesRes, ovRes] = await Promise.allSettled([
-        usersService.getAll(),
-        coursesService.getAll(),
-        registrationsService.getAll(),
-        revenueService.getSummary(),
-        revenueService.getClearanceRoster(),
-        revenueService.getLifecycle(),
-        policiesService.getPolicies(),
-        policiesService.getPhases(),
-        overridesService.getAll(),
-      ]);
-
-      if (uRes.status === 'fulfilled' && Array.isArray(uRes.value)) setUsers(uRes.value);
-      if (cRes.status === 'fulfilled' && Array.isArray(cRes.value)) setCourses(cRes.value);
-      if (rRes.status === 'fulfilled' && Array.isArray(rRes.value)) setRegistrations(rRes.value);
-      if (revRes.status === 'fulfilled' && revRes.value) setRevenueData(revRes.value);
-      if (clearRes.status === 'fulfilled' && Array.isArray(clearRes.value)) setClearanceRoster(clearRes.value);
-      if (lifeRes.status === 'fulfilled' && lifeRes.value) setGraceLifecycle(lifeRes.value);
-      if (polRes.status === 'fulfilled' && polRes.value?.settings) setPolicies(polRes.value.settings);
-      if (phasesRes.status === 'fulfilled' && Array.isArray(phasesRes.value)) setPhases(phasesRes.value);
-      if (ovRes.status === 'fulfilled' && Array.isArray(ovRes.value)) setOverrides(ovRes.value);
-    } catch (err) {
-      console.warn('Error loading Dean dashboard data:', err);
-    } finally {
-      setLoading(false);
+        if (ignore) return;
+        if (uRes.status === 'fulfilled' && Array.isArray(uRes.value)) setUsers(uRes.value);
+        if (cRes.status === 'fulfilled' && Array.isArray(cRes.value)) setCourses(cRes.value);
+        if (rRes.status === 'fulfilled' && Array.isArray(rRes.value)) setRegistrations(rRes.value);
+        if (revRes.status === 'fulfilled' && revRes.value) setRevenueData(revRes.value);
+        if (clearRes.status === 'fulfilled' && Array.isArray(clearRes.value)) setClearanceRoster(clearRes.value);
+        if (lifeRes.status === 'fulfilled' && lifeRes.value) setGraceLifecycle(lifeRes.value);
+        if (polRes.status === 'fulfilled' && polRes.value?.settings) setPolicies(polRes.value.settings);
+        if (phasesRes.status === 'fulfilled' && Array.isArray(phasesRes.value)) setPhases(phasesRes.value);
+        if (ovRes.status === 'fulfilled' && Array.isArray(ovRes.value)) setOverrides(ovRes.value);
+      } catch (err) {
+        if (!ignore) console.warn('Error loading Dean dashboard data:', err);
+      } finally {
+        if (!ignore) setLoading(false);
+      }
     }
-  }
+
+    fetchData();
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   // Filtered Assistant Deans
   const assistantDeans = useMemo(() => {
@@ -226,6 +230,7 @@ export default function DeanDashboard() {
       const refreshed = await usersService.getAll();
       setUsers(refreshed);
     } catch (err) {
+      console.error(err);
       toast.error('Failed to delete user');
     }
   }
@@ -242,6 +247,7 @@ export default function DeanDashboard() {
       setRevenueData(revRes);
       setClearanceRoster(clearRes);
     } catch (err) {
+      console.error(err);
       toast.error('Failed to record payment');
     }
   }
@@ -269,6 +275,7 @@ export default function DeanDashboard() {
       setRevenueData(revRes);
       setClearanceRoster(clearRes);
     } catch (err) {
+      console.error(err);
       toast.error('Failed to grant waiver');
     }
   }
@@ -322,6 +329,7 @@ export default function DeanDashboard() {
       const revRes = await revenueService.getSummary();
       setRevenueData(revRes);
     } catch (err) {
+      console.error(err);
       toast.error('Failed to cancel subscription');
     }
   }
@@ -339,6 +347,7 @@ export default function DeanDashboard() {
       setRevenueData(revRes);
       setGraceLifecycle(lifeRes);
     } catch (err) {
+      console.error(err);
       toast.error('Failed to toggle grace period simulation');
     }
   }
@@ -360,6 +369,7 @@ export default function DeanDashboard() {
       URL.revokeObjectURL(url);
       toast.success('📥 Academic Archive Downloaded Successfully!');
     } catch (err) {
+      console.error(err);
       toast.error('Failed to export academic archive');
     }
   }
@@ -425,6 +435,11 @@ export default function DeanDashboard() {
       <TopNavbar navLinks={navLinks} />
 
       <main className={styles.pageContainer}>
+        {loading && (
+          <div style={{ padding: '0.75rem 1rem', marginBottom: '1rem', background: 'rgba(59, 130, 246, 0.08)', borderRadius: '8px', color: '#2563eb', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span>🔄</span> Refreshing live institutional data...
+          </div>
+        )}
         {/* 60-Day Grace Period Warning Banner */}
         {isGraceActive && (
           <div className={styles.graceBanner}>
@@ -1115,7 +1130,7 @@ export default function DeanDashboard() {
                     </strong>
                   </div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    Next Renewal Date: {new Date(saasModal.proration.newRenewalDate || Date.now()).toLocaleDateString()}
+                    Next Renewal Date: {saasModal.proration.newRenewalDate || 'Annual Auto-Renewal'}
                   </div>
                 </div>
               )}

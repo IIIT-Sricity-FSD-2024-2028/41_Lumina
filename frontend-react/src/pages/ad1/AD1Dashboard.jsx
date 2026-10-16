@@ -8,7 +8,6 @@ import StatCard, { StatCardsRow } from './components/StatCard';
 import DataTable from './components/DataTable';
 import useAD1Data from './hooks/useAD1Data';
 import { ALL_SLOT_KEYS } from './utils/dataTransforms';
-import shared from './styles/ad1-shared.module.css';
 import styles from './AD1Dashboard.module.css';
 
 export default function AD1Dashboard() {

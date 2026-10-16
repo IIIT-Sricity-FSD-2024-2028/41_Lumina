@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { adminService } from '../services/admin.service';
 import toast from 'react-hot-toast';
@@ -7,21 +7,15 @@ import styles from './BugReportModal.module.css';
 export default function BugReportModal({ isOpen, onClose }) {
   const { user } = useAuth();
 
-  const [email, setEmail] = useState('');
+  const defaultEmail = user?.Email || (user?.User_ID ? `${user.User_ID}@lumina.edu` : '');
+  const [customEmail, setCustomEmail] = useState(null);
+  const email = customEmail !== null ? customEmail : defaultEmail;
+
   const [category, setCategory] = useState('System_Incident');
   const [priority, setPriority] = useState('Medium');
   const [subject, setSubject] = useState('');
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
-
-  // Auto-fill user email/ID if logged in
-  useEffect(() => {
-    if (user?.Email) {
-      setEmail(user.Email);
-    } else if (user?.User_ID) {
-      setEmail(`${user.User_ID}@lumina.edu`);
-    }
-  }, [user]);
 
   // 1. If not open, render nothing
   if (!isOpen) return null;
@@ -44,6 +38,7 @@ export default function BugReportModal({ isOpen, onClose }) {
       // Reset form & close
       setSubject('');
       setDescription('');
+      setCustomEmail(null);
       onClose();
     } catch (err) {
       console.error('Failed to dispatch docket', err);
@@ -84,7 +79,7 @@ export default function BugReportModal({ isOpen, onClose }) {
                 type="email"
                 className={styles.input}
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => setCustomEmail(e.target.value)}
                 placeholder="name@iiits.in"
                 required
               />

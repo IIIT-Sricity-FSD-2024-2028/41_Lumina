@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/auth.service';
 import Footer from '../components/Footer';
@@ -273,7 +274,11 @@ export default function Landing() {
 
           {/* Right: Inquiry Form Card */}
           <div className={styles.inquiryCard}>
-            <form onSubmit={(e) => { e.preventDefault(); alert('Message received! Our team will get back to you shortly.'); }}>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              e.target.reset();
+              toast.success('Message received! Our team will get back to you shortly.');
+            }}>
               <div className={styles.formRow}>
                 <div className={styles.formField} style={{ marginBottom: 0 }}>
                   <label htmlFor="fullName">Full Name</label>

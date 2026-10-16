@@ -14,72 +14,11 @@
  *   • Mock data fallback when API is offline
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import AdminPortalLayout from './AdminPortalLayout';
 import { adminService } from '../../services/admin.service';
 import { useAuth } from '../../context/AuthContext';
 import styles from './AdminPortal.module.css';
-
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-const MOCK_MAP = {
-  'SPOC-001': {
-    spoc: { adminId: 'SPOC-001', fullName: 'Arjun Verma', email: 'arjun.spoc@lumina.edu' },
-    assignedInstitutes: [
-      { instituteId: 'INST-IIITS', name: 'Indian Institute of Information Technology Sri City', tier: 'Enterprise', deanName: 'Dr. K Divyabramham', deanEmail: 'dean@iiits.in', studentCount: 1250 },
-      { instituteId: 'INST-NITK', name: 'National Institute of Technology Karnataka', tier: 'Campus', deanName: 'Prof. K. Vidyadhar', deanEmail: 'dean.acad@nitk.edu.in', studentCount: 1800 },
-    ],
-    recentDockets: [
-      { docketId: 'DOC-1001', instituteId: 'INST-IIITS', priority: 'High', category: 'Performance_Latency', subject: 'Registration concurrency spike on section enrollment API', description: 'Peak 350 req/sec reached during Phase 1 opening. Recommended connection pool tuning.', submittedBy: 'it-admin@iiits.in', status: 'Open' },
-      { docketId: 'DOC-1002', instituteId: 'INST-IIITS', priority: 'Medium', category: 'SSO_Integration', subject: 'Google Workspace SAML SSO certificate renewal for @iiits.in', description: 'SSL/SAML signing certificate expires in 14 days.', submittedBy: 'it-admin@iiits.in', status: 'In_Progress' },
-      { docketId: 'DOC-1004', instituteId: 'INST-IIITS', priority: 'Critical', category: 'Seat_Quota_Expansion', subject: 'Tenant license capacity warning: 1,220 / 1,250 seats allocated', description: 'University consumed 97.6% of licensed Enterprise student seats.', submittedBy: 'system-monitor@lumina.internal', status: 'Open' },
-      { docketId: 'DOC-1003', instituteId: 'INST-IIITS', priority: 'Low', category: 'Database_Backup', subject: 'End-of-term database snapshot & cold archival for Fall 2025', description: 'Verify integrity of automated hourly snapshots.', submittedBy: 'dean@iiits.in', status: 'Resolved', resolutionNotes: 'Snapshot SHA-256 verified and encrypted in cold S3 storage.' },
-    ],
-  },
-  'SPOC-002': {
-    spoc: { adminId: 'SPOC-002', fullName: 'Eswar Prasad', email: 'eswar.spoc@lumina.edu' },
-    assignedInstitutes: [
-      { instituteId: 'INST-IITB', name: 'Indian Institute of Technology Bombay', tier: 'Enterprise', deanName: 'Prof. Subhasis Chaudhuri', deanEmail: 'dean.acad@iitb.ac.in', studentCount: 3400 },
-      { instituteId: 'INST-IIITH', name: 'International Institute of Information Technology Hyderabad', tier: 'Enterprise', deanName: 'Prof. P. J. Narayanan', deanEmail: 'director@iiit.ac.in', studentCount: 1950 },
-    ],
-    recentDockets: [
-      { docketId: 'DOC-1005', instituteId: 'INST-IITB', priority: 'High', category: 'Data_Migration', subject: 'Bulk roster migration failed on row 412 (Malformed roll number)', description: 'Postgraduate batch roster upload encountered duplicate primary key constraint.', submittedBy: 'it-admin@iitb.ac.in', status: 'Open' },
-    ],
-  },
-  'SPOC-003': {
-    spoc: { adminId: 'SPOC-003', fullName: 'Priya Sharma', email: 'priya.spoc@lumina.edu' },
-    assignedInstitutes: [
-      { instituteId: 'INST-BITS', name: 'Birla Institute of Technology and Science Pilani', tier: 'Campus', deanName: 'Prof. V. Ramgopal Rao', deanEmail: 'dean.wilp@bits-pilani.ac.in', studentCount: 2200 },
-      { instituteId: 'INST-MANIPAL', name: 'Manipal Academy of Higher Education', tier: 'Starter', deanName: 'Dr. Narayana Sabhahit', deanEmail: 'registrar@manipal.edu', studentCount: 950 },
-    ],
-    recentDockets: [
-      { docketId: 'DOC-1006', instituteId: 'INST-BITS', priority: 'Medium', category: 'Seat_Quota_Expansion', subject: 'Request expansion of Campus Tier quota by 500 seats', description: 'Pilani & Goa dual campus expansion requires seat expansion.', submittedBy: 'dean@bits-pilani.ac.in', status: 'In_Progress' },
-    ],
-  },
-};
-
-function buildMockPayload(spocId, instituteId) {
-  const spocData = MOCK_MAP[spocId] || MOCK_MAP['SPOC-001'];
-  const activeInst = (instituteId
-    ? spocData.assignedInstitutes.find((i) => i.instituteId === instituteId)
-    : null) || spocData.assignedInstitutes[0];
-  const filteredDockets = spocData.recentDockets.filter((d) => d.instituteId === activeInst.instituteId);
-
-  return {
-    spoc: spocData.spoc,
-    assignedInstitute: activeInst,
-    assignedInstitutes: spocData.assignedInstitutes,
-    metrics: {
-      openDocketsCount: filteredDockets.filter((d) => d.status !== 'Resolved').length,
-      totalStudents: activeInst.studentCount,
-      avgResponseMinutes: 14,
-      slaUptimePercent: '99.99%',
-    },
-    recentDockets: filteredDockets,
-    systemAlerts: [
-      { type: 'info', title: `Tenant Active: ${activeInst.name}`, message: `Priority Window 1 active for Spring 2026 term. ${activeInst.tier} Tier policies loaded.`, time: '10m ago' },
-      { type: 'warning', title: 'Seat Capacity Threshold', message: 'University approaching licensed seat ceiling.', time: '1h ago' },
-    ],
-  };
-}
 
 // ─── Badge Helpers ─────────────────────────────────────────────────────────────
 function CategoryBadge({ category }) {
@@ -129,6 +68,7 @@ export default function AdminPortalPage() {
   const [currentSpocId, setCurrentSpocId] = useState(initialSpocId);
   const [currentInstituteId, setCurrentInstituteId] = useState(null);
   const [dashboard, setDashboard] = useState(null);
+  const [adminTeam, setAdminTeam] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Tab state
@@ -161,6 +101,21 @@ export default function AdminPortalPage() {
     '[Term Status]: Active Term is Spring 2026. Last snapshot backup verified at 2026-08-30T09:00:00Z (SHA-256: 8f4b...3a1c).'
   );
 
+  // Load Admin SPOC roster dynamically
+  useEffect(() => {
+    async function fetchAdminTeam() {
+      try {
+        const team = await adminService.getAdminTeam();
+        if (Array.isArray(team)) {
+          setAdminTeam(team);
+        }
+      } catch (err) {
+        console.warn('Could not load SPOC team roster:', err);
+      }
+    }
+    fetchAdminTeam();
+  }, []);
+
   // ── Load dashboard ────────────────────────────────────────────────────────
   const loadDashboard = useCallback(async (spocId, instId) => {
     try {
@@ -170,27 +125,42 @@ export default function AdminPortalPage() {
       if (data?.assignedInstitute?.instituteId) {
         setCurrentInstituteId(data.assignedInstitute.instituteId);
       }
-    } catch {
-      // Fallback to mock
-      const mock = buildMockPayload(spocId, instId);
-      setDashboard(mock);
-      setCurrentInstituteId(mock.assignedInstitute.instituteId);
+    } catch (err) {
+      console.warn('Failed to load SPOC operational dashboard:', err);
+      toast.error('Could not load SPOC operational dashboard from server');
+      setDashboard(null);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    loadDashboard(currentSpocId, currentInstituteId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Sync log modal submitter when dashboard loads
-  useEffect(() => {
-    if (dashboard?.spoc?.fullName) {
-      setLogForm((prev) => ({ ...prev, submitter: `${dashboard.spoc.fullName} (Lumina SPOC)` }));
+    let ignore = false;
+    async function initDashboard() {
+      try {
+        const data = await adminService.getDashboard(currentSpocId, currentInstituteId || undefined);
+        if (ignore) return;
+        setDashboard(data);
+        if (data?.assignedInstitute?.instituteId) {
+          setCurrentInstituteId(data.assignedInstitute.instituteId);
+        }
+      } catch (err) {
+        if (!ignore) {
+          console.warn('Failed to load SPOC operational dashboard:', err);
+          toast.error('Could not load SPOC operational dashboard from server');
+          setDashboard(null);
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
     }
-  }, [dashboard]);
+    initDashboard();
+    return () => {
+      ignore = true;
+    };
+  }, [currentSpocId, currentInstituteId]);
 
   // ── Switchers ─────────────────────────────────────────────────────────────
   function handleSpocSwitch(spocId) {
@@ -218,19 +188,12 @@ export default function AdminPortalPage() {
   async function submitResolution() {
     try {
       await adminService.updateDocketStatus(resolveModal.docketId, resolveStatus, resolveNotes);
+      toast.success(`✔ Docket ${resolveModal.docketId} marked as ${resolveStatus.replace('_', ' ')}`);
       closeResolveModal();
       loadDashboard(currentSpocId, currentInstituteId);
-    } catch {
-      // Local update fallback
-      if (dashboard?.recentDockets) {
-        const updated = dashboard.recentDockets.map((d) =>
-          d.docketId === resolveModal.docketId
-            ? { ...d, status: resolveStatus, resolutionNotes: resolveNotes }
-            : d
-        );
-        setDashboard((prev) => ({ ...prev, recentDockets: updated }));
-      }
-      closeResolveModal();
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to update docket status on server');
     }
   }
 
@@ -266,17 +229,20 @@ export default function AdminPortalPage() {
     };
     try {
       await adminService.createDocket(payload);
-    } catch {
-      // silently fall through – mock confirms success
+      toast.success(`✔ Technical Docket dispatched to ${logForm.targetQueue === 'super_user_escalate' ? 'Super User Escalation Queue' : 'SPOC Incident Queue'}!`);
+      closeLogModal();
+      loadDashboard(currentSpocId, currentInstituteId);
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to log technical docket');
     }
-    alert(`✔ Technical Docket successfully created and dispatched to ${logForm.targetQueue === 'super_user_escalate' ? 'Super User Escalation Queue' : 'SPOC Incident Queue'}.`);
-    closeLogModal();
-    loadDashboard(currentSpocId, currentInstituteId);
   }
 
   // ── SSO Handshake ─────────────────────────────────────────────────────────
   function triggerSsoHandshakeTest() {
-    alert('✔ SAML 2.0 IdP Handshake Successful!\nResponse Time: 4ms\nCert Status: Valid (Signed by DigiCert)');
+    toast.success('✔ SAML 2.0 IdP Handshake Successful! Response Time: 4ms. Valid DigiCert Certificate.', {
+      duration: 4000,
+    });
   }
 
   // ── Seat Quota Upgrade ────────────────────────────────────────────────────
@@ -286,15 +252,21 @@ export default function AdminPortalPage() {
     const instId = dashboard?.assignedInstitute?.instituteId || 'INST-IIITS';
     try {
       await adminService.createDocket({
-        instituteId: instId, instituteName: instName,
+        instituteId: instId,
+        instituteName: instName,
         submittedBy: `${spocName} (Assigned SPOC)`,
-        category: 'Seat_Quota_Expansion', priority: 'High',
+        category: 'Seat_Quota_Expansion',
+        priority: 'High',
         subject: `Tenant seat quota upgrade requested (+500 seats) for ${instName}`,
-        description: 'University tenant is approaching 98% licensed capacity. Requested expansion from 1,250 to 1,750 seats.',
+        description: 'University tenant is approaching licensed capacity. Requested expansion by 500 seats.',
         assignedSpocId: currentSpocId,
       });
-    } catch { /* ignore */ }
-    alert('✔ Capacity expansion ticket dispatched to Super User sales queue!');
+      toast.success('✔ Capacity expansion ticket dispatched to Super User sales queue!');
+      loadDashboard(currentSpocId, currentInstituteId);
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to request seat quota expansion');
+    }
   }
 
   // ── Term Rollover ─────────────────────────────────────────────────────────
@@ -370,12 +342,16 @@ export default function AdminPortalPage() {
 
     try {
       await adminService.bulkImportCourses(parsedCourses);
-    } catch { /* ignore */ }
-
-    setLogOutput(
-      `✔ Successfully committed ${parsedCourses.length} courses to database:\n` +
-      parsedCourses.map((c) => `• Ingested: ${c.courseId} - ${c.courseName} (${c.credits} CR, ${c.deptId})`).join('\n')
-    );
+      toast.success(`✔ Successfully imported ${parsedCourses.length} courses!`);
+      setLogOutput(
+        `✔ Successfully committed ${parsedCourses.length} courses to database:\n` +
+        parsedCourses.map((c) => `• Ingested: ${c.courseId} - ${c.courseName} (${c.credits} CR, ${c.deptId})`).join('\n')
+      );
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to import courses into database');
+      setLogOutput(`❌ Database import failed: ${err?.response?.data?.message || err?.message || 'Server error'}`);
+    }
   }
 
   // ── Drag & Drop handlers ──────────────────────────────────────────────────
@@ -432,9 +408,17 @@ export default function AdminPortalPage() {
               value={currentSpocId}
               onChange={(e) => handleSpocSwitch(e.target.value)}
             >
-              <option value="SPOC-001">Arjun Verma (2 Institutes)</option>
-              <option value="SPOC-002">Eswar Prasad (2 Institutes)</option>
-              <option value="SPOC-003">Priya Sharma (2 Institutes)</option>
+              {adminTeam.length > 0 ? (
+                adminTeam.map((spoc) => (
+                  <option key={spoc.adminId} value={spoc.adminId}>
+                    {spoc.fullName} ({spoc.adminId})
+                  </option>
+                ))
+              ) : (
+                <option value={currentSpocId}>
+                  {dashboard?.spoc?.fullName ? `${dashboard.spoc.fullName} (${currentSpocId})` : currentSpocId}
+                </option>
+              )}
             </select>
           </div>
           <div className={styles.switcherGroup}>
