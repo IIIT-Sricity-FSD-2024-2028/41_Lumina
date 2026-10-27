@@ -80,10 +80,38 @@ export default function App() {
           />
 
           {/* AD1 Routes */}
-          <Route path='/ad1/dashboard' element={<AD1Dashboard />} />
-          <Route path='/ad1/course-catalog' element={<CourseCatalog />} />
-          <Route path='/ad1/course-section' element={<CourseSection />} />
-          <Route path='/ad1/timetable' element={<Timetable />} />
+          <Route
+            path='/ad1/dashboard'
+            element={
+              <ProtectedRoute allowedRoles={['Assistant_Dean_1']}>
+                <AD1Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path='/ad1/course-catalog'
+            element={
+              <ProtectedRoute allowedRoles={['Assistant_Dean_1']}>
+                <CourseCatalog />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path='/ad1/course-section'
+            element={
+              <ProtectedRoute allowedRoles={['Assistant_Dean_1']}>
+                <CourseSection />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path='/ad1/timetable'
+            element={
+              <ProtectedRoute allowedRoles={['Assistant_Dean_1']}>
+                <Timetable />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path='/dean1'
             element={<Navigate to='/ad1/dashboard' replace />}
