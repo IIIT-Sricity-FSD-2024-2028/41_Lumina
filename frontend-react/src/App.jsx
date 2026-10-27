@@ -248,12 +248,7 @@ export default function App() {
             element={
               <ProtectedRoute
                 allowedRoles={[
-                  'Faculty',
-                  'Dean',
-                  'Admin',
-                  'Super_User',
-                  'Assistant_Dean_1',
-                  'Assistant_Dean_2',
+                  'Faculty'
                 ]}
               >
                 <FacultyLayout />
