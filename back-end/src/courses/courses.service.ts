@@ -1,7 +1,7 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { CourseCatalog, CoursePrerequisite } from '../database/interfaces';
-import { CreateCourseDto } from '../common/dto';
+import { CreateCourseDto, UpdateCourseDto } from '../common/dto';
 
 @Injectable()
 export class CoursesService {
@@ -61,14 +61,25 @@ export class CoursesService {
     if (dto.ugYear || dto.semester || dto.courseType) {
       const targetSemester = this.getTargetSemester(dto.ugYear, dto.semester);
       const courseType = this.normalizeCourseType(dto.courseType);
-      const maxId = this.db.degreeRequirements.reduce((max, r) => Math.max(max, r.requirementId), 0);
-      this.db.degreeRequirements.push({
-        requirementId: maxId + 1,
-        deptId: dto.deptId,
-        courseId: dto.courseId,
-        courseType,
-        targetSemester,
-      });
+      const isMultiDept =
+        courseType === 'Institute Core' ||
+        courseType === 'SEED' ||
+        dto.deptId === '-' ||
+        dto.deptId?.startsWith('All') ||
+        !dto.deptId;
+
+      const depts = isMultiDept ? ['CSE', 'ECE', 'AIDS'] : [dto.deptId];
+
+      for (const d of depts) {
+        const maxId = this.db.degreeRequirements.reduce((max, r) => Math.max(max, r.requirementId), 0);
+        this.db.degreeRequirements.push({
+          requirementId: maxId + 1,
+          deptId: d,
+          courseId: dto.courseId,
+          courseType,
+          targetSemester,
+        });
+      }
     }
 
     // Create prerequisite entries
@@ -137,7 +148,12 @@ export class CoursesService {
 
     // 4. Get degree requirements for this dept + semester
     const semesterReqs = this.db.degreeRequirements.filter(
-      dr => dr.deptId === user.deptId && dr.targetSemester === (student.currentSemester || 4),
+      dr =>
+        (dr.deptId === user.deptId ||
+          dr.deptId === 'ALL' ||
+          dr.courseType === 'Institute Core' ||
+          dr.courseType === 'SEED') &&
+        dr.targetSemester === (student.currentSemester || 4),
     );
 
     // 5. For each requirement, check if any section exists in the active term
@@ -207,12 +223,50 @@ export class CoursesService {
     return this.db.coursePrerequisites;
   }
 
-  update(courseId: string, updates: Partial<CourseCatalog>): CourseCatalog {
+  update(courseId: string, updates: UpdateCourseDto): CourseCatalog {
     const courseIndex = this.db.courseCatalog.findIndex(c => c.courseId === courseId);
     if (courseIndex === -1) {
       throw new NotFoundException(`Course with ID ${courseId} not found.`);
     }
     this.db.courseCatalog[courseIndex] = { ...this.db.courseCatalog[courseIndex], ...updates };
+
+    // Update degree requirements if semester/type/ugYear/dept updated
+    if (updates.ugYear || updates.semester || updates.courseType || updates.deptId) {
+      const existingReqs = this.db.degreeRequirements.filter(r => r.courseId === courseId);
+      const targetSemester = this.getTargetSemester(updates.ugYear, updates.semester);
+      const courseType = this.normalizeCourseType(updates.courseType);
+
+      if (existingReqs.length > 0) {
+        for (const req of existingReqs) {
+          if (updates.ugYear || updates.semester) req.targetSemester = targetSemester;
+          if (updates.courseType) req.courseType = courseType;
+          if (updates.deptId && updates.deptId !== '-' && !updates.deptId.startsWith('All')) {
+            req.deptId = updates.deptId;
+          }
+        }
+      } else {
+        const maxId = this.db.degreeRequirements.reduce((max, r) => Math.max(max, r.requirementId), 0);
+        this.db.degreeRequirements.push({
+          requirementId: maxId + 1,
+          deptId: updates.deptId || 'CSE',
+          courseId,
+          courseType,
+          targetSemester,
+        });
+      }
+    }
+
+    // Update prerequisites if provided
+    if (updates.prerequisites) {
+      this.db.coursePrerequisites = this.db.coursePrerequisites.filter(p => p.targetCourseId !== courseId);
+      for (const prereqId of updates.prerequisites) {
+        this.db.coursePrerequisites.push({
+          targetCourseId: courseId,
+          requiredCourseId: prereqId,
+        });
+      }
+    }
+
     return this.db.courseCatalog[courseIndex];
   }
 }

@@ -154,9 +154,16 @@ export default function CourseCatalog() {
     const newCourse = buildCourseFromForm(addForm, addPrereqTags);
     try {
       await coursesService.create({
-        courseId: newCourse.code, courseName: newCourse.name, credits: newCourse.credits,
-        courseCapacity: newCourse.type === 'Seed Course' ? 120 : 60, status: newCourse.status,
+        courseId: newCourse.code,
+        courseName: newCourse.name,
+        credits: newCourse.credits,
+        courseCapacity: newCourse.type === 'Seed Course' ? 120 : 60,
+        status: newCourse.status,
         deptId: newCourse.dept === '-' || newCourse.dept.startsWith('All') ? 'CSE' : newCourse.dept,
+        ugYear: newCourse.ugYear,
+        semester: newCourse.semester,
+        courseType: newCourse.type,
+        prerequisites: newCourse.prerequisites,
       });
       setData((prev) => ({ ...prev, courses: [...prev.courses, newCourse] }));
       setAddModalOpen(false);
@@ -175,8 +182,14 @@ export default function CourseCatalog() {
     const updated = buildCourseFromForm(editForm, editPrereqTags);
     try {
       await coursesService.update(editingCourseCode, {
-        courseName: updated.name, credits: updated.credits, status: updated.status,
+        courseName: updated.name,
+        credits: updated.credits,
+        status: updated.status,
         deptId: updated.dept === '-' || updated.dept.startsWith('All') ? 'CSE' : updated.dept,
+        ugYear: updated.ugYear,
+        semester: updated.semester,
+        courseType: updated.type,
+        prerequisites: updated.prerequisites,
       });
       setData((prev) => ({ ...prev, courses: prev.courses.map((c) => c.code === editingCourseCode ? { ...c, ...updated } : c) }));
       setEditModalOpen(false);
