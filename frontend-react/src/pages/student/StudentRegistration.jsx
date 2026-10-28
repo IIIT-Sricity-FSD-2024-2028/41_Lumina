@@ -12,6 +12,18 @@ import { overridesService } from '../../services/overrides.service';
 import { revenueService } from '../../services/revenue.service';
 import { slotsService } from '../../services/slots.service';
 import { usersService } from '../../services/users.service';
+import { policiesService } from '../../services/policies.service';
+
+function computeTermLabel(academicYear, term) {
+  if (!academicYear || !term) return 'Spring 2026';
+  const parts = academicYear.split('-');
+  if (parts.length !== 2) return `${term} ${academicYear}`;
+  const startYear = parts[0].trim();
+  const endYear = parts[1].trim();
+  if (term === 'Spring' || term === 'Summer') return `${term} ${endYear}`;
+  if (term === 'Monsoon' || term === 'Fall') return `${term} ${startYear}`;
+  return `${term} ${endYear}`;
+}
 
 import styles from './StudentRegistration.module.css';
 
@@ -29,7 +41,8 @@ export default function StudentRegistration() {
   const [currentSemester, setCurrentSemester] = useState(user?.Current_Semester || 4);
   const [activeTerm, setActiveTerm] = useState('Spring 2026');
   const [maxCredits, setMaxCredits] = useState(20);
-  const [facultyMap, setFacultyMap] = useState({});
+  const [, setFacultyMap] = useState({});
+  const [policies, setPolicies] = useState(null);
 
   const [activeTab, setActiveTab] = useState('catalog'); // 'catalog' | 'myCourses' | 'overrides' | 'timetable'
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -48,7 +61,7 @@ export default function StudentRegistration() {
     async function fetchData() {
       setLoading(true);
       try {
-        const [catalogRes, studentCoursesRes, regsRes, overridesRes, billingRes, slotsRes, usersRes] =
+        const [catalogRes, studentCoursesRes, regsRes, overridesRes, billingRes, slotsRes, usersRes, policiesRes] =
           await Promise.allSettled([
             coursesService.getAll(),
             coursesService.getForStudent(studentId),
@@ -57,6 +70,7 @@ export default function StudentRegistration() {
             revenueService.getStudentBilling(studentId),
             slotsService.getAll(),
             usersService.getAll(),
+            policiesService.getPolicies(),
           ]);
 
         const catalogList = catalogRes.status === 'fulfilled' && Array.isArray(catalogRes.value) ? catalogRes.value : [];
@@ -79,6 +93,17 @@ export default function StudentRegistration() {
         }
         if (studentRaw?.maxCreditLimit) {
           setMaxCredits(studentRaw.maxCreditLimit);
+        }
+
+        if (policiesRes.status === 'fulfilled' && policiesRes.value?.settings) {
+          const pol = policiesRes.value.settings;
+          setPolicies(pol);
+          if (pol.academicYear && pol.term) {
+            setActiveTerm(computeTermLabel(pol.academicYear, pol.term));
+          }
+          if (pol.maxCredits) {
+            setMaxCredits(pol.maxCredits);
+          }
         }
 
         if (usersRes.status === 'fulfilled' && Array.isArray(usersRes.value)) {
@@ -155,7 +180,88 @@ export default function StudentRegistration() {
 
   const registeredCourseIds = registeredInCatalogCourseIds;
 
+  const registrationWindowInfo = useMemo(() => {
+    if (!policies) {
+      return {
+        isOpen: true,
+        message: null,
+        badge: `${activeTerm} Registration Open`,
+        variant: 'approved',
+        datesStr: null,
+      };
+    }
+    if (policies.systemStatus === 'Deactivated') {
+      return {
+        isOpen: false,
+        message: 'The enrollment system is currently deactivated by administration.',
+        badge: 'System Inactive',
+        variant: 'rejected',
+        datesStr: null,
+      };
+    }
+    if (policies.windowStatus === 'Closed') {
+      return {
+        isOpen: false,
+        message: 'The enrollment window is currently closed by the Assistant Dean.',
+        badge: 'Window Closed',
+        variant: 'rejected',
+        datesStr: null,
+      };
+    }
+    if (policies.windowStatus === 'Paused') {
+      return {
+        isOpen: false,
+        message: 'Course registration is temporarily paused by administration.',
+        badge: 'Window Paused',
+        variant: 'pending',
+        datesStr: null,
+      };
+    }
+
+    const now = new Date();
+    const startDate = policies.startDate ? new Date(policies.startDate) : null;
+    const endDate = policies.endDate ? new Date(policies.endDate) : null;
+
+    if (startDate && !isNaN(startDate.getTime()) && now < startDate) {
+      const startStr = startDate.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+      return {
+        isOpen: false,
+        message: `The enrollment window has not opened yet. Registration opens on ${startStr}.`,
+        badge: `Opens ${startDate.toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`,
+        variant: 'pending',
+        datesStr: `Opens: ${startStr}`,
+      };
+    }
+
+    if (endDate && !isNaN(endDate.getTime()) && now > endDate) {
+      const endStr = endDate.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+      return {
+        isOpen: false,
+        message: `The enrollment window closed on ${endStr}. New registrations are locked for this term.`,
+        badge: 'Window Closed',
+        variant: 'rejected',
+        datesStr: `Closed on: ${endStr}`,
+      };
+    }
+
+    const datesStr = (startDate && endDate && !isNaN(startDate.getTime()) && !isNaN(endDate.getTime()))
+      ? `${startDate.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })} – ${endDate.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}`
+      : 'Open';
+
+    return {
+      isOpen: true,
+      message: `Enrollment Window is Active: Registration allowed between ${datesStr}`,
+      badge: `${activeTerm} Registration Open`,
+      variant: 'approved',
+      datesStr,
+    };
+  }, [policies, activeTerm]);
+
   async function handleRegister(courseId) {
+    if (!registrationWindowInfo.isOpen) {
+      toast.error(registrationWindowInfo.message || 'Enrollment window is currently closed.');
+      return;
+    }
     if (billing?.isFinancialHoldActive) {
       toast.error('Cannot register: You have an active financial hold! Clear tuition balance first.');
       setIsTuitionModalOpen(true);
@@ -279,6 +385,34 @@ export default function StudentRegistration() {
           title="Course Registration & Catalog"
           subtitle={`${activeTerm} Active Enrollment • Semester ${currentSemester} Courses • Select courses, manage registrations, and submit override requests.`}
         />
+
+        {/* Enrollment Window Status Banner */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '12px 18px',
+          borderRadius: '8px',
+          marginBottom: '1rem',
+          border: registrationWindowInfo.isOpen ? '1px solid #bbf7d0' : '1px solid #fecaca',
+          background: registrationWindowInfo.isOpen ? '#f0fdf4' : '#fef2f2',
+          color: registrationWindowInfo.isOpen ? '#166534' : '#991b1b',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '1.3rem' }}>{registrationWindowInfo.isOpen ? '🟢' : '🔒'}</span>
+            <div>
+              <strong style={{ fontSize: '0.9rem' }}>
+                {registrationWindowInfo.isOpen ? 'Enrollment Window Active' : 'Enrollment Window Closed / Restricted'}
+              </strong>
+              <div style={{ fontSize: '0.8rem', opacity: 0.9 }}>
+                {registrationWindowInfo.message}
+              </div>
+            </div>
+          </div>
+          <span className={`badge badge-${registrationWindowInfo.variant}`} style={{ padding: '6px 12px', fontSize: '0.8rem' }}>
+            {registrationWindowInfo.badge}
+          </span>
+        </div>
 
         {/* Financial Hold Warning Banner */}
         {billing?.isFinancialHoldActive && (
@@ -407,8 +541,6 @@ export default function StudentRegistration() {
                       : 'TBA';
                     const slotTime = courseSlots[0] ? `${courseSlots[0].startTime} - ${courseSlots[0].endTime}` : 'TBA';
                     const slotRoom = courseSlots[0]?.roomNumber ? `Room ${courseSlots[0].roomNumber}` : 'TBA';
-                    const facultyId = courseSlots[0]?.facultyId;
-                    const facultyText = facultyId ? (facultyMap[facultyId] || `Faculty (${facultyId})`) : 'TBA';
 
                     const prereqText = c.prerequisite || 'None';
                     const prereqId = c.prerequisiteCourseId;
@@ -468,9 +600,6 @@ export default function StudentRegistration() {
                             <div className={styles.metaRow}>
                               <strong>Schedule:</strong> <span>{slotDays} ({slotTime}) • {slotRoom}</span>
                             </div>
-                            <div className={styles.metaRow}>
-                              <strong>Instructor:</strong> <span>{facultyText}</span>
-                            </div>
                           </div>
                         </div>
 
@@ -493,6 +622,16 @@ export default function StudentRegistration() {
                             <span className="badge badge-approved" style={{ padding: '6px 12px' }}>
                               ✓ Registered
                             </span>
+                          ) : !registrationWindowInfo.isOpen ? (
+                            <button
+                              type="button"
+                              className="btn-secondary"
+                              disabled
+                              title={registrationWindowInfo.message}
+                              style={{ fontSize: '0.82rem', padding: '6px 14px', opacity: 0.6, cursor: 'not-allowed' }}
+                            >
+                              Window Closed
+                            </button>
                           ) : (
                             <button
                               type="button"

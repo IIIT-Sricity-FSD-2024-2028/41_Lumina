@@ -4,6 +4,17 @@ import { policiesService } from '../../services/policies.service';
 import toast from 'react-hot-toast';
 import styles from './Dean2.module.css';
 
+function computeTermLabel(academicYear, term) {
+  if (!academicYear || !term) return '—';
+  const parts = academicYear.split('-');
+  if (parts.length !== 2) return `${term} ${academicYear}`;
+  const startYear = parts[0].trim();
+  const endYear = parts[1].trim();
+  if (term === 'Spring' || term === 'Summer') return `${term} ${endYear}`;
+  if (term === 'Monsoon' || term === 'Fall') return `${term} ${startYear}`;
+  return `${term} ${endYear}`;
+}
+
 function formatDateShort(dtStr) {
   if (!dtStr) return '';
   const d = new Date(dtStr);
@@ -94,6 +105,22 @@ export default function Dean2Enrollment() {
     } catch (err) {
       console.error('Failed to update setting:', err);
       toast.error(err.response?.data?.message || `Failed to update ${key}`);
+    }
+  };
+
+  const handleTermChange = async (newYear, newTerm) => {
+    try {
+      const termLabel = computeTermLabel(newYear, newTerm);
+      await policiesService.updatePolicies({
+        academicYear: newYear,
+        term: newTerm,
+        logMessage: `Term updated to ${termLabel}`,
+      });
+      setSettings((prev) => ({ ...prev, academicYear: newYear, term: newTerm }));
+      toast.success(`Academic Term updated to ${termLabel}`);
+    } catch (err) {
+      console.error('Failed to update term:', err);
+      toast.error('Failed to update academic term');
     }
   };
 
@@ -268,6 +295,48 @@ export default function Dean2Enrollment() {
           >
             Deactivate System
           </button>
+        </div>
+      </div>
+
+      {/* Active Academic Term Configuration */}
+      <div className={`${styles.card} ${styles.windowCard}`} style={{ marginBottom: '1.25rem' }}>
+        <div className={styles.windowHeader}>
+          <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--d2-primary)' }}>
+            📅 Active Academic Term
+          </h3>
+          <span className={`${styles.badge} ${styles.badgeActive}`}>
+            {computeTermLabel(settings.academicYear, settings.term)}
+          </span>
+        </div>
+
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+          <div className={styles.formGroup} style={{ flex: 1, minWidth: '160px', margin: 0 }}>
+            <label htmlFor="enrollAcademicYear">Academic Year</label>
+            <select
+              id="enrollAcademicYear"
+              value={settings.academicYear || '2025-2026'}
+              onChange={(e) => handleTermChange(e.target.value, settings.term || 'Spring')}
+              className={styles.formControl}
+            >
+              <option value="2024-2025">2024-2025</option>
+              <option value="2025-2026">2025-2026</option>
+              <option value="2026-2027">2026-2027</option>
+              <option value="2027-2028">2027-2028</option>
+            </select>
+          </div>
+
+          <div className={styles.formGroup} style={{ flex: 1, minWidth: '140px', margin: 0 }}>
+            <label htmlFor="enrollTerm">Term</label>
+            <select
+              id="enrollTerm"
+              value={settings.term || 'Spring'}
+              onChange={(e) => handleTermChange(settings.academicYear || '2025-2026', e.target.value)}
+              className={styles.formControl}
+            >
+              <option value="Spring">Spring</option>
+              <option value="Monsoon">Monsoon</option>
+            </select>
+          </div>
         </div>
       </div>
 

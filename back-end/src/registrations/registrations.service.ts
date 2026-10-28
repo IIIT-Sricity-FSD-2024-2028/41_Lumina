@@ -15,6 +15,12 @@ export class RegistrationsService {
    * Falls back to the last term if none is currently open.
    */
   private getActiveTermId(): string {
+    const policy = this.db.policySettings;
+    if (policy && policy.academicYear && policy.term) {
+      const parts = policy.academicYear.split('-');
+      const year = (policy.term === 'Spring' || policy.term === 'Summer') ? (parts[1]?.trim() || parts[0]?.trim()) : parts[0]?.trim();
+      return `${policy.term.toUpperCase()}${year}`;
+    }
     const now = new Date();
     const activeTerm = this.db.academicTerms.find(t => {
       const start = new Date(t.startTimestamp);
@@ -92,6 +98,25 @@ export class RegistrationsService {
     }
     if (policy.windowStatus === 'Paused') {
       throw new BadRequestException('Enrollment is currently paused.');
+    }
+
+    // ── 3a. Time Window Enforcement ─────────────────────────
+    const now = new Date();
+    if (policy.startDate) {
+      const start = new Date(policy.startDate);
+      if (!isNaN(start.getTime()) && now < start) {
+        throw new BadRequestException(
+          `Enrollment window has not opened yet. Registration opens on ${start.toLocaleString()}.`
+        );
+      }
+    }
+    if (policy.endDate) {
+      const end = new Date(policy.endDate);
+      if (!isNaN(end.getTime()) && now > end) {
+        throw new BadRequestException(
+          `Enrollment window closed on ${end.toLocaleString()}. Registration is no longer permitted.`
+        );
+      }
     }
 
     // ── 3b. Phase-Driven Enrollment check ─────────────────────

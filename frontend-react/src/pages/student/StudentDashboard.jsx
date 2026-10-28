@@ -13,6 +13,18 @@ import { announcementsService } from '../../services/announcements.service';
 import { coursesService } from '../../services/courses.service';
 import { registrationsService } from '../../services/registrations.service';
 import { slotsService } from '../../services/slots.service';
+import { policiesService } from '../../services/policies.service';
+
+function computeTermLabel(academicYear, term) {
+  if (!academicYear || !term) return 'Spring 2026';
+  const parts = academicYear.split('-');
+  if (parts.length !== 2) return `${term} ${academicYear}`;
+  const startYear = parts[0].trim();
+  const endYear = parts[1].trim();
+  if (term === 'Spring' || term === 'Summer') return `${term} ${endYear}`;
+  if (term === 'Monsoon' || term === 'Fall') return `${term} ${startYear}`;
+  return `${term} ${endYear}`;
+}
 
 import styles from './StudentDashboard.module.css';
 
@@ -40,15 +52,18 @@ export default function StudentDashboard() {
   const [currentSemester, setCurrentSemester] = useState(user?.Current_Semester || 4);
   const [activeTerm, setActiveTerm] = useState('Spring 2026');
   const [maxCredits, setMaxCredits] = useState(20);
+  const [policies, setPolicies] = useState(null);
 
   const [isTuitionModalOpen, setIsTuitionModalOpen] = useState(false);
+  const [isAnnouncementsModalOpen, setIsAnnouncementsModalOpen] = useState(false);
+  const [announcementSearch, setAnnouncementSearch] = useState('');
   const [isPaying, setIsPaying] = useState(false);
 
   useEffect(() => {
     async function loadDashboardData() {
       setLoading(true);
       try {
-        const [billingRes, annRes, studentCourseRes, regRes, allCoursesRes, slotsRes] =
+        const [billingRes, annRes, studentCourseRes, regRes, allCoursesRes, slotsRes, policiesRes] =
           await Promise.allSettled([
             revenueService.getStudentBilling(studentId),
             announcementsService.getAll(),
@@ -56,6 +71,7 @@ export default function StudentDashboard() {
             registrationsService.getAll(),
             coursesService.getAll(),
             slotsService.getAll(),
+            policiesService.getPolicies(),
           ]);
 
         if (billingRes.status === 'fulfilled' && billingRes.value) {
@@ -83,6 +99,17 @@ export default function StudentDashboard() {
 
         if (slotsRes.status === 'fulfilled' && Array.isArray(slotsRes.value)) {
           setSlots(slotsRes.value);
+        }
+
+        if (policiesRes.status === 'fulfilled' && policiesRes.value?.settings) {
+          const pol = policiesRes.value.settings;
+          setPolicies(pol);
+          if (pol.academicYear && pol.term) {
+            setActiveTerm(computeTermLabel(pol.academicYear, pol.term));
+          }
+          if (pol.maxCredits) {
+            setMaxCredits(pol.maxCredits);
+          }
         }
 
 
@@ -255,6 +282,129 @@ export default function StudentDashboard() {
     };
   }, [activeRegisteredCourses, slots, allUserRegistrations, allCatalog, courses, primarySection]);
 
+  const windowStatusInfo = useMemo(() => {
+    if (!policies) {
+      return {
+        isOpen: true,
+        badgeClass: 'badge-approved',
+        badgeText: `${activeTerm} Registration Active`,
+        datesStr: null,
+      };
+    }
+    if (policies.systemStatus === 'Deactivated') {
+      return {
+        isOpen: false,
+        badgeClass: 'badge-rejected',
+        badgeText: 'System Inactive',
+        datesStr: null,
+      };
+    }
+    if (policies.windowStatus === 'Closed') {
+      return {
+        isOpen: false,
+        badgeClass: 'badge-rejected',
+        badgeText: 'Window Closed',
+        datesStr: null,
+      };
+    }
+    if (policies.windowStatus === 'Paused') {
+      return {
+        isOpen: false,
+        badgeClass: 'badge-pending',
+        badgeText: 'Window Paused',
+        datesStr: null,
+      };
+    }
+
+    const now = new Date();
+    const startDate = policies.startDate ? new Date(policies.startDate) : null;
+    const endDate = policies.endDate ? new Date(policies.endDate) : null;
+
+    if (startDate && !isNaN(startDate.getTime()) && now < startDate) {
+      const startStr = startDate.toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      return {
+        isOpen: false,
+        badgeClass: 'badge-pending',
+        badgeText: `Opens ${startStr}`,
+        datesStr: startDate.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }),
+      };
+    }
+
+    if (endDate && !isNaN(endDate.getTime()) && now > endDate) {
+      return {
+        isOpen: false,
+        badgeClass: 'badge-rejected',
+        badgeText: 'Window Closed',
+        datesStr: `Closed ${endDate.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}`,
+      };
+    }
+
+    const datesStr =
+      startDate && endDate && !isNaN(startDate.getTime()) && !isNaN(endDate.getTime())
+        ? `${startDate.toLocaleDateString([], { month: 'short', day: 'numeric' })} – ${endDate.toLocaleDateString([], { month: 'short', day: 'numeric' })}`
+        : null;
+
+    return {
+      isOpen: true,
+      badgeClass: 'badge-approved',
+      badgeText: `${activeTerm} Registration Active`,
+      datesStr,
+    };
+  }, [policies, activeTerm]);
+
+  const sortedAnnouncements = useMemo(() => {
+    return [...announcements].sort((a, b) => {
+      const tA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const tB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return tB - tA;
+    });
+  }, [announcements]);
+
+  const filteredModalAnnouncements = useMemo(() => {
+    if (!announcementSearch.trim()) return sortedAnnouncements;
+    const q = announcementSearch.toLowerCase();
+    return sortedAnnouncements.filter((a) =>
+      (a.title && a.title.toLowerCase().includes(q)) ||
+      (a.message && a.message.toLowerCase().includes(q)) ||
+      (a.courseId && a.courseId.toLowerCase().includes(q))
+    );
+  }, [sortedAnnouncements, announcementSearch]);
+
+  const getAttachmentUrl = (url) => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    const base = import.meta.env.VITE_API_BASE || 'http://localhost:3000';
+    return `${base.replace(/\/$/, '')}/${url.replace(/^\//, '')}`;
+  };
+
+  const handleDownloadAttachment = async (e, ann) => {
+    e.stopPropagation();
+    if (!ann.attachmentUrl) return;
+    const fullUrl = getAttachmentUrl(ann.attachmentUrl);
+    try {
+      const res = await fetch(fullUrl);
+      if (!res.ok) throw new Error('File download failed');
+      const blob = await res.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = ann.attachmentName || 'document.pdf';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch {
+      window.open(fullUrl, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  const handleViewAttachment = (e, ann) => {
+    e.stopPropagation();
+    if (!ann.attachmentUrl) return;
+    const fullUrl = getAttachmentUrl(ann.attachmentUrl);
+    window.open(fullUrl, '_blank', 'noopener,noreferrer');
+  };
+
   const yearNumber = Math.ceil(currentSemester / 2);
 
   return (
@@ -290,9 +440,16 @@ export default function StudentDashboard() {
                 </div>
               </div>
               <div>
-                <span className="badge badge-approved" style={{ fontSize: '0.85rem', padding: '6px 14px' }}>
-                  {activeTerm} Registration Active
-                </span>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                  <span className={`badge ${windowStatusInfo.badgeClass}`} style={{ fontSize: '0.85rem', padding: '6px 14px' }}>
+                    {windowStatusInfo.badgeText}
+                  </span>
+                  {windowStatusInfo.datesStr && (
+                    <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>
+                      Window: {windowStatusInfo.datesStr}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -434,19 +591,39 @@ export default function StudentDashboard() {
 
               {/* Right Column: Department Announcements */}
               <div className={styles.sectionBox}>
-                <div className={styles.sectionHeader}>
-                  <h3>Campus Alerts & Announcements</h3>
+                <div className={styles.sectionHeader} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h3 style={{ margin: 0 }}>Campus Alerts & Announcements</h3>
+                  <button
+                    type="button"
+                    onClick={() => setIsAnnouncementsModalOpen(true)}
+                    className="btn-outline"
+                    style={{
+                      fontSize: '0.75rem',
+                      padding: '4px 10px',
+                      fontWeight: 600,
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    View All ({sortedAnnouncements.length}) &rarr;
+                  </button>
                 </div>
                 <div className={styles.announcementList}>
-                  {announcements.length === 0 ? (
+                  {sortedAnnouncements.length === 0 ? (
                     <div style={{ padding: '32px', textAlign: 'center', color: '#64748b', fontSize: '0.9rem' }}>
                       No active campus announcements at this time.
                     </div>
                   ) : (
-                    announcements.slice(0, 5).map((ann) => (
-                      <div key={ann.announcementId || ann.id} className={styles.announcementItem}>
+                    sortedAnnouncements.slice(0, 5).map((ann) => (
+                      <div
+                        key={ann.announcementId || ann.id}
+                        className={styles.announcementItem}
+                        style={{ cursor: 'pointer', transition: 'background 0.15s ease', padding: '10px 8px', borderRadius: '6px' }}
+                        onClick={() => setIsAnnouncementsModalOpen(true)}
+                        title="Click to view all announcements & details"
+                      >
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                          <span className="badge" style={{ background: '#e0e7ff', color: '#4338ca' }}>
+                          <span className="badge" style={{ background: '#e0e7ff', color: '#4338ca', fontWeight: 600 }}>
                             {ann.courseId || 'Campus Alert'}
                           </span>
                           <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
@@ -456,39 +633,265 @@ export default function StudentDashboard() {
                         <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#1e293b' }}>
                           {ann.title || 'Department Notice'}
                         </div>
-                        <div style={{ fontSize: '0.82rem', color: '#64748b', marginTop: '2px' }}>
+                        <div style={{ fontSize: '0.82rem', color: '#64748b', marginTop: '2px', lineHeight: 1.4 }}>
                           {ann.message}
                         </div>
                         {ann.attachmentUrl && (
-                          <div style={{ marginTop: '6px' }}>
-                            <a
-                              href={ann.attachmentUrl.startsWith('http') ? ann.attachmentUrl : `http://localhost:3000${ann.attachmentUrl}`}
-                              target="_blank"
-                              rel="noreferrer"
+                          <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }} onClick={(e) => e.stopPropagation()}>
+                            <button
+                              type="button"
+                              onClick={(e) => handleViewAttachment(e, ann)}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '5px',
+                                background: '#eff6ff',
+                                border: '1px solid #bfdbfe',
+                                padding: '3px 8px',
+                                borderRadius: '4px',
+                                fontSize: '0.74rem',
+                                color: '#1d4ed8',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                              }}
+                              title="Open PDF in new tab"
+                            >
+                              📄 {ann.attachmentName || 'View PDF'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => handleDownloadAttachment(e, ann)}
                               style={{
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: '4px',
-                                background: '#f1f5f9',
+                                background: '#f8fafc',
                                 border: '1px solid #cbd5e1',
                                 padding: '3px 8px',
                                 borderRadius: '4px',
-                                fontSize: '0.75rem',
-                                color: '#2563eb',
+                                fontSize: '0.72rem',
+                                color: '#475569',
                                 fontWeight: 600,
+                                cursor: 'pointer',
                               }}
+                              title="Download PDF"
                             >
-                              📎 {ann.attachmentName || 'Download Attachment'}
-                            </a>
+                              ⬇ Download
+                            </button>
                           </div>
                         )}
                       </div>
                     ))
                   )}
+
+                  {sortedAnnouncements.length > 5 && (
+                    <div style={{ marginTop: '8px', textAlign: 'center', paddingTop: '8px', borderTop: '1px solid #f1f5f9' }}>
+                      <button
+                        type="button"
+                        onClick={() => setIsAnnouncementsModalOpen(true)}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#2563eb',
+                          fontWeight: 600,
+                          fontSize: '0.82rem',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                        }}
+                      >
+                        View all {sortedAnnouncements.length} announcements & attachments &rarr;
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           </>
+        )}
+
+
+        {/* Full Announcements & PDF Attachments Modal */}
+        {isAnnouncementsModalOpen && (
+          <div className={styles.modalOverlay} onClick={() => setIsAnnouncementsModalOpen(false)}>
+            <div
+              className={styles.modalBox}
+              style={{ maxWidth: '720px', maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #e2e8f0', paddingBottom: '14px' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '1.25rem' }}>📢</span>
+                    <h3 style={{ margin: 0, fontSize: '1.15rem', color: '#0f172a' }}>Campus Alerts & Announcements</h3>
+                    <span className="badge badge-approved" style={{ fontSize: '0.75rem', padding: '2px 8px' }}>
+                      {sortedAnnouncements.length} Total
+                    </span>
+                  </div>
+                  <p style={{ margin: '4px 0 0 0', fontSize: '0.82rem', color: '#64748b' }}>
+                    Official notices, course circulars, and reference materials from faculty
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsAnnouncementsModalOpen(false)}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    fontSize: '1.4rem',
+                    lineHeight: 1,
+                    color: '#94a3b8',
+                    cursor: 'pointer',
+                    padding: '2px 6px',
+                    borderRadius: '4px',
+                  }}
+                  aria-label="Close modal"
+                >
+                  &times;
+                </button>
+              </div>
+
+              {/* Search Filter */}
+              <div style={{ padding: '6px 0 2px 0' }}>
+                <input
+                  type="text"
+                  placeholder="Search announcements by course, title, or keywords..."
+                  value={announcementSearch}
+                  onChange={(e) => setAnnouncementSearch(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid #cbd5e1',
+                    fontSize: '0.85rem',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+
+              {/* Scrollable Announcements List */}
+              <div style={{ overflowY: 'auto', flex: 1, paddingRight: '4px', display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '4px' }}>
+                {filteredModalAnnouncements.length === 0 ? (
+                  <div style={{ padding: '36px', textAlign: 'center', color: '#64748b', fontSize: '0.9rem' }}>
+                    No announcements found matching "{announcementSearch}".
+                  </div>
+                ) : (
+                  filteredModalAnnouncements.map((ann) => (
+                    <div
+                      key={ann.announcementId || ann.id}
+                      style={{
+                        padding: '16px',
+                        borderRadius: '8px',
+                        background: '#f8fafc',
+                        border: '1px solid #e2e8f0',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '8px',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span className="badge" style={{ background: '#e0e7ff', color: '#4338ca', fontWeight: 600 }}>
+                          {ann.courseId || 'Campus Alert'}
+                        </span>
+                        <span style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                          {ann.createdAt ? new Date(ann.createdAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'Recent'}
+                        </span>
+                      </div>
+
+                      <div style={{ fontWeight: 700, fontSize: '0.98rem', color: '#0f172a' }}>
+                        {ann.title || 'Department Notice'}
+                      </div>
+
+                      <div style={{ fontSize: '0.88rem', color: '#334155', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>
+                        {ann.message}
+                      </div>
+
+                      {/* Attachment Card */}
+                      {ann.attachmentUrl && (
+                        <div
+                          style={{
+                            marginTop: '6px',
+                            padding: '10px 14px',
+                            background: '#ffffff',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: '6px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap',
+                            gap: '10px',
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ fontSize: '1.4rem' }}>📄</span>
+                            <div>
+                              <div style={{ fontWeight: 600, fontSize: '0.86rem', color: '#1e293b' }}>
+                                {ann.attachmentName || 'Attached Document'}
+                              </div>
+                              {ann.fileSize && (
+                                <div style={{ fontSize: '0.72rem', color: '#64748b' }}>
+                                  {(ann.fileSize / 1024).toFixed(1)} KB &bull; Document
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <button
+                              type="button"
+                              onClick={(e) => handleViewAttachment(e, ann)}
+                              className="btn-outline"
+                              style={{
+                                fontSize: '0.78rem',
+                                padding: '5px 12px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                              }}
+                            >
+                              👁️ Open PDF
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => handleDownloadAttachment(e, ann)}
+                              className="btn-primary"
+                              style={{
+                                fontSize: '0.78rem',
+                                padding: '5px 12px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                              }}
+                            >
+                              ⬇ Download
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Modal Footer */}
+              <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                  Showing {filteredModalAnnouncements.length} of {sortedAnnouncements.length} announcements
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsAnnouncementsModalOpen(false)}
+                  className="btn-secondary"
+                  style={{ fontSize: '0.82rem', padding: '6px 14px' }}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Tuition Breakdown Modal */}

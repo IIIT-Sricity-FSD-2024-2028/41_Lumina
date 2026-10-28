@@ -437,7 +437,10 @@ export const facultyService = {
           title: a.title,
           message: a.message || a.content,
           ago: 'Recently',
-          attachmentName: a.attachmentName || a.attachmentUrl ? 'Attached Document' : null,
+          attachmentName: a.attachmentName || (a.attachmentUrl ? 'Attached Document' : null),
+          attachmentUrl: a.attachmentUrl || null,
+          fileSize: a.fileSize || null,
+          createdAt: a.createdAt || null,
         }));
       }
     } catch {
@@ -478,6 +481,10 @@ export const facultyService = {
       backendSuccess = true;
       if (res && (res.announcementId || res.id)) {
         newAnn.id = res.announcementId || res.id;
+        newAnn.attachmentUrl = res.attachmentUrl;
+        newAnn.attachmentName = res.attachmentName || newAnn.attachmentName;
+        newAnn.fileSize = res.fileSize;
+        writeStorage(STORAGE_KEYS.ANNOUNCEMENTS, stored);
       }
     } catch (e) {
       backendError = e.response?.data?.message || e.message;

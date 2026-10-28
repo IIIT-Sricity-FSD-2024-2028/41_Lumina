@@ -132,15 +132,38 @@ export class CoursesService {
       return { currentSemester: student.currentSemester, activeTerm: '', courses: [] };
     }
 
-    // 3. Determine active term
-    const now = new Date();
-    const activeTerm = this.db.academicTerms.find(t => {
-      const start = new Date(t.startTimestamp);
-      const end = new Date(t.endTimestamp);
-      return now >= start && now <= end;
-    }) ?? [...this.db.academicTerms].sort(
-      (a, b) => new Date(b.startTimestamp).getTime() - new Date(a.startTimestamp).getTime()
-    )[0];
+    // 3. Determine active term dynamically from Dean 2 policy settings if available
+    const policy = this.db.policySettings;
+    let activeTerm: any = null;
+    if (policy && policy.academicYear && policy.term) {
+      const parts = policy.academicYear.split('-');
+      const year = (policy.term === 'Spring' || policy.term === 'Summer') ? (parts[1]?.trim() || parts[0]?.trim()) : parts[0]?.trim();
+      const termName = `${policy.term} ${year}`;
+      const termId = `${policy.term.toUpperCase()}${year}`;
+      activeTerm = this.db.academicTerms.find(t => t.termId === termId || t.termName.toLowerCase() === termName.toLowerCase());
+      if (!activeTerm) {
+        activeTerm = {
+          termId,
+          termName,
+          startTimestamp: '2020-01-01T00:00:00Z',
+          endTimestamp: '2030-12-31T23:59:59Z',
+          minCreditLimit: policy.minCredits || 12,
+          maxCreditLimit: policy.maxCredits || 22,
+        };
+        this.db.academicTerms.push(activeTerm);
+      }
+    }
+
+    if (!activeTerm) {
+      const now = new Date();
+      activeTerm = this.db.academicTerms.find(t => {
+        const start = new Date(t.startTimestamp);
+        const end = new Date(t.endTimestamp);
+        return now >= start && now <= end;
+      }) ?? [...this.db.academicTerms].sort(
+        (a, b) => new Date(b.startTimestamp).getTime() - new Date(a.startTimestamp).getTime()
+      )[0];
+    }
 
     if (!activeTerm) {
       return { currentSemester: student.currentSemester, activeTerm: '', courses: [] };
@@ -210,8 +233,8 @@ export class CoursesService {
       currentSemester: student.currentSemester || 4,
       activeTerm: activeTerm.termName,
       termId: activeTerm.termId,
-      minCreditLimit: activeTerm.minCreditLimit || 12,
-      maxCreditLimit: activeTerm.maxCreditLimit || 20,
+      minCreditLimit: policy?.minCredits || activeTerm.minCreditLimit || 12,
+      maxCreditLimit: policy?.maxCredits || activeTerm.maxCreditLimit || 20,
       courses: result,
     };
   }

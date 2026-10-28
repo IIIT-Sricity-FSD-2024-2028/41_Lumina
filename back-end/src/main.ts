@@ -28,6 +28,7 @@ async function bootstrap() {
         },
       },
       crossOriginEmbedderPolicy: false,
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
     }),
   );
 
@@ -81,7 +82,12 @@ async function bootstrap() {
     fs.mkdirSync(uploadsDir, { recursive: true });
   }
   const express = require('express');
-  app.use('/uploads', express.static(uploadsDir));
+  app.use('/uploads', express.static(uploadsDir, {
+    setHeaders: (res: any) => {
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+    },
+  }));
 
   // ── Swagger / OpenAPI Configuration ────────────────────────
   const config = new DocumentBuilder()
