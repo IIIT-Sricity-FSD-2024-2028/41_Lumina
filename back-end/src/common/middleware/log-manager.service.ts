@@ -63,7 +63,7 @@ export class LogManagerService implements OnModuleInit, OnModuleDestroy {
   /**
    * Appends an authentication audit record to logs/auth.log.
    */
-  writeAuthLog(status: 'SUCCESS' | 'FAILED', userId: string, role: string, ip: string, message: string): void {
+  writeAuthLog(status: 'SUCCESS' | 'FAILED' | 'LOGOUT', userId: string, role: string, ip: string, message: string): void {
     const timestamp = new Date().toISOString();
     const formattedEntry = `${timestamp} | AUTH_${status.padEnd(7)} | USER: ${userId.padEnd(10)} | ROLE: ${role.padEnd(12)} | IP: ${ip} | ${message}\n`;
     fs.appendFile(this.authLogPath, formattedEntry, (err) => {

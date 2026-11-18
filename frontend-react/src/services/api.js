@@ -42,8 +42,11 @@ api.interceptors.response.use(
   (error) => {
     // If backend rejected because session expired or invalid
     if (error.response && error.response.status === 401) {
-      localStorage.removeItem('Lumina_Session');
-      window.location.href = '/login';
+      const isLoginRequest = error.config?.url?.includes('/auth/login');
+      if (!isLoginRequest) {
+        localStorage.removeItem('Lumina_Session');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

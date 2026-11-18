@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
+import { DatabaseService } from '../../database/database.service';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 
 /**
@@ -23,6 +24,7 @@ export class RolesGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
     private readonly jwtService: JwtService,
+    private readonly db: DatabaseService,
   ) {}
 
   canActivate(context: ExecutionContext): boolean {
@@ -49,6 +51,14 @@ export class RolesGuard implements CanActivate {
     const authHeader = request.headers['authorization'] as string | undefined;
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7).trim();
+
+      // Check if token has been blacklisted / invalidated on logout or superseded by new login
+      if (this.db.isTokenRevoked(token)) {
+        throw new UnauthorizedException(
+          'Authentication token has been revoked or invalidated. Please log in again.',
+        );
+      }
+
       try {
         const decoded = this.jwtService.verify(token, {
           secret:
@@ -56,6 +66,7 @@ export class RolesGuard implements CanActivate {
             'lumina_super_secure_jwt_secret_key_2026_academic_platform',
         });
         request.user = decoded;
+        userRole = decoded.role;
       } catch (err) {
         // Fallback to x-role header if available for resilient browser session switching
         const fallbackRole = request.headers['x-role'] as string | undefined;

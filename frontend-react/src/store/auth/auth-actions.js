@@ -19,7 +19,11 @@ export const loginUser = (credentials) => {
 };
 
 export const logoutUser = () => {
-  return (dispatch) => {
-    dispatch(authActions.logout());
+  return async (dispatch) => {
+    try {
+      await authService.logout();
+    } finally {
+      dispatch(authActions.logout());
+    }
   };
 };

@@ -32,4 +32,17 @@ export class AuthController {
     const password = body.Password || body.password || '';
     return this.authService.login(userId, password, clientIp);
   }
+
+  @Post('logout')
+  @Roles('*') // Allows any logged in user or client to invalidate session
+  @ApiOperation({ summary: 'Log out user and invalidate current session token' })
+  @ApiResponse({ status: 200, description: 'Logout successful. Session token invalidated.' })
+  logout(@Req() req: Request) {
+    const rawIp = req.ip || req.socket.remoteAddress || '127.0.0.1';
+    const clientIp = rawIp.replace(/^.*:/, '') || '127.0.0.1';
+    const authHeader = req.headers['authorization'] as string | undefined;
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7).trim() : '';
+    const userId = (req as any).user?.userId;
+    return this.authService.logout(token, userId, clientIp);
+  }
 }

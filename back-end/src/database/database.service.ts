@@ -837,6 +837,33 @@ export class DatabaseService implements OnModuleInit {
       ).length;
     }
   }
+
+  // ── Session Tracking & Token Revocation ───────────────────────
+  private readonly revokedTokens: Set<string> = new Set<string>();
+  private readonly activeUserSessions: Map<string, string> = new Map<string, string>();
+
+  registerSession(userId: string, token: string): void {
+    if (!userId || !token) return;
+    const previousToken = this.activeUserSessions.get(userId);
+    if (previousToken && previousToken !== token) {
+      this.revokedTokens.add(previousToken);
+    }
+    this.activeUserSessions.set(userId, token);
+  }
+
+  revokeToken(token: string, userId?: string): void {
+    if (token) {
+      this.revokedTokens.add(token);
+    }
+    if (userId) {
+      this.activeUserSessions.delete(userId);
+    }
+  }
+
+  isTokenRevoked(token: string): boolean {
+    if (!token) return true;
+    return this.revokedTokens.has(token);
+  }
 }
 
 

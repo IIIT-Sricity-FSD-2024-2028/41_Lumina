@@ -29,15 +29,19 @@ export class AuthService {
     // Record successful authentication event in logs/auth.log
     this.logManager.writeAuthLog('SUCCESS', user.userId, user.role, clientIp, 'User logged in successfully.');
 
-    // Generate cryptographic signed JWT token
+    // Generate cryptographic signed JWT token with unique session ID (jti)
     const payload = {
       sub: user.userId,
       userId: user.userId,
       role: user.role,
       email: user.email,
       deptId: user.deptId,
+      jti: `${user.userId}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
     };
     const accessToken = this.jwtService.sign(payload);
+
+    // Register active session & invalidate previous session token for this user
+    this.db.registerSession(user.userId, accessToken);
 
     // Return session-compatible object (PascalCase keys for frontend compatibility + JWT)
     const session: Record<string, any> = {
@@ -60,6 +64,14 @@ export class AuthService {
     }
 
     return session;
+  }
+
+  logout(token: string, userId?: string, clientIp = '127.0.0.1') {
+    if (token) {
+      this.db.revokeToken(token, userId);
+    }
+    this.logManager.writeAuthLog('LOGOUT', userId || 'UNKNOWN', 'User', clientIp, 'User logged out successfully.');
+    return { success: true, message: 'Logged out successfully.' };
   }
 }
 
