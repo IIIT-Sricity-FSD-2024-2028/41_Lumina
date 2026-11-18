@@ -67,10 +67,31 @@ export class AuthService {
   }
 
   logout(token: string, userId?: string, clientIp = '127.0.0.1') {
+    let resolvedUserId = userId;
+    let resolvedRole = 'User';
     if (token) {
-      this.db.revokeToken(token, userId);
+      try {
+        const decoded = this.jwtService.decode(token) as Record<string, any> | null;
+        if (decoded) {
+          if (!resolvedUserId) {
+            resolvedUserId = decoded.userId || decoded.sub;
+          }
+          if (decoded.role) {
+            resolvedRole = decoded.role;
+          }
+        }
+      } catch {
+        // Fallback to provided or default values if decode fails
+      }
+      this.db.revokeToken(token, resolvedUserId);
     }
-    this.logManager.writeAuthLog('LOGOUT', userId || 'UNKNOWN', 'User', clientIp, 'User logged out successfully.');
+    this.logManager.writeAuthLog(
+      'LOGOUT',
+      resolvedUserId || 'UNKNOWN',
+      resolvedRole,
+      clientIp,
+      'User logged out successfully.',
+    );
     return { success: true, message: 'Logged out successfully.' };
   }
 }

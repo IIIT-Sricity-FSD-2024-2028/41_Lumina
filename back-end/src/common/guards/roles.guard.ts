@@ -39,8 +39,23 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    // Wildcard '*' means the endpoint is public (e.g. login)
+    // Wildcard '*' means the endpoint is public (e.g. login, logout)
     if (requiredRoles.includes('*')) {
+      const request = context.switchToHttp().getRequest();
+      const authHeader = request.headers['authorization'] as string | undefined;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.substring(7).trim();
+        try {
+          const decoded = this.jwtService.verify(token, {
+            secret:
+              process.env.JWT_SECRET ||
+              'lumina_super_secure_jwt_secret_key_2026_academic_platform',
+          });
+          request.user = decoded;
+        } catch {
+          // Public endpoint: permit access without blocking on expired/invalid token
+        }
+      }
       return true;
     }
 
@@ -68,14 +83,9 @@ export class RolesGuard implements CanActivate {
         request.user = decoded;
         userRole = decoded.role;
       } catch (err) {
-        // Fallback to x-role header if available for resilient browser session switching
-        const fallbackRole = request.headers['x-role'] as string | undefined;
-        if (!fallbackRole) {
-          throw new UnauthorizedException(
-            'Invalid or expired authentication token (JWT verification failed).',
-          );
-        }
-        userRole = fallbackRole;
+        throw new UnauthorizedException(
+          'Authentication token has expired or is invalid. Please log in again.',
+        );
       }
     }
 

@@ -1,15 +1,17 @@
 import { authActions } from './auth-slice';
 import { authService } from '../../services/auth.service';
 
-export const loginUser = (credentials) => {
+export const loginUser = (userIdOrCredentials, password) => {
   return async (dispatch) => {
     dispatch(authActions.setLoading(true));
+    dispatch(authActions.setError(null));
     try {
-      const data = await authService.login(credentials);
+      const data = await authService.login(userIdOrCredentials, password);
       dispatch(authActions.login(data));
       return data;
     } catch (err) {
-      const message = err.response?.data?.message || err.message || 'Login failed';
+      const message =
+        err.response?.data?.message || err.message || 'Invalid Username or Password.';
       dispatch(authActions.setError(message));
       throw err;
     } finally {
@@ -20,10 +22,12 @@ export const loginUser = (credentials) => {
 
 export const logoutUser = () => {
   return async (dispatch) => {
+    dispatch(authActions.setLoading(true));
     try {
       await authService.logout();
     } finally {
       dispatch(authActions.logout());
+      dispatch(authActions.setLoading(false));
     }
   };
 };

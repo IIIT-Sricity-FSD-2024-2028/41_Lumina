@@ -57,6 +57,21 @@
         ]
       }
     },
+    "/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Logout successful. Session token invalidated."
+          }
+        },
+        "summary": "Log out user and invalidate current session token",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
     "/users": {
       "get": {
         "operationId": "UsersController_findAll",

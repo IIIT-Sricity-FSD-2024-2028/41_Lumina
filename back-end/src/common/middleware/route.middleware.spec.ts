@@ -9,7 +9,7 @@ describe('RouteMiddleware', () => {
   let nextFunction: NextFunction;
 
   beforeEach(() => {
-    middleware = new RouteMiddleware();
+    middleware = new RouteMiddleware({ activeInstitutePlan: { status: 'Active' } } as any);
     mockResponse = {};
     nextFunction = jest.fn();
   });
