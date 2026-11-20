@@ -8,8 +8,9 @@
  * - Full mock data fallback when API is offline
  */
 import { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
-import { adminService } from '../../services/admin.service';
+import { updateDocketStatus, createDocket } from '../../store/admin/admin-actions';
 import styles from './AdminPortal.module.css';
 
 // ─── Badge Sub-Components ──────────────────────────────────────────────────────
@@ -47,15 +48,16 @@ function StatusBadge({ status }) {
 
 // ─── Tab Component ──────────────────────────────────────────────────────────────
 export default function TechnicalIncidentsTab({
-  dashboard, setDashboard, loading, currentSpocId, inst, onRefresh,
+  dashboard, loading, currentSpocId, inst,
 }) {
+  const dispatch = useDispatch();
+  const isSubmitting = useSelector((state) => state.admin.isSubmitting);
   const dockets = dashboard?.recentDockets || [];
 
   // ── Resolve modal state ──
   const [resolveModal, setResolveModal] = useState({ open: false, docketId: '', subject: '' });
   const [resolveStatus, setResolveStatus] = useState('Resolved');
   const [resolveNotes, setResolveNotes]   = useState('');
-  const [isSubmitting, setIsSubmitting]   = useState(false);
 
   function openResolveModal(docketId, subject) {
     setResolveModal({ open: true, docketId, subject });
@@ -66,28 +68,21 @@ export default function TechnicalIncidentsTab({
     setResolveModal({ open: false, docketId: '', subject: '' });
   }
   async function submitResolution() {
-    setIsSubmitting(true);
     try {
-      await adminService.updateDocketStatus(resolveModal.docketId, resolveStatus, resolveNotes);
-      setDashboard((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          recentDockets: prev.recentDockets.map((d) =>
-            d.docketId === resolveModal.docketId
-              ? { ...d, status: resolveStatus, resolutionNotes: resolveNotes, resolvedAt: new Date().toISOString() }
-              : d
-          ),
-        };
-      });
+      await dispatch(
+        updateDocketStatus(
+          resolveModal.docketId,
+          resolveStatus,
+          resolveNotes,
+          currentSpocId,
+          inst?.instituteId
+        )
+      );
       toast.success(`✔ Docket ${resolveModal.docketId} marked as ${resolveStatus.replace('_', ' ')} in database`);
       closeResolveModal();
-      if (onRefresh) onRefresh();
     } catch (err) {
       console.error(err);
       toast.error('Failed to update docket status on server');
-    } finally {
-      setIsSubmitting(false);
     }
   }
 
@@ -112,7 +107,6 @@ export default function TechnicalIncidentsTab({
   }
   async function submitLogDocket(e) {
     e.preventDefault();
-    setIsSubmitting(true);
     const instName = inst?.name || 'IIIT Sri City';
     const instId   = inst?.instituteId || 'INST-IIITS';
     const payload  = {
@@ -125,19 +119,12 @@ export default function TechnicalIncidentsTab({
       assignedSpocId: currentSpocId,
     };
     try {
-      const created = await adminService.createDocket(payload);
-      const newDocket = created && created.docketId
-        ? created
-        : { ...payload, docketId: `DOC-${Date.now().toString().slice(-4)}`, status: 'Open', createdAt: new Date().toISOString() };
-      setDashboard((prev) => prev ? { ...prev, recentDockets: [newDocket, ...(prev.recentDockets || [])] } : prev);
+      await dispatch(createDocket(payload, currentSpocId, instId));
       toast.success(`✔ Technical Docket logged and dispatched to ${logForm.targetQueue === 'super_user_escalate' ? 'Super User Escalation Queue' : 'SPOC Incident Queue'}!`);
       closeLogModal();
-      if (onRefresh) onRefresh();
     } catch (err) {
       console.error(err);
       toast.error('Failed to log technical docket to backend database');
-    } finally {
-      setIsSubmitting(false);
     }
   }
 
