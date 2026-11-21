@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import { useAuth } from '../../context/AuthContext';
-import { facultyService } from '../../services/faculty.service';
+import {
+  fetchFacultyCourses,
+  fetchCourseMaterials,
+  addCourseMaterial,
+} from '../../store/faculty/faculty-actions';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import toast from 'react-hot-toast';
 import styles from './FacultyCourses.module.css';
@@ -9,46 +14,38 @@ import styles from './FacultyCourses.module.css';
 export default function FacultyCourses() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const [loading, setLoading] = useState(true);
-  const [courses, setCourses] = useState([]);
+  const courses = useSelector((state) => state.faculty.courses);
+  const materials = useSelector((state) => state.faculty.currentCourseMaterials);
+  const loading = useSelector((state) => state.faculty.loading);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTerm, setSelectedTerm] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
 
   // Materials Modal state
   const [activeCourseForModal, setActiveCourseForModal] = useState(null);
-  const [materials, setMaterials] = useState([]);
   const [newMatTitle, setNewMatTitle] = useState('');
   const [newMatType, setNewMatType] = useState('Slides');
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    async function loadCourses() {
-      setLoading(true);
-      try {
-        const list = await facultyService.getCourses(user);
-        setCourses(list);
-      } catch (err) {
-        console.error('Failed to load courses', err);
+    if (user) {
+      dispatch(fetchFacultyCourses(user)).catch(() => {
         toast.error('Failed to load courses data');
-      } finally {
-        setLoading(false);
-      }
+      });
     }
-
-    loadCourses();
-  }, [user]);
+  }, [dispatch, user]);
 
   // Open Materials Modal
   async function handleOpenMaterials(course) {
     setActiveCourseForModal(course);
     try {
-      const mats = await facultyService.getMaterials(course.id);
-      setMaterials(mats);
+      await dispatch(fetchCourseMaterials(course.id));
     } catch {
-      setMaterials([]);
+      // Ignored - error handled in thunk
     }
   }
 
@@ -109,13 +106,14 @@ export default function FacultyCourses() {
 
     setUploading(true);
     try {
-      const added = await facultyService.addMaterial(
-        activeCourseForModal.id,
-        { name: newMatTitle, type: newMatType, slotId: activeCourseForModal.slotId || 1 },
-        selectedFile
+      const added = await dispatch(
+        addCourseMaterial(
+          activeCourseForModal.id,
+          { name: newMatTitle, type: newMatType, slotId: activeCourseForModal.slotId || 1 },
+          selectedFile
+        )
       );
 
-      setMaterials((prev) => [added.material, ...prev]);
       setNewMatTitle('');
       setSelectedFile(null);
       if (added.backendSuccess) {
@@ -153,7 +151,7 @@ export default function FacultyCourses() {
     toast.success(`Downloaded ${mat.name || 'document'}`);
   }
 
-  if (loading) {
+  if (loading && courses.length === 0) {
     return <LoadingSpinner text="Loading courses..." />;
   }
 
