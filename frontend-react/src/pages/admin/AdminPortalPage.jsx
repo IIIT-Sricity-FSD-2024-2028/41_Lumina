@@ -14,8 +14,9 @@
  *       4. InfrastructureHealthTab: Live system telemetry metrics, SLA tracking & operational alerts
  *   • URL-synchronized routing (/admin, /admin/provisioning, /admin/migration, /admin/telemetry)
  */
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useEffect, useCallback, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 
 import AdminPortalLayout from './AdminPortalLayout';
@@ -24,7 +25,8 @@ import TenantProvisioningTab from './TenantProvisioningTab';
 import DataMigrationTab from './DataMigrationTab';
 import InfrastructureHealthTab from './InfrastructureHealthTab';
 
-import { adminService } from '../../services/admin.service';
+import { fetchAdminDashboard } from '../../store/admin/admin-actions';
+import { adminActions } from '../../store/admin/admin-slice';
 import { useAuth } from '../../context/AuthContext';
 import styles from './AdminPortal.module.css';
 
@@ -39,6 +41,15 @@ export default function AdminPortalPage() {
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  // Read admin state from Redux store
+  const {
+    dashboard,
+    loading,
+    error: apiError,
+    currentInstituteId,
+  } = useSelector((state) => state.admin);
 
   // Determine active tab from URL path
   const activeTab = useMemo(() => {
@@ -55,62 +66,34 @@ export default function AdminPortalPage() {
     : 'SPOC-001';
   const currentSpocId = authenticatedSpocId;
 
-  const [currentInstituteId, setCurrentInstituteId] = useState(null);
-  const [dashboard, setDashboard]                   = useState(null);
-  const [loading, setLoading]                       = useState(true);
-  const [apiError, setApiError]                     = useState(null);
-
-  // ── Load live dashboard from database API ─────────────────────────────────
-  const loadDashboard = useCallback(async (spocId, instId) => {
-    setLoading(true);
-    setApiError(null);
-    try {
-      const data = await adminService.getDashboard(spocId, instId || undefined);
-      setDashboard(data);
-      if (data?.assignedInstitute?.instituteId && !currentInstituteId) {
-        setCurrentInstituteId(data.assignedInstitute.instituteId);
-      }
-    } catch (err) {
-      console.error('Failed to load admin dashboard from backend:', err);
-      const msg = err.response?.data?.message || err.message || 'Failed to fetch dashboard data from server';
-      setApiError(msg);
-      toast.error(`Backend Error: ${msg}`);
-    } finally {
-      setLoading(false);
-    }
-  }, [currentInstituteId]);
+  // ── Load live dashboard from Redux thunk ─────────────────────────────────
+  const loadDashboard = useCallback(
+    (spocId, instId) => {
+      dispatch(fetchAdminDashboard(spocId, instId || undefined)).catch((err) => {
+        const msg =
+          err.response?.data?.message ||
+          err.message ||
+          'Failed to fetch dashboard data from server';
+        toast.error(`Backend Error: ${msg}`);
+      });
+    },
+    [dispatch]
+  );
 
   useEffect(() => {
-    let ignore = false;
-    async function init() {
-      try {
-        const data = await adminService.getDashboard(authenticatedSpocId, currentInstituteId || undefined);
-        if (!ignore) {
-          setDashboard(data);
-          if (data?.assignedInstitute?.instituteId && !currentInstituteId) {
-            setCurrentInstituteId(data.assignedInstitute.instituteId);
-          }
-          setLoading(false);
-        }
-      } catch (err) {
-        if (!ignore) {
-          console.error('Failed to load admin dashboard from backend:', err);
-          const msg = err.response?.data?.message || err.message || 'Failed to fetch dashboard data from server';
-          setApiError(msg);
-          toast.error(`Backend Error: ${msg}`);
-          setLoading(false);
-        }
-      }
-    }
-    init();
-    return () => {
-      ignore = true;
-    };
-  }, [authenticatedSpocId, currentInstituteId]);
+    dispatch(fetchAdminDashboard(authenticatedSpocId, undefined)).catch((err) => {
+      const msg =
+        err.response?.data?.message ||
+        err.message ||
+        'Failed to fetch dashboard data from server';
+      toast.error(`Backend Error: ${msg}`);
+    });
+  }, [dispatch, authenticatedSpocId]); // Initial fetch on mount; switching institutes triggers handleInstituteSwitch
 
   // ── Client Institute Switcher (for assigned multi-tenant universities) ─────
   function handleInstituteSwitch(newInstId) {
-    setCurrentInstituteId(newInstId);
+    dispatch(adminActions.setCurrentInstituteId(newInstId));
+    dispatch(fetchAdminDashboard(authenticatedSpocId, newInstId || undefined));
     toast(`Active client switched to: ${newInstId}`, { icon: '🏛️' });
   }
 
@@ -251,11 +234,9 @@ export default function AdminPortalPage() {
       {activeTab === 'incidents' && (
         <TechnicalIncidentsTab
           dashboard={dashboard}
-          setDashboard={setDashboard}
           loading={loading}
           currentSpocId={currentSpocId}
           inst={inst}
-          onRefresh={() => loadDashboard(currentSpocId, currentInstituteId)}
         />
       )}
 
