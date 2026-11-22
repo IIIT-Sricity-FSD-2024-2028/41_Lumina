@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 
 import AppShell from '../../components/common/AppShell';
@@ -6,44 +7,38 @@ import PageHeader from '../../components/common/PageHeader';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 
 import { useAuth } from '../../context/AuthContext';
-import { coursesService } from '../../services/courses.service';
-import { registrationsService } from '../../services/registrations.service';
-import { overridesService } from '../../services/overrides.service';
-import { revenueService } from '../../services/revenue.service';
-import { slotsService } from '../../services/slots.service';
-import { usersService } from '../../services/users.service';
-import { policiesService } from '../../services/policies.service';
-
-function computeTermLabel(academicYear, term) {
-  if (!academicYear || !term) return 'Spring 2026';
-  const parts = academicYear.split('-');
-  if (parts.length !== 2) return `${term} ${academicYear}`;
-  const startYear = parts[0].trim();
-  const endYear = parts[1].trim();
-  if (term === 'Spring' || term === 'Summer') return `${term} ${endYear}`;
-  if (term === 'Monsoon' || term === 'Fall') return `${term} ${startYear}`;
-  return `${term} ${endYear}`;
-}
+import {
+  fetchStudentRegistration,
+  registerStudentCourse,
+  submitStudentOverride,
+  payStudentTuition,
+} from '../../store/student/student-actions';
 
 import styles from './StudentRegistration.module.css';
 
 export default function StudentRegistration() {
   const { user } = useAuth();
+  const dispatch = useDispatch();
   const studentId = user?.User_ID || 'S2024001';
 
-  const [loading, setLoading] = useState(true);
-  const [courses, setCourses] = useState([]);
-  const [registrations, setRegistrations] = useState([]);
-  const [allRegistrations, setAllRegistrations] = useState([]);
-  const [slots, setSlots] = useState([]);
-  const [overrides, setOverrides] = useState([]);
-  const [billing, setBilling] = useState(null);
-  const [currentSemester, setCurrentSemester] = useState(user?.Current_Semester || 4);
-  const [activeTerm, setActiveTerm] = useState('Spring 2026');
-  const [maxCredits, setMaxCredits] = useState(20);
-  const [, setFacultyMap] = useState({});
-  const [policies, setPolicies] = useState(null);
+  // Redux Student State
+  const {
+    loading,
+    courses,
+    registrations,
+    allRegistrations,
+    slots,
+    overrides,
+    billing,
+    policies,
+    currentSemester,
+    activeTerm,
+    maxCredits,
+    isSubmittingOverride,
+    isPaying,
+  } = useSelector((state) => state.student);
 
+  // Local UI states
   const [activeTab, setActiveTab] = useState('catalog'); // 'catalog' | 'myCourses' | 'overrides' | 'timetable'
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
@@ -52,116 +47,12 @@ export default function StudentRegistration() {
   const [isOverrideModalOpen, setIsOverrideModalOpen] = useState(false);
   const [overrideCourse, setOverrideCourse] = useState(null);
   const [overrideReason, setOverrideReason] = useState('');
-  const [isSubmittingOverride, setIsSubmittingOverride] = useState(false);
 
   const [isTuitionModalOpen, setIsTuitionModalOpen] = useState(false);
-  const [isPaying, setIsPaying] = useState(false);
 
   useEffect(() => {
-    async function fetchData() {
-      setLoading(true);
-      try {
-        const [catalogRes, studentCoursesRes, regsRes, overridesRes, billingRes, slotsRes, usersRes, policiesRes] =
-          await Promise.allSettled([
-            coursesService.getAll(),
-            coursesService.getForStudent(studentId),
-            registrationsService.getAll(),
-            overridesService.getByStudent(studentId),
-            revenueService.getStudentBilling(studentId),
-            slotsService.getAll(),
-            usersService.getAll(),
-            policiesService.getPolicies(),
-          ]);
-
-        const catalogList = catalogRes.status === 'fulfilled' && Array.isArray(catalogRes.value) ? catalogRes.value : [];
-        const studentRaw = studentCoursesRes.status === 'fulfilled' ? studentCoursesRes.value : null;
-        const studentCourses = studentRaw?.courses && Array.isArray(studentRaw.courses)
-          ? studentRaw.courses.map((item) => ({
-              ...item.course,
-              courseType: item.courseType || item.course?.courseType,
-              sections: item.sections,
-              prerequisite: item.course?.prerequisite || null,
-              prerequisiteCourseId: item.course?.prerequisiteCourseId || null,
-            }))
-          : [];
-
-        if (studentRaw?.currentSemester) {
-          setCurrentSemester(studentRaw.currentSemester);
-        }
-        if (studentRaw?.activeTerm) {
-          setActiveTerm(studentRaw.activeTerm);
-        }
-        if (studentRaw?.maxCreditLimit) {
-          setMaxCredits(studentRaw.maxCreditLimit);
-        }
-
-        if (policiesRes.status === 'fulfilled' && policiesRes.value?.settings) {
-          const pol = policiesRes.value.settings;
-          setPolicies(pol);
-          if (pol.academicYear && pol.term) {
-            setActiveTerm(computeTermLabel(pol.academicYear, pol.term));
-          }
-          if (pol.maxCredits) {
-            setMaxCredits(pol.maxCredits);
-          }
-        }
-
-        if (usersRes.status === 'fulfilled' && Array.isArray(usersRes.value)) {
-          const fMap = {};
-          usersRes.value.forEach((u) => {
-            const uId = u.userId || u.User_ID;
-            const uName = u.fullName || u.Full_Name;
-            if (uId && uName) fMap[uId] = uName;
-          });
-          setFacultyMap(fMap);
-        }
-
-        // Show the courses of that student's semester
-        if (studentCourses.length > 0) {
-          setCourses(studentCourses);
-        } else {
-          // If student courses list is empty or API unavailable, filter catalog for semester
-          const semCourses = catalogList.filter((c) => c.semester === currentSemester);
-          setCourses(semCourses.length > 0 ? semCourses : catalogList.slice(0, 6));
-        }
-
-        if (regsRes.status === 'fulfilled' && Array.isArray(regsRes.value)) {
-          setAllRegistrations(regsRes.value);
-          const userRegs = regsRes.value.filter(
-            (r) => r.studentId === studentId || r.Student_ID === studentId
-          );
-          setRegistrations(userRegs);
-        } else {
-          setRegistrations([]);
-        }
-
-        if (slotsRes.status === 'fulfilled' && Array.isArray(slotsRes.value)) {
-          setSlots(slotsRes.value);
-        }
-
-        if (overridesRes.status === 'fulfilled' && Array.isArray(overridesRes.value)) {
-          setOverrides(overridesRes.value);
-        }
-
-        if (billingRes.status === 'fulfilled' && billingRes.value) {
-          setBilling(billingRes.value);
-        } else {
-          setBilling({
-            studentId,
-            balanceDue: 0,
-            paymentStatus: 'Cleared',
-            isFinancialHoldActive: false,
-          });
-        }
-      } catch (err) {
-        console.error('Error loading registration data:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchData();
-  }, [studentId, currentSemester]);
+    dispatch(fetchStudentRegistration(studentId, user?.Current_Semester || 4));
+  }, [dispatch, studentId, user?.Current_Semester]);
 
   // Courses available in current semester catalog
   const catalogCourseIds = useMemo(() => {
@@ -269,10 +160,8 @@ export default function StudentRegistration() {
     }
 
     try {
-      const res = await registrationsService.enroll(studentId, courseId);
+      await dispatch(registerStudentCourse(studentId, courseId));
       toast.success(`Successfully registered for ${courseId}!`);
-      setRegistrations((prev) => [...prev, res]);
-      setAllRegistrations((prev) => [...prev, res]);
     } catch (err) {
       const errMsg = err?.response?.data?.message || err?.message || `Failed to enroll in ${courseId}.`;
       toast.error(errMsg);
@@ -291,42 +180,30 @@ export default function StudentRegistration() {
       return;
     }
 
-    setIsSubmittingOverride(true);
     try {
-      const res = await overridesService.create({
-        Student_ID: studentId,
-        Course_ID: overrideCourse.courseId || overrideCourse.Course_ID,
-        Reason: overrideReason,
-      });
-      toast.success(`Override request for ${overrideCourse.courseId || overrideCourse.Course_ID} submitted to Assistant Dean!`);
-      setOverrides((prev) => [...prev, res]);
+      const targetCourseId = overrideCourse.courseId || overrideCourse.Course_ID;
+      await dispatch(
+        submitStudentOverride({
+          studentId,
+          courseId: targetCourseId,
+          reason: overrideReason,
+        })
+      );
+      toast.success(`Override request for ${targetCourseId} submitted to Assistant Dean!`);
       setIsOverrideModalOpen(false);
     } catch (err) {
       const errMsg = err?.response?.data?.message || err?.message || 'Failed to submit override request.';
       toast.error(errMsg);
-    } finally {
-      setIsSubmittingOverride(false);
     }
   }
 
   async function handlePayTuition() {
-    setIsPaying(true);
     try {
-      const res = await revenueService.payStudentTuition(studentId, billing?.balanceDue || 2500);
-      toast.success(res.message || 'Financial hold cleared! Course registration unlocked.');
-      setBilling((prev) => ({
-        ...prev,
-        amountPaid: res.amountPaid || prev.totalAmountDue || 2500,
-        balanceDue: 0,
-        paymentStatus: 'Cleared',
-        isFinancialHoldActive: false,
-        transactionId: res.transactionId,
-      }));
+      const res = await dispatch(payStudentTuition(studentId, billing?.balanceDue || 2500));
+      toast.success(res?.message || 'Financial hold cleared! Course registration unlocked.');
       setIsTuitionModalOpen(false);
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Tuition payment failed. Please try again.');
-    } finally {
-      setIsPaying(false);
     }
   }
 
