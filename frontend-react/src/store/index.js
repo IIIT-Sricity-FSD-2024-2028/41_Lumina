@@ -3,7 +3,6 @@ import authSlice from './auth/auth-slice';
 import studentSlice from './student/student-slice';
 import facultySlice from './faculty/faculty-slice';
 import adminSlice from './admin/admin-slice';
-import deanSlice from './dean/dean-slice';
 
 const store = configureStore({
   reducer: {
@@ -11,7 +10,6 @@ const store = configureStore({
     student: studentSlice.reducer,
     faculty: facultySlice.reducer,
     admin: adminSlice.reducer,
-    dean: deanSlice.reducer,
   },
 });
 
