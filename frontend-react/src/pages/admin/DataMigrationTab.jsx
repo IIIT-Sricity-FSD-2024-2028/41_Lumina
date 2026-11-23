@@ -11,10 +11,18 @@
  */
 import { useState, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { adminService } from '../../services/admin.service';
+import { useDispatch, useSelector } from 'react-redux';
+import { bulkImportCourses, fetchAdminDashboard } from '../../store/admin/admin-actions';
 import styles from './AdminPortal.module.css';
 
-export default function DataMigrationTab({ dashboard, onRefresh }) {
+export default function DataMigrationTab({ dashboard: propDashboard, onRefresh }) {
+  const dispatch = useDispatch();
+  const reduxAdmin = useSelector((state) => state.admin);
+  const dashboard = propDashboard || reduxAdmin.dashboard;
+  const authUser = useSelector((state) => state.auth?.user);
+  const spocId = dashboard?.spoc?.spocId || authUser?.spocId || 'SPOC-001';
+  const instId = reduxAdmin.currentInstituteId || dashboard?.assignedInstitute?.instituteId;
+
   const [csvText, setCsvText]       = useState('');
   const [logOutput, setLogOutput]   = useState('[Migration Engine]: Standing by for course/student CSV dataset payload...');
   const [isDragOver, setIsDragOver] = useState(false);
@@ -101,7 +109,7 @@ export default function DataMigrationTab({ dashboard, onRefresh }) {
     setIsImporting(true);
     setLogOutput(`Ingesting ${parsedCourses.length} course definitions into database catalog...`);
     try {
-      const res = await adminService.bulkImportCourses(parsedCourses);
+      const res = await dispatch(bulkImportCourses(parsedCourses));
       const count = res?.importedCount ?? parsedCourses.length;
       toast.success(`✔ Successfully committed ${count} courses to database!`);
       setLogOutput(
@@ -109,6 +117,7 @@ export default function DataMigrationTab({ dashboard, onRefresh }) {
         parsedCourses.map((c) => `• Ingested into DB: ${c.courseId} - ${c.courseName} (${c.credits} CR, ${c.deptId})`).join('\n')
       );
       setCsvText('');
+      dispatch(fetchAdminDashboard(spocId, instId)).catch(() => null);
       if (onRefresh) onRefresh();
     } catch (err) {
       console.error('Bulk import error:', err);

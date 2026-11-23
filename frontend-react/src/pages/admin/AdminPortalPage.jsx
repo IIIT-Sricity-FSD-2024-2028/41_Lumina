@@ -107,7 +107,6 @@ export default function AdminPortalPage() {
   const totalStudents = metrics?.totalStudents ?? (inst?.studentCount ?? 0);
   const seatsUsed     = metrics?.seatsUsed ?? 0;
   const quotaPct      = metrics?.quotaPct ?? (totalStudents > 0 ? Math.round((seatsUsed / totalStudents) * 100) : 0);
-  const progressColor = quotaPct > 90 ? '#f59e0b' : '#10b981';
 
   const dockets     = dashboard?.recentDockets || [];
   const openDockets = metrics?.openDocketsCount ?? dockets.filter((d) => d.status !== 'Resolved').length;
@@ -241,30 +240,15 @@ export default function AdminPortalPage() {
       )}
 
       {activeTab === 'provisioning' && (
-        <TenantProvisioningTab
-          dashboard={dashboard}
-          currentSpocId={currentSpocId}
-          inst={inst}
-          seatsUsed={seatsUsed}
-          totalStudents={totalStudents}
-          quotaPct={quotaPct}
-          progressColor={progressColor}
-          onRefresh={() => loadDashboard(currentSpocId, currentInstituteId)}
-        />
+        <TenantProvisioningTab />
       )}
 
       {activeTab === 'migration' && (
-        <DataMigrationTab
-          dashboard={dashboard}
-          onRefresh={() => loadDashboard(currentSpocId, currentInstituteId)}
-        />
+        <DataMigrationTab />
       )}
 
       {activeTab === 'telemetry' && (
-        <InfrastructureHealthTab
-          dashboard={dashboard}
-          onRefresh={() => loadDashboard(currentSpocId, currentInstituteId)}
-        />
+        <InfrastructureHealthTab />
       )}
     </AdminPortalLayout>
   );
