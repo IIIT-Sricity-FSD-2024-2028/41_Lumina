@@ -1,9 +1,9 @@
+import { useSelector } from 'react-redux';
 import AppShell from '../../components/common/AppShell';
 import AcademicRoadmap from './AcademicRoadmap';
-import { useAuth } from '../../context/AuthContext';
 
 export default function StudentRoadmap() {
-  const { user } = useAuth();
+  const user = useSelector((state) => state.auth.user);
 
   return (
     <AppShell>
