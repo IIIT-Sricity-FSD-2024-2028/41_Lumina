@@ -15,18 +15,27 @@
  */
 
 import { useState, useEffect, useMemo } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import TopNavbar from '../../components/common/TopNavbar';
 import Footer from '../../components/Footer';
 
 // Pre-built services
-import { usersService } from '../../services/users.service';
-import { coursesService } from '../../services/courses.service';
-import { registrationsService } from '../../services/registrations.service';
 import { revenueService } from '../../services/revenue.service';
-import { policiesService } from '../../services/policies.service';
-import { overridesService } from '../../services/overrides.service';
+
+// Redux Actions
+import {
+  fetchDeanDashboardData,
+  createUserAction,
+  updateUserAction,
+  deleteUserAction,
+  recordStudentPaymentAction,
+  waiveStudentHoldAction,
+  updateSaasTierAction,
+  cancelSaasSubscriptionAction,
+  toggleGracePeriodAction,
+} from '../../store/dean/dean-actions';
 
 import styles from './DeanDashboard.module.css';
 
@@ -41,19 +50,23 @@ function formatTimelineDate(dtStr, fallbackMonth = 'SEP', fallbackDay = '01') {
 
 export default function DeanDashboard() {
   const { user } = useAuth();
+  const dispatch = useDispatch();
 
-  // Core Data States
-  const [users, setUsers] = useState([]);
-  const [courses, setCourses] = useState([]);
-  const [registrations, setRegistrations] = useState([]);
-  const [revenueData, setRevenueData] = useState(null);
-  const [clearanceRoster, setClearanceRoster] = useState([]);
+  // Core Data States from Redux store
+  const {
+    users,
+    courses,
+    registrations,
+    revenueData,
+    clearanceRoster,
+    graceLifecycle,
+    policies,
+    phases,
+    overrides,
+    loading,
+  } = useSelector((state) => state.dean);
+
   const [clearanceFilter, setClearanceFilter] = useState('all');
-  const [graceLifecycle, setGraceLifecycle] = useState(null);
-  const [policies, setPolicies] = useState({});
-  const [phases, setPhases] = useState([]);
-  const [overrides, setOverrides] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   // User CRUD Modal State
   const [userModal, setUserModal] = useState({
@@ -83,45 +96,10 @@ export default function DeanDashboard() {
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [deleteUserModal, setDeleteUserModal] = useState({ isOpen: false, userId: '' });
 
-  // Load all initial data dynamically
+  // Load all initial data via Redux action thunk
   useEffect(() => {
-    let ignore = false;
-    async function fetchData() {
-      try {
-        const [uRes, cRes, rRes, revRes, clearRes, lifeRes, polRes, phasesRes, ovRes] = await Promise.allSettled([
-          usersService.getAll(),
-          coursesService.getAll(),
-          registrationsService.getAll(),
-          revenueService.getSummary(),
-          revenueService.getClearanceRoster(),
-          revenueService.getLifecycle(),
-          policiesService.getPolicies(),
-          policiesService.getPhases(),
-          overridesService.getAll(),
-        ]);
-
-        if (ignore) return;
-        if (uRes.status === 'fulfilled' && Array.isArray(uRes.value)) setUsers(uRes.value);
-        if (cRes.status === 'fulfilled' && Array.isArray(cRes.value)) setCourses(cRes.value);
-        if (rRes.status === 'fulfilled' && Array.isArray(rRes.value)) setRegistrations(rRes.value);
-        if (revRes.status === 'fulfilled' && revRes.value) setRevenueData(revRes.value);
-        if (clearRes.status === 'fulfilled' && Array.isArray(clearRes.value)) setClearanceRoster(clearRes.value);
-        if (lifeRes.status === 'fulfilled' && lifeRes.value) setGraceLifecycle(lifeRes.value);
-        if (polRes.status === 'fulfilled' && polRes.value?.settings) setPolicies(polRes.value.settings);
-        if (phasesRes.status === 'fulfilled' && Array.isArray(phasesRes.value)) setPhases(phasesRes.value);
-        if (ovRes.status === 'fulfilled' && Array.isArray(ovRes.value)) setOverrides(ovRes.value);
-      } catch (err) {
-        if (!ignore) console.warn('Error loading Dean dashboard data:', err);
-      } finally {
-        if (!ignore) setLoading(false);
-      }
-    }
-
-    fetchData();
-    return () => {
-      ignore = true;
-    };
-  }, []);
+    dispatch(fetchDeanDashboardData());
+  }, [dispatch]);
 
   // Filtered Assistant Deans
   const assistantDeans = useMemo(() => {
@@ -198,15 +176,13 @@ export default function DeanDashboard() {
     try {
       if (userModal.mode === 'create') {
         payload.Password = 'password123';
-        await usersService.create(payload);
+        await dispatch(createUserAction(payload));
         toast.success(`User ${payload.User_ID} created successfully!`);
       } else {
-        await usersService.update(payload.User_ID, payload);
+        await dispatch(updateUserAction(payload.User_ID, payload));
         toast.success(`User ${payload.User_ID} updated successfully!`);
       }
       setUserModal({ isOpen: false, mode: 'create', data: null });
-      const refreshedUsers = await usersService.getAll();
-      setUsers(refreshedUsers);
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Failed to save user');
     }
@@ -224,11 +200,9 @@ export default function DeanDashboard() {
     const userId = deleteUserModal.userId;
     setDeleteUserModal({ isOpen: false, userId: '' });
     try {
-      await usersService.delete(userId);
+      await dispatch(deleteUserAction(userId));
       toast.success(`User ${userId} deleted.`);
       setUserModal({ isOpen: false, mode: 'create', data: null });
-      const refreshed = await usersService.getAll();
-      setUsers(refreshed);
     } catch (err) {
       console.error(err);
       toast.error('Failed to delete user');
@@ -238,14 +212,8 @@ export default function DeanDashboard() {
   // Tuition Financial Actions
   async function handleRecordPayment(studentId, name) {
     try {
-      await revenueService.payStudentTuition(studentId, 2500);
+      await dispatch(recordStudentPaymentAction(studentId, 2500));
       toast.success(`Payment recorded for ${name} ($2,500)! Registration hold cleared.`);
-      const [revRes, clearRes] = await Promise.all([
-        revenueService.getSummary(),
-        revenueService.getClearanceRoster(),
-      ]);
-      setRevenueData(revRes);
-      setClearanceRoster(clearRes);
     } catch (err) {
       console.error(err);
       toast.error('Failed to record payment');
@@ -266,14 +234,8 @@ export default function DeanDashboard() {
     const { studentId, studentName, reason } = waiverModal;
     setWaiverModal(prev => ({ ...prev, isOpen: false }));
     try {
-      await revenueService.waiveHold(studentId, reason.trim() || 'Dean Academic Merit Scholarship Waiver');
+      await dispatch(waiveStudentHoldAction(studentId, reason.trim() || 'Dean Academic Merit Scholarship Waiver'));
       toast.success(`Financial hold waived for ${studentName}!`);
-      const [revRes, clearRes] = await Promise.all([
-        revenueService.getSummary(),
-        revenueService.getClearanceRoster(),
-      ]);
-      setRevenueData(revRes);
-      setClearanceRoster(clearRes);
     } catch (err) {
       console.error(err);
       toast.error('Failed to grant waiver');
@@ -305,15 +267,9 @@ export default function DeanDashboard() {
   async function handleConfirmSaasTier() {
     setSaasModal(prev => ({ ...prev, loading: true }));
     try {
-      const res = await revenueService.setActiveTier(saasModal.targetTier, saasModal.billingCycle);
-      toast.success(res.message || `Subscription updated to ${saasModal.targetTier} Plan!`);
+      const res = await dispatch(updateSaasTierAction(saasModal.targetTier, saasModal.billingCycle));
+      toast.success(res?.message || `Subscription updated to ${saasModal.targetTier} Plan!`);
       setSaasModal(prev => ({ ...prev, isOpen: false, loading: false }));
-      const [revRes, lifeRes] = await Promise.all([
-        revenueService.getSummary(),
-        revenueService.getLifecycle(),
-      ]);
-      setRevenueData(revRes);
-      setGraceLifecycle(lifeRes);
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Failed to update SaaS subscription');
       setSaasModal(prev => ({ ...prev, loading: false }));
@@ -323,11 +279,9 @@ export default function DeanDashboard() {
   // Subscription Cancellation
   async function handleConfirmCancelSubscription() {
     try {
-      await revenueService.cancelSubscription();
+      await dispatch(cancelSaasSubscriptionAction());
       toast.success('Subscription auto-renewal disabled. Access remains active until period end.');
       setCancelModalOpen(false);
-      const revRes = await revenueService.getSummary();
-      setRevenueData(revRes);
     } catch (err) {
       console.error(err);
       toast.error('Failed to cancel subscription');
@@ -337,15 +291,9 @@ export default function DeanDashboard() {
   // Simulate Grace Period / Reactivate License
   async function handleToggleGrace(enable) {
     try {
-      await revenueService.simulateGracePeriod(enable);
+      await dispatch(toggleGracePeriodAction(enable));
       toast.success(enable ? '⚠️ 60-Day Grace Period simulation is now ACTIVE!' : '✅ Institutional License Reactivated!');
       setCancelModalOpen(false);
-      const [revRes, lifeRes] = await Promise.all([
-        revenueService.getSummary(),
-        revenueService.getLifecycle(),
-      ]);
-      setRevenueData(revRes);
-      setGraceLifecycle(lifeRes);
     } catch (err) {
       console.error(err);
       toast.error('Failed to toggle grace period simulation');
