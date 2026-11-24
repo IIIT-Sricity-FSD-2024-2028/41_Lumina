@@ -1,17 +1,20 @@
-/**
- * AD1 Dashboard — Deal1 Home (Page 1)
+﻿/**
+ * AD1 Dashboard â€” Deal1 Home (Page 1)
  * Refactored to use shared AD1PageLayout, StatCard, and DataTable.
  */
 import { useState, useMemo } from 'react';
+import { useSelector } from 'react-redux';
 import AD1PageLayout from './components/AD1PageLayout';
 import StatCard, { StatCardsRow } from './components/StatCard';
 import DataTable from './components/DataTable';
-import useAD1Data from './hooks/useAD1Data';
+import useLoadAD1Data from './hooks/useLoadAD1Data';
+import { selectAD1Data } from '../../store/ad1/ad1-slice';
 import { ALL_SLOT_KEYS } from './utils/dataTransforms';
 import styles from './AD1Dashboard.module.css';
 
 export default function AD1Dashboard() {
-  const { data, loading, error } = useAD1Data();
+  const { loading, error } = useLoadAD1Data();
+  const data = useSelector(selectAD1Data);
   const [selectedDay, setSelectedDay] = useState('Monday');
   const [selectedRoomIdx, setSelectedRoomIdx] = useState(0);
 
@@ -46,10 +49,10 @@ export default function AD1Dashboard() {
       {stats && (
         <>
           <StatCardsRow>
-            <StatCard icon="📋" label="Total Courses" value={stats.total} color="blue" />
-            <StatCard icon="📅" label="Allocated" value={stats.allocated} color="green" />
-            <StatCard icon="⏳" label="Pending" value={stats.pending} color="red" />
-            <StatCard icon="🏫" label="Required Slots" value={stats.requiredSlots} color="amber" />
+            <StatCard icon="ðŸ“‹" label="Total Courses" value={stats.total} color="blue" />
+            <StatCard icon="ðŸ“…" label="Allocated" value={stats.allocated} color="green" />
+            <StatCard icon="â³" label="Pending" value={stats.pending} color="red" />
+            <StatCard icon="ðŸ«" label="Required Slots" value={stats.requiredSlots} color="amber" />
           </StatCardsRow>
 
           <section className={styles.dashboardBottom}>
