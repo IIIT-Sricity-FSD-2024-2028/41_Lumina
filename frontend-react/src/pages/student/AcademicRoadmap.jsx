@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { coursesService } from '../../services/courses.service';
-import { registrationsService } from '../../services/registrations.service';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchStudentRoadmap } from '../../store/student/student-actions';
 import './roadmap.css';
 
 function getAvailablePool(sourceList, claimedMap, currentSemNum) {
@@ -345,21 +345,20 @@ function RoadmapCard({ label, date, courses, totalCredits }) {
    MAIN ROOT COMPONENT
    ========================================================================== */
 export default function AcademicRoadmap({ studentUser }) {
+  const dispatch = useDispatch();
   const studentId = studentUser?.User_ID || studentUser?.userId || 'S2024001';
   const studentName = studentUser?.Full_Name || studentUser?.fullName || 'Student';
   const currentSemester = studentUser?.Current_Semester || 4;
   const deptId = studentUser?.Dept_ID || 'CSE';
 
-  const [semHistory, setSemHistory] = useState({});
-  const [earnedCredits, setEarnedCredits] = useState(0);
+  // Redux Student State
+  const { semHistory, earnedCredits, peCourses, ieCourses, futureSemData } = useSelector(
+    (state) => state.student
+  );
+
   const [currentSem, setCurrentSem] = useState(null);
   const [activePlanSem, setActivePlanSem] = useState(null);
   const [view, setView] = useState('plan');
-
-  // Real database dynamic lists
-  const [peCourses, setPeCourses] = useState([]);
-  const [ieCourses, setIeCourses] = useState([]);
-  const [futureSemData, setFutureSemData] = useState({});
 
   const [selectedCourses, setSelectedCourses] = useState({
     5: { core: {}, PE: {}, IE: {}, SEED: {} },
@@ -389,197 +388,9 @@ export default function AcademicRoadmap({ studentUser }) {
     return seq;
   }, [currentSemester]);
 
-  // Load real student academic history, catalog, prerequisites, and degree requirements from database
   useEffect(() => {
-    async function loadAcademicData() {
-      try {
-        const [regData, catData, prereqData, degreeReqData] = await Promise.all([
-          registrationsService.getAll(),
-          coursesService.getAll(),
-          coursesService.getPrerequisites(),
-          coursesService.getDegreeRequirements(),
-        ]);
-
-        const catalog = Array.isArray(catData) ? catData : [];
-        const catalogMap = {};
-        catalog.forEach((c) => {
-          catalogMap[c.courseId || c.Course_ID] = c;
-        });
-
-        // Prerequisite mapping from DB: targetCourseId -> requiredCourseId
-        const prereqs = Array.isArray(prereqData) ? prereqData : [];
-        const prereqMap = {};
-        prereqs.forEach((p) => {
-          prereqMap[p.targetCourseId] = p.requiredCourseId;
-        });
-
-        const userRegs = Array.isArray(regData)
-          ? regData.filter((r) => r.studentId === studentId || r.Student_ID === studentId)
-          : [];
-
-        // Dynamic Degree Audit: Total Passed Credits (Grade !== 'F' & Grade !== null)
-        const passedCourseIds = new Set(
-          userRegs
-            .filter((r) => r.finalGrade && r.finalGrade !== 'F')
-            .map((r) => r.courseId || r.Course_ID)
-        );
-
-        // Courses currently enrolled in active term
-        const inProgressCourseIds = new Set(
-          userRegs
-            .filter((r) => !r.finalGrade)
-            .map((r) => r.courseId || r.Course_ID)
-        );
-
-        const totalPassed = userRegs
-          .filter((r) => r.finalGrade && r.finalGrade !== 'F')
-          .reduce((sum, r) => {
-            const cId = r.courseId || r.Course_ID;
-            return sum + (catalogMap[cId]?.credits || 4);
-          }, 0);
-        setEarnedCredits(totalPassed);
-
-        // Build academic history dynamically from database degreeRequirements and actual student registrations
-        const degreeReqs = Array.isArray(degreeReqData) ? degreeReqData : [];
-        const deptReqs = degreeReqs.filter((dr) => !dr.deptId || dr.deptId === deptId);
-
-        const dynamicHistory = {};
-
-        // Generate past completed semesters (1 up to currentSemester - 1)
-        for (let semNum = 1; semNum < currentSemester; semNum++) {
-          const semReqs = deptReqs.filter((dr) => dr.targetSemester === semNum);
-          const semCourseIds = new Set(semReqs.map((dr) => dr.courseId));
-
-          const semRegs = userRegs.filter((r) => {
-            const cId = r.courseId || r.Course_ID;
-            return semCourseIds.has(cId);
-          });
-
-          const mappedCourses = semReqs.map((dr) => {
-            const foundCat = catalogMap[dr.courseId] || {};
-            const reg = semRegs.find((r) => (r.courseId || r.Course_ID) === dr.courseId);
-            return {
-              id: dr.courseId,
-              name: foundCat.courseName || dr.courseId,
-              credits: foundCat.credits || 4,
-              grade: reg?.finalGrade || 'A',
-            };
-          });
-
-          const semTotal = mappedCourses.reduce((sum, c) => sum + c.credits, 0);
-
-          const yearOffset = Math.floor((semNum - 1) / 2);
-          const isMonsoon = semNum % 2 === 1;
-          const startYear = 2024 + yearOffset;
-          const dateStr = isMonsoon
-            ? `Aug ${startYear} – Dec ${startYear}`
-            : `Jan ${startYear + 1} – May ${startYear + 1}`;
-
-          dynamicHistory[semNum] = {
-            title: `Semester ${semNum}`,
-            date: dateStr,
-            isCurrent: false,
-            coursesSummary: mappedCourses.map((c) => c.id).join(', '),
-            courses: mappedCourses,
-            totalCredits: semTotal,
-          };
-        }
-
-        setSemHistory(dynamicHistory);
-
-        // Helper to format prerequisite display and verify completion
-        function resolvePrereq(courseId) {
-          const requiredId = prereqMap[courseId];
-          if (!requiredId) {
-            return { prereqText: 'None', warning: null };
-          }
-          const requiredName = catalogMap[requiredId]?.courseName || requiredId;
-          const isSatisfied = passedCourseIds.has(requiredId) || inProgressCourseIds.has(requiredId);
-          return {
-            prereqText: `${requiredId}: ${requiredName}`,
-            warning: isSatisfied ? null : `Prerequisite ${requiredId} (${requiredName}) not yet completed.`,
-          };
-        }
-
-        // Build Program Electives pool from actual DB catalog
-        const dbPE = catalog
-          .filter((c) => (c.courseId || '').startsWith('PE'))
-          .map((c) => {
-            const { prereqText, warning } = resolvePrereq(c.courseId);
-            return {
-              id: c.courseId,
-              name: `${c.courseId}: ${c.courseName}`,
-              credits: c.credits || 3,
-              prereqText,
-              warning,
-            };
-          });
-        setPeCourses(dbPE);
-
-        // Build Institute Electives pool from actual DB catalog
-        const dbIE = catalog
-          .filter((c) => (c.courseId || '').startsWith('IE'))
-          .map((c) => {
-            const { prereqText, warning } = resolvePrereq(c.courseId);
-            return {
-              id: c.courseId,
-              name: `${c.courseId}: ${c.courseName}`,
-              credits: c.credits || 3,
-              prereqText,
-              warning,
-            };
-          });
-        setIeCourses(dbIE);
-
-        // Build Future Semesters dynamic definitions with real database courses and prerequisites
-        const builtFutureSemesters = {};
-
-        for (let s = currentSemester + 1; s <= 8; s++) {
-          const semReqs = deptReqs.filter((dr) => dr.targetSemester === s);
-          const coreReqs = semReqs.filter(
-            (dr) => dr.courseType === 'Program Core' || dr.courseType === 'Institute Core' || dr.courseType === 'Core'
-          );
-          const peReqs = semReqs.filter((dr) => dr.courseType === 'Elective' && dr.courseId.startsWith('PE'));
-          const ieReqs = semReqs.filter((dr) => dr.courseType === 'Elective' && dr.courseId.startsWith('IE'));
-
-          const coreList = coreReqs.map((dr) => {
-            const cat = catalogMap[dr.courseId] || {};
-            const { prereqText, warning } = resolvePrereq(dr.courseId);
-            return {
-              id: dr.courseId,
-              name: `${dr.courseId}: ${cat.courseName || dr.courseId}`,
-              credits: cat.credits || 4,
-              prereq: prereqText,
-              warning,
-              type: 'core',
-            };
-          });
-
-          const yearOffset = Math.floor((s - 1) / 2);
-          const isMonsoon = s % 2 === 1;
-          const year = 2024 + yearOffset + (isMonsoon ? 0 : 1);
-          const dateStr = isMonsoon ? `Monsoon ${year}` : `Spring ${year}`;
-
-          builtFutureSemesters[s] = {
-            label: `Semester ${s}`,
-            date: dateStr,
-            limits: {
-              PE: peReqs.length > 0 ? peReqs.length : (s <= 6 ? 2 : 1),
-              IE: ieReqs.length > 0 ? ieReqs.length : (s <= 6 ? 1 : 0),
-              SEED: 0,
-            },
-            courses: coreList,
-          };
-        }
-
-        setFutureSemData(builtFutureSemesters);
-      } catch (e) {
-        console.warn('Academic records error:', e);
-      }
-    }
-
-    loadAcademicData();
-  }, [studentId, currentSemester, deptId]);
+    dispatch(fetchStudentRoadmap(studentId, currentSemester, deptId));
+  }, [dispatch, studentId, currentSemester, deptId]);
 
   const handleSelectSem = (val) => {
     if (!val || !semSequence[val]) {
