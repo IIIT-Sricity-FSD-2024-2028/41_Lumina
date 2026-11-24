@@ -162,8 +162,21 @@ export const createAD1Course = createAsyncThunk(
 
 export const updateAD1Course = createAsyncThunk(
   'ad1Planning/updateCourse',
-  async ({ courseId, changes }, { rejectWithValue }) => {
+  async ({ courseId, changes }, { getState, requestId, rejectWithValue }) => {
     try {
+      const course = getState().ad1Planning.data.courses.find((entry) => entry.Course_ID === courseId);
+      if (course?.Status === 'Active' && changes.status === 'Inactive') {
+        const registrations = await registrationsService.getAll();
+        if (getState().ad1Planning.writeRequestId !== requestId) return;
+
+        if (registrations.some((entry) => entry.courseId === courseId && entry.status === 'Enrolled')) {
+          return rejectWithValue({
+            field: 'status',
+            message: 'This course cannot be made inactive while students are enrolled.',
+          });
+        }
+      }
+
       const saved = await coursesService.update(courseId, changes);
       return courseChanges(courseId, changes, saved);
     } catch (err) {

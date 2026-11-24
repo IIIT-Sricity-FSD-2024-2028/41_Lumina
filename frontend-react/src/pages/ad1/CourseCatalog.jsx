@@ -1,5 +1,5 @@
-﻿/**
- * CourseCatalog â€” Deal1 Page 2
+/**
+ * CourseCatalog — Deal1 Page 2
  * Refactored to use shared AD1PageLayout, StatCard, Modal, FormGroup,
  * DataTable, Pagination, PrereqDropdown, and shared CSS tokens.
  */
@@ -27,7 +27,7 @@ export default function CourseCatalog() {
   const data = useSelector(selectAD1Data);
   const writing = useSelector(selectAD1Writing);
 
-  // â”€â”€â”€ Filters â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Filters ───────────────────────────────────────────────
   const [search, setSearch] = useState('');
   const [filterUG, setFilterUG] = useState('');
   const [filterType, setFilterType] = useState('');
@@ -35,12 +35,12 @@ export default function CourseCatalog() {
   const [filterSemester, setFilterSemester] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
 
-  // â”€â”€â”€ Modal State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Modal State ───────────────────────────────────────────
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingCourseCode, setEditingCourseCode] = useState(null);
 
-  // â”€â”€â”€ Form State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Form State ────────────────────────────────────────────
   const [addForm, setAddForm] = useState({ code: '', name: '', credits: '', ugYear: '', semester: '', type: '', dept: '' });
   const [addPrereqTags, setAddPrereqTags] = useState([]);
   const [addErrors, setAddErrors] = useState({});
@@ -50,7 +50,7 @@ export default function CourseCatalog() {
 
   const deptDisabled = filterType === 'Institute Core' || filterType === 'Seed Course';
 
-  // â”€â”€â”€ Filtered courses â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Filtered courses ──────────────────────────────────────
   const filteredCourses = useMemo(() => {
     if (!data) return [];
     return data.courses.filter((c) => {
@@ -89,7 +89,7 @@ export default function CourseCatalog() {
     }
   };
 
-  // â”€â”€â”€ Type change handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Type change handlers ─────────────────────────────────
   const handleTypeChange = (form, setForm) => (type) => {
     const updates = { type };
     if (type === 'Institute Core') updates.dept = '';
@@ -97,7 +97,7 @@ export default function CourseCatalog() {
     setForm((f) => ({ ...f, ...updates }));
   };
 
-  // â”€â”€â”€ Validate form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Validate form ─────────────────────────────────────────
   const validateForm = (form, isAdd) => {
     const errs = {};
     if (isAdd) {
@@ -119,7 +119,7 @@ export default function CourseCatalog() {
     return errs;
   };
 
-  // â”€â”€â”€ Build course object from form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Build course object from form ─────────────────────────
   const buildCourseFromForm = (form, prereqs) => ({
     code: form.code?.trim().toUpperCase() || form.code,
     name: form.name.trim(),
@@ -132,7 +132,7 @@ export default function CourseCatalog() {
     status: form.status || 'Active',
   });
 
-  // â”€â”€â”€ Open modals â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Open modals ───────────────────────────────────────────
   const openAddModal = () => {
     setAddForm({ code: '', name: '', credits: '', ugYear: '', semester: '', type: '', dept: '' });
     setAddPrereqTags([]); setAddErrors({}); setAddModalOpen(true);
@@ -147,7 +147,7 @@ export default function CourseCatalog() {
     setEditPrereqTags([...(course.prerequisites || [])]); setEditErrors({}); setEditModalOpen(true);
   };
 
-  // â”€â”€â”€ Submit handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Submit handlers ──────────────────────────────────────
   const handleAddCourse = async (e) => {
     e.preventDefault();
     if (writing) return;
@@ -195,15 +195,20 @@ export default function CourseCatalog() {
         courseType: updated.type,
         prerequisites: updated.prerequisites,
       };
-      await dispatch(updateAD1Course({ courseId: editingCourseCode, changes })).unwrap();
+      const result = await dispatch(updateAD1Course({ courseId: editingCourseCode, changes })).unwrap();
+      if (!result) return;
       setEditModalOpen(false);
       toast.success('Course updated successfully!');
     } catch (err) {
+      if (err.field === 'status') {
+        setEditErrors((errors) => ({ ...errors, status: err.message }));
+        return;
+      }
       toast.error('Failed to update course: ' + err.message);
     }
   };
 
-  // â”€â”€â”€ Course Form JSX (shared between Add/Edit) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Course Form JSX (shared between Add/Edit) ────────────
   const renderCourseForm = (form, setForm, errors, prereqTags, setPrereqTags, isAdd) => (
     <>
       <div className={shared.formRow}>
@@ -273,7 +278,10 @@ export default function CourseCatalog() {
               {['Active', 'Inactive'].map((s) => (
                 <label key={s} className={shared.radioLabel}>
                   <input type="radio" name="editStatus" value={s} checked={form.status === s}
-                    onChange={() => setForm((f) => ({ ...f, status: s }))} /> {s}
+                    onChange={() => {
+                      setForm((f) => ({ ...f, status: s }));
+                      setEditErrors((previous) => ({ ...previous, status: undefined }));
+                    }} /> {s}
                 </label>
               ))}
             </div>
@@ -307,7 +315,7 @@ export default function CourseCatalog() {
       {/* Filters */}
       <div className={styles.filterBar}>
         <div className={styles.filterSearch}>
-          <span className={styles.searchIcon}>ðŸ”</span>
+          <span className={styles.searchIcon}>🔍</span>
           <input type="text" className={styles.searchInput} placeholder="Search by course code or name..."
             value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
@@ -333,7 +341,7 @@ export default function CourseCatalog() {
           <option value="">Status</option>
           <option value="Active">Active</option><option value="Inactive">Inactive</option>
         </select>
-        <button className={styles.clearBtn} onClick={clearFilters} title="Clear all filters">âŸ³</button>
+        <button className={styles.clearBtn} onClick={clearFilters} title="Clear all filters">⟳</button>
       </div>
 
       {/* Table */}
@@ -358,7 +366,7 @@ export default function CourseCatalog() {
                     {c.status}
                   </span>
                 </td>
-                <td><button className={styles.actionBtn} title="Edit" onClick={() => openEditModal(c.code)}>âœï¸</button></td>
+                <td><button className={styles.actionBtn} title="Edit" onClick={() => openEditModal(c.code)}>✏️</button></td>
               </tr>
             );
           })}

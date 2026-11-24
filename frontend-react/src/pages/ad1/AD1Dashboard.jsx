@@ -1,5 +1,5 @@
-﻿/**
- * AD1 Dashboard â€” Deal1 Home (Page 1)
+/**
+ * AD1 Dashboard — Deal1 Home (Page 1)
  * Refactored to use shared AD1PageLayout, StatCard, and DataTable.
  */
 import { useState, useMemo } from 'react';
@@ -49,10 +49,10 @@ export default function AD1Dashboard() {
       {stats && (
         <>
           <StatCardsRow>
-            <StatCard icon="ðŸ“‹" label="Total Courses" value={stats.total} color="blue" />
-            <StatCard icon="ðŸ“…" label="Allocated" value={stats.allocated} color="green" />
-            <StatCard icon="â³" label="Pending" value={stats.pending} color="red" />
-            <StatCard icon="ðŸ«" label="Required Slots" value={stats.requiredSlots} color="amber" />
+            <StatCard icon="📋" label="Total Courses" value={stats.total} color="blue" />
+            <StatCard icon="📅" label="Allocated" value={stats.allocated} color="green" />
+            <StatCard icon="⏳" label="Pending" value={stats.pending} color="red" />
+            <StatCard icon="🏫" label="Required Slots" value={stats.requiredSlots} color="amber" />
           </StatCardsRow>
 
           <section className={styles.dashboardBottom}>
