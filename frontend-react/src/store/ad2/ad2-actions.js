@@ -603,7 +603,7 @@ export const submitGradesheetForReview = () => async (dispatch, getState) => {
  * Thunk: Load all data for the Analytics page (reuses shared state if loaded)
  */
 export const fetchAnalyticsData = () => async (dispatch, getState) => {
-  const { courses, registrations, sections, users, analyticsLoaded } = getState().ad2;
+  const { courses, analyticsLoaded } = getState().ad2;
   if (analyticsLoaded && courses.length > 0) return; // already loaded
 
   dispatch(ad2Actions.setLoading(true));
@@ -681,7 +681,7 @@ export const sendPolicyUpdate = (payload, successMsg) => async (dispatch) => {
   } catch (err) {
     console.error('Policy update error:', err);
     const msg = err.response?.data?.message || 'Failed to update policy';
-    throw new Error(msg);
+    throw new Error(msg, { cause: err });
   } finally {
     dispatch(ad2Actions.setSaving(false));
   }
