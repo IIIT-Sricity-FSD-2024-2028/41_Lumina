@@ -3,11 +3,13 @@
  * Refactored to use shared AD1PageLayout and shared CSS tokens.
  */
 import { useState, useMemo, useCallback } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 import AD1PageLayout from './components/AD1PageLayout';
 import Modal from './components/Modal';
-import useAD1Data from './hooks/useAD1Data';
-import { slotsService } from '../../services/slots.service';
+import useLoadAD1Data from './hooks/useLoadAD1Data';
+import { createAD1Slot, deleteAD1Slot, updateAD1Slot } from '../../store/ad1/ad1-actions';
+import { selectAD1Data, selectAD1Writing } from '../../store/ad1/ad1-slice';
 import {
   TIME_SLOTS, DAYS, getSemesterFromTerm, normalizeSectionValue, getCardColorClass,
 } from './utils/dataTransforms';
@@ -16,7 +18,19 @@ import shared from './styles/ad1-shared.module.css';
 import styles from './Timetable.module.css';
 
 export default function Timetable() {
-  const { data, loading, error, setData } = useAD1Data();
+  const dispatch = useDispatch();
+  const { loading, error } = useLoadAD1Data();
+  const data = useSelector(selectAD1Data);
+  const writing = useSelector(selectAD1Writing);
+  const [allocationEdits, setAllocationEdits] = useState({});
+
+  const timetable = useMemo(() => {
+    if (!data) return [];
+    const allocations = new Map(data.timetable.map((allocation) => [allocation.id, allocation]));
+    // Preserve the editor display for choices that the existing slot API does not save.
+    Object.values(allocationEdits).forEach((allocation) => allocations.set(allocation.id, allocation));
+    return [...allocations.values()];
+  }, [data, allocationEdits]);
 
   // ─── Filters ───────────────────────────────────────────────
   const [filterTerm, setFilterTerm] = useState('Spring 2026');
@@ -75,7 +89,7 @@ export default function Timetable() {
   const filteredAllocations = useMemo(() => {
     if (!data) return [];
     const semester = getSemesterFromTerm(filterTerm);
-    return data.timetable.filter((alloc) => {
+    return timetable.filter((alloc) => {
       const course = data.courses.find((c) => c.code === alloc.courseCode);
       if (!course || course.ugYear !== filterUG || course.semester !== semester || course.type !== filterType) return false;
       if (filterType === 'Program Core' && course.dept !== filterDept) return false;
@@ -84,7 +98,7 @@ export default function Timetable() {
       if (filterSection && normalizeSectionValue(alloc.section) !== filterSection) return false;
       return true;
     });
-  }, [data, filterTerm, filterUG, filterType, filterDept, filterCourse, filterSection]);
+  }, [data, timetable, filterTerm, filterUG, filterType, filterDept, filterCourse, filterSection]);
 
   const allocMap = useMemo(() => {
     const map = {};
@@ -113,8 +127,8 @@ export default function Timetable() {
 
   const panelValidation = useMemo(() => {
     if (!data) return { facultyOk: false, roomOk: false, facultyMsg: '', roomMsg: '' };
-    return validateSlot({ day: panelDay, timeSlot: panelSlot, professor: panelFaculty, room: panelRoom, editingAlloc }, data.timetable);
-  }, [data, panelDay, panelSlot, panelFaculty, panelRoom, editingAlloc]);
+    return validateSlot({ day: panelDay, timeSlot: panelSlot, professor: panelFaculty, room: panelRoom, editingAlloc }, timetable);
+  }, [data, timetable, panelDay, panelSlot, panelFaculty, panelRoom, editingAlloc]);
 
   const canUpdate = panelCourse && panelFaculty && panelRoom && panelValidation.facultyOk && panelValidation.roomOk;
 
@@ -132,36 +146,49 @@ export default function Timetable() {
 
   // ─── CRUD ──────────────────────────────────────────────────
   const handleUpdateSlot = async () => {
-    if (!data || !canUpdate) return;
+    if (!data || !canUpdate || writing) return;
     const newAlloc = { day: panelDay, timeSlot: panelSlot, courseCode: panelCourse, room: panelRoom, professor: panelFaculty, section: panelSection };
+    const [startTime, endTime] = newAlloc.timeSlot.split('-');
+    const changes = { roomNumber: newAlloc.room, dayOfWeek: newAlloc.day, startTime, endTime };
     try {
+      let id;
       if (editingAlloc) {
-        await slotsService.update(editingAlloc.id, { roomNumber: newAlloc.room, dayOfWeek: newAlloc.day, startTime: newAlloc.timeSlot.split('-')[0], endTime: newAlloc.timeSlot.split('-')[1] });
-        setData((prev) => ({ ...prev, timetable: prev.timetable.map((a) => a.id === editingAlloc.id ? { ...a, ...newAlloc, id: editingAlloc.id } : a) }));
+        id = editingAlloc.id;
+        await dispatch(updateAD1Slot({ slotId: id, changes })).unwrap();
         toast.success('Slot updated successfully');
       } else {
         const faculty = data.faculty.find((f) => f.name === panelFaculty);
-        const res = await slotsService.create({ sectionId: `${panelCourse}-S1`, facultyId: faculty?.id || 'F2024001', roomNumber: newAlloc.room, dayOfWeek: newAlloc.day, startTime: newAlloc.timeSlot.split('-')[0], endTime: newAlloc.timeSlot.split('-')[1], syllabus: null });
-        setData((prev) => ({ ...prev, timetable: [...prev.timetable, { ...newAlloc, id: res?.slotId || Date.now() }] }));
+        const slot = await dispatch(createAD1Slot({
+          sectionId: `${panelCourse}-S1`,
+          facultyId: faculty?.id || 'F2024001',
+          ...changes,
+          syllabus: null,
+        })).unwrap();
+        id = slot.Slot_ID;
         toast.success('Slot allocated successfully');
       }
-    } catch (err) { toast.error('Failed to save slot: ' + (err.response?.data?.message || err.message)); }
+      setAllocationEdits((previous) => ({ ...previous, [id]: { ...newAlloc, id } }));
+    } catch (err) { toast.error('Failed to save slot: ' + err.message); }
     closeSidePanel();
   };
 
   const handleRemoveAllocation = () => {
-    if (!editingAlloc || !data) return;
+    if (!editingAlloc || !data || writing) return;
     setDeleteConfirmOpen(true);
   };
 
   const handleConfirmRemove = async () => {
     setDeleteConfirmOpen(false);
-    if (!editingAlloc || !data) return;
+    if (!editingAlloc || !data || writing) return;
     try {
-      await slotsService.delete(editingAlloc.id);
-      setData((prev) => ({ ...prev, timetable: prev.timetable.filter((a) => a.id !== editingAlloc.id) }));
+      await dispatch(deleteAD1Slot(editingAlloc.id)).unwrap();
+      setAllocationEdits((previous) => {
+        const next = { ...previous };
+        delete next[editingAlloc.id];
+        return next;
+      });
       toast.success('Slot removed');
-    } catch (err) { toast.error('Failed: ' + (err.response?.data?.message || err.message)); }
+    } catch (err) { toast.error('Failed: ' + err.message); }
     closeSidePanel();
   };
 
@@ -307,7 +334,7 @@ export default function Timetable() {
             <select className={shared.selectField} value={panelFaculty} onChange={(e) => setPanelFaculty(e.target.value)}>
               <option value="">Select Faculty</option>
               {data?.faculty.map((f) => {
-                const { facultyOk } = validateSlot({ day: panelDay, timeSlot: panelSlot, professor: f.name, room: '', editingAlloc }, data.timetable);
+                const { facultyOk } = validateSlot({ day: panelDay, timeSlot: panelSlot, professor: f.name, room: '', editingAlloc }, timetable);
                 return <option key={f.id} value={f.name}>{f.name} ({f.dept}){!facultyOk ? ' [Conflict]' : ''}</option>;
               })}
             </select>
@@ -316,7 +343,7 @@ export default function Timetable() {
             <select className={shared.selectField} value={panelRoom} onChange={(e) => setPanelRoom(e.target.value)}>
               <option value="">Select Room</option>
               {data?.rooms.map((r) => {
-                const { roomOk } = validateSlot({ day: panelDay, timeSlot: panelSlot, professor: '', room: r.name, editingAlloc }, data.timetable);
+                const { roomOk } = validateSlot({ day: panelDay, timeSlot: panelSlot, professor: '', room: r.name, editingAlloc }, timetable);
                 return <option key={r.name} value={r.name}>{r.name} (Cap: {r.capacity}){!roomOk ? ' [Booked]' : ''}</option>;
               })}
             </select>
