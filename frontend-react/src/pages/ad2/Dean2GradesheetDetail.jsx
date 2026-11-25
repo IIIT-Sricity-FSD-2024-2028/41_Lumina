@@ -1,105 +1,30 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import Dean2Layout from './Dean2Layout';
-import { coursesService } from '../../services/courses.service';
-import { registrationsService } from '../../services/registrations.service';
-import { usersService } from '../../services/users.service';
-import { announcementsService } from '../../services/announcements.service';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  fetchGradesheetDetail,
+  calculateGpa,
+  sendGpaToStudents,
+  saveGradesheetDraft,
+  submitGradesheetForReview,
+} from '../../store/ad2/ad2-actions';
 import toast from 'react-hot-toast';
 import styles from './Dean2.module.css';
 
 export default function Dean2GradesheetDetail() {
   const { courseId: paramCourseId, termId: paramTermId } = useParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const [loading, setLoading] = useState(true);
-  const [course, setCourse] = useState(null);
-  const [term, setTerm] = useState(paramTermId || 'Spring 2026');
-  const [enrollments, setEnrollments] = useState([]);
-  const [sheetStatus, setSheetStatus] = useState('REVIEW'); // 'REVIEW' | 'DRAFT' | 'SUBMITTED_FOR_REVIEW' | 'PUBLISHED'
-  const [gpaStats, setGpaStats] = useState(null);
-  const [actionLoading, setActionLoading] = useState(false);
+  // Redux state
+  const { loading, actionLoading, gradesheetDetail } = useSelector((state) => state.ad2);
+  const { course, term, enrollments, sheetStatus, gpaStats } = gradesheetDetail;
 
   useEffect(() => {
-    async function loadDetail() {
-      try {
-        setLoading(true);
-        const [cRes, rRes, uRes] = await Promise.allSettled([
-          coursesService.getAll(),
-          registrationsService.getAll(),
-          usersService.getAll(),
-        ]);
-
-        const allCourses = cRes.status === 'fulfilled' && Array.isArray(cRes.value) ? cRes.value : [];
-        const allRegistrations = rRes.status === 'fulfilled' && Array.isArray(rRes.value) ? rRes.value : [];
-        const allUsers = uRes.status === 'fulfilled' && Array.isArray(uRes.value) ? uRes.value : [];
-
-        // Match selected course or default to first
-        let targetCourse = allCourses.find((c) => (c.courseId || c.Course_ID) === paramCourseId);
-        if (!targetCourse && allCourses.length > 0) {
-          targetCourse = allCourses[0];
-        }
-        setCourse(targetCourse || { courseId: paramCourseId || 'CS201', courseName: 'Data Structures', deptId: 'CSE', credits: 4 });
-
-        const cid = targetCourse ? targetCourse.courseId || targetCourse.Course_ID : paramCourseId;
-        const currentTerm = paramTermId ? decodeURIComponent(paramTermId) : 'Spring 2026';
-        setTerm(currentTerm);
-
-        // Filter enrollments for this course
-        const matchedRegs = allRegistrations.filter(
-          (r) => (r.courseId || r.Course_ID) === cid
-        );
-
-        const usersMap = {};
-        allUsers.forEach((u) => {
-          usersMap[u.userId || u.User_ID] = u;
-        });
-
-        if (matchedRegs.length > 0) {
-          const list = matchedRegs.map((r) => {
-            const sid = r.studentId || r.Student_ID;
-            const u = usersMap[sid] || {};
-            const grade = r.finalGrade || r.Final_Grade || 'A';
-            const gradePoint =
-              grade === 'A+' || grade === 'A'
-                ? '10.0'
-                : grade === 'A-'
-                ? '9.0'
-                : grade === 'B+'
-                ? '9.0'
-                : grade === 'B'
-                ? '8.0'
-                : grade === 'C'
-                ? '7.0'
-                : grade === 'D'
-                ? '6.0'
-                : grade === 'F'
-                ? '0.0'
-                : '—';
-
-            return {
-              enrollmentId: r.enrollmentId || r.Enrollment_ID || r.id,
-              studentId: sid,
-              studentName: u.fullName || u.Full_Name || 'Enrolled Student',
-              credits: targetCourse?.credits || targetCourse?.Credits || 4,
-              grade: grade,
-              gradePoint: gradePoint,
-            };
-          });
-          setEnrollments(list);
-        } else {
-          setEnrollments([]);
-        }
-      } catch (err) {
-        console.error('Failed to load gradesheet detail:', err);
-        toast.error('Failed to load grade sheet detail');
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadDetail();
-  }, [paramCourseId, paramTermId]);
+    dispatch(fetchGradesheetDetail(paramCourseId, paramTermId))
+      .catch(() => toast.error('Failed to load grade sheet detail'));
+  }, [dispatch, paramCourseId, paramTermId]);
 
   const getGradeBadgeClass = (grade) => {
     switch (grade) {
@@ -127,144 +52,49 @@ export default function Dean2GradesheetDetail() {
   const deptId = course?.deptId || course?.Dept_ID || 'CSE';
   const credits = course?.credits || course?.Credits || 4;
 
-  // 1. Calculate GPA: Computes exact GPA point values, averages, and updates list
+  // 1. Calculate GPA
   const handleCalculateGpa = () => {
     if (enrollments.length === 0) {
       toast.error('No students enrolled to calculate GPA.');
       return;
     }
-
-    const gradePointMap = {
-      'A+': 10.0,
-      'A': 10.0,
-      'A-': 9.0,
-      'B+': 9.0,
-      'B': 8.0,
-      'B-': 7.0,
-      'C+': 7.0,
-      'C': 7.0,
-      'D': 6.0,
-      'F': 0.0,
-    };
-
-    let totalPoints = 0;
-    let counted = 0;
-    let minGp = 10.0;
-    let maxGp = 0.0;
-
-    const updated = enrollments.map((e) => {
-      const g = (e.grade || 'A').toUpperCase().trim();
-      const pt = gradePointMap[g] !== undefined ? gradePointMap[g] : 7.0;
-      totalPoints += pt;
-      counted += 1;
-      if (pt < minGp) minGp = pt;
-      if (pt > maxGp) maxGp = pt;
-      return {
-        ...e,
-        gradePoint: pt.toFixed(1),
-      };
-    });
-
-    const avg = counted > 0 ? (totalPoints / counted).toFixed(2) : '0.00';
-    setEnrollments(updated);
-    setGpaStats({
-      calculated: true,
-      avgGpa: avg,
-      highestGpa: maxGp.toFixed(1),
-      lowestGpa: minGp.toFixed(1),
-      studentCount: counted,
-    });
-
-    toast.success(`🧮 GPA Calculated! Class Average: ${avg} / 10.0 (${counted} students)`);
+    const stats = dispatch(calculateGpa());
+    if (stats) {
+      toast.success(`🧮 GPA Calculated! Class Average: ${stats.avgGpa} / 10.0 (${stats.studentCount} students)`);
+    }
   };
 
-  // 2. Send GPA to Students: Persists batch grades to backend & broadcasts announcement
+  // 2. Send GPA to Students
   const handleSendGpa = async () => {
     if (enrollments.length === 0) {
       toast.error('No student grades available to send.');
       return;
     }
-
     try {
-      setActionLoading(true);
-
-      // Persist grades if enrollment IDs available
-      const gradeBatch = enrollments
-        .filter((e) => e.enrollmentId)
-        .map((e) => ({
-          enrollmentId: e.enrollmentId,
-          finalGrade: e.grade,
-        }));
-
-      if (gradeBatch.length > 0) {
-        await registrationsService.batchUpdateGrades(gradeBatch).catch((err) => {
-          console.warn('Batch grades persist notice:', err);
-        });
-      }
-
-      // Publish announcement to students
-      await announcementsService.create({
-        title: `Official Grades & GPA Released: ${courseCode}`,
-        content: `Official semester grades and GPA for ${courseCode} (${courseName}) have been processed and published to all student profiles by Assistant Dean 2.`,
-        deptId: deptId,
-        courseId: courseCode,
-      }).catch((err) => {
-        console.warn('Announcement dispatch notice:', err);
-      });
-
-      setSheetStatus('PUBLISHED');
+      await dispatch(sendGpaToStudents());
       toast.success(`▷ GPA & grades officially published to ${enrollments.length} students!`);
     } catch (err) {
-      console.error('Failed to send GPA to students:', err);
       toast.error('Failed to send GPA to students');
-    } finally {
-      setActionLoading(false);
     }
   };
 
   // 3. Save Draft
   const handleSaveDraft = async () => {
     try {
-      setActionLoading(true);
-      const gradeBatch = enrollments
-        .filter((e) => e.enrollmentId)
-        .map((e) => ({
-          enrollmentId: e.enrollmentId,
-          finalGrade: e.grade,
-        }));
-
-      if (gradeBatch.length > 0) {
-        await registrationsService.batchUpdateGrades(gradeBatch).catch(() => {});
-      }
-
-      setSheetStatus('DRAFT');
-      toast.success(`💾 Grade sheet draft for ${courseCode} saved.`);
+      const code = await dispatch(saveGradesheetDraft());
+      toast.success(`💾 Grade sheet draft for ${code} saved.`);
     } catch (err) {
-      console.error('Failed to save draft:', err);
       toast.error('Failed to save draft');
-    } finally {
-      setActionLoading(false);
     }
   };
 
   // 4. Submit for Review
   const handleSubmitReview = async () => {
     try {
-      setActionLoading(true);
-      await announcementsService.create({
-        title: `Grade Sheet Submitted for Dean Approval: ${courseCode}`,
-        content: `Assistant Dean 2 has submitted the grade sheet and calculated GPA records for ${courseCode} (${courseName}) for final Dean sign-off.`,
-        deptId: deptId,
-        courseId: courseCode,
-      }).catch(() => {});
-
-      setSheetStatus('SUBMITTED_FOR_REVIEW');
-      toast.success(`📨 Grade sheet for ${courseCode} submitted for Dean review!`);
+      const code = await dispatch(submitGradesheetForReview());
+      toast.success(`📨 Grade sheet for ${code} submitted for Dean review!`);
     } catch (err) {
-      console.error('Failed to submit for review:', err);
       toast.error('Failed to submit for review');
-    } finally {
-      setActionLoading(false);
     }
   };
 

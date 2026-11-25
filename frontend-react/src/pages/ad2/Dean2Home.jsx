@@ -1,12 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import Dean2Layout from './Dean2Layout';
-import { policiesService } from '../../services/policies.service';
-import { overridesService } from '../../services/overrides.service';
-import { usersService } from '../../services/users.service';
-import { coursesService } from '../../services/courses.service';
-import { registrationsService } from '../../services/registrations.service';
-import { sectionsService } from '../../services/sections.service';
+import { fetchDean2HomeDashboard } from '../../store/ad2/ad2-actions';
 import styles from './Dean2.module.css';
 
 function computeTermLabel(academicYear, term) {
@@ -28,141 +24,22 @@ function formatDateOnly(dtStr) {
 
 export default function Dean2Home() {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [policies, setPolicies] = useState({});
-  const [activePhase, setActivePhase] = useState(null);
-  const [pendingOverridesCount, setPendingOverridesCount] = useState(0);
-  const [metrics, setMetrics] = useState({
-    totalEnrolled: 0,
-    yetToEnroll: 0,
-    targetStudents: 0,
-    enrollmentProgress: 0,
-    totalCourses: 0,
-  });
-  const [ugBreakdown, setUgBreakdown] = useState([]);
+  const dispatch = useDispatch();
 
+  // ── Redux state ──────────────────────────────────────────────────
+  const {
+    loading,
+    policies,
+    activePhase,
+    pendingOverridesCount,
+    metrics,
+    ugBreakdown,
+  } = useSelector((state) => state.ad2);
+
+  // ── Fetch on mount ───────────────────────────────────────────────
   useEffect(() => {
-    async function loadDashboardData() {
-      try {
-        setLoading(true);
-        const [
-          polData,
-          phasesData,
-          overridesData,
-          usersData,
-          coursesData,
-          regsData,
-          sectionsData,
-        ] = await Promise.allSettled([
-          policiesService.getPolicies(),
-          policiesService.getPhases(),
-          overridesService.getAll(),
-          usersService.getAll(),
-          coursesService.getAll(),
-          registrationsService.getAll(),
-          sectionsService.getAll(),
-        ]);
-
-        if (polData.status === 'fulfilled' && polData.value?.settings) {
-          setPolicies(polData.value.settings);
-        }
-
-        if (phasesData.status === 'fulfilled' && Array.isArray(phasesData.value)) {
-          const active = phasesData.value.find((p) => p.status === 'Active');
-          setActivePhase(active ? active.name : null);
-        }
-
-        if (overridesData.status === 'fulfilled' && Array.isArray(overridesData.value)) {
-          const pending = overridesData.value.filter(
-            (o) => (o.approvalStatus || o.Approval_Status) === 'Pending'
-          ).length;
-          setPendingOverridesCount(pending);
-        }
-
-        const users = usersData.status === 'fulfilled' && Array.isArray(usersData.value) ? usersData.value : [];
-        const courses = coursesData.status === 'fulfilled' && Array.isArray(coursesData.value) ? coursesData.value : [];
-        const registrations = regsData.status === 'fulfilled' && Array.isArray(regsData.value) ? regsData.value : [];
-        const sections = sectionsData.status === 'fulfilled' && Array.isArray(sectionsData.value) ? sectionsData.value : [];
-
-        const students = users.filter((u) => (u.role || u.Role) === 'Student');
-        const enrolledStudentIds = new Set(
-          registrations
-            .filter((r) => (r.status || r.Status || 'Enrolled') === 'Enrolled')
-            .map((r) => r.studentId || r.Student_ID)
-        );
-        const enrolledCount = enrolledStudentIds.size;
-        const totalStudentCount = students.length || enrolledCount || 0;
-        const yetToEnrollCount = Math.max(0, totalStudentCount - enrolledCount);
-        const progressPct = totalStudentCount > 0 ? Math.round((enrolledCount / totalStudentCount) * 100) : 0;
-
-        setMetrics({
-          totalEnrolled: enrolledCount,
-          yetToEnroll: yetToEnrollCount,
-          targetStudents: totalStudentCount,
-          enrollmentProgress: progressPct,
-          totalCourses: courses.length,
-        });
-
-        // Build capacity map by courseId
-        const capacityByCourse = {};
-        sections.forEach((s) => {
-          const cid = s.courseId || s.Course_ID;
-          if (cid) {
-            capacityByCourse[cid] = (capacityByCourse[cid] || 0) + (Number(s.capacity || s.Capacity) || 40);
-          }
-        });
-
-        // Group courses by UG Level and Department
-        const groups = {};
-        courses.forEach((c) => {
-          const cid = c.courseId || c.Course_ID || '';
-          const dept = c.deptId || c.Dept_ID || 'General';
-          const match = cid.match(/\d+/);
-          const num = match ? parseInt(match[0], 10) : 100;
-          const ugLevel = num >= 400 ? 'UG4' : num >= 300 ? 'UG3' : num >= 200 ? 'UG2' : 'UG1';
-          const key = `${ugLevel}_${dept}`;
-
-          if (!groups[key]) {
-            groups[key] = {
-              ugLevel,
-              dept,
-              courseIds: [],
-              seats: 0,
-            };
-          }
-          groups[key].courseIds.push(cid);
-          groups[key].seats += capacityByCourse[cid] || 40;
-        });
-
-        const breakdown = Object.values(groups).map((g) => {
-          const enrolledInGroup = registrations.filter(
-            (r) => g.courseIds.includes(r.courseId || r.Course_ID) && (r.status || r.Status || 'Enrolled') === 'Enrolled'
-          ).length;
-          const fillRate = g.seats > 0 ? Math.min(100, Math.round((enrolledInGroup / g.seats) * 100)) : 0;
-          const status = fillRate >= 75 ? 'Stable' : fillRate >= 40 ? 'Active' : 'On Track';
-
-          return {
-            ugLevel: g.ugLevel,
-            dept: g.dept,
-            coursesCount: g.courseIds.length,
-            totalSeats: g.seats,
-            enrolled: enrolledInGroup,
-            fillRate,
-            status,
-          };
-        });
-
-        breakdown.sort((a, b) => a.ugLevel.localeCompare(b.ugLevel) || a.dept.localeCompare(b.dept));
-        setUgBreakdown(breakdown);
-      } catch (err) {
-        console.error('Error loading Dean2 dashboard data:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadDashboardData();
-  }, []);
+    dispatch(fetchDean2HomeDashboard());
+  }, [dispatch]);
 
   const academicTermLabel = computeTermLabel(policies.academicYear, policies.term);
   const termStatusText = policies.termLocked ? 'Locked' : 'Active';

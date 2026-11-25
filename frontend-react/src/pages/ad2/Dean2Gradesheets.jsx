@@ -1,42 +1,23 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import Dean2Layout from './Dean2Layout';
-import { coursesService } from '../../services/courses.service';
-import { registrationsService } from '../../services/registrations.service';
+import { fetchGradesheets } from '../../store/ad2/ad2-actions';
 import toast from 'react-hot-toast';
 import styles from './Dean2.module.css';
 
 export default function Dean2Gradesheets() {
-  const [loading, setLoading] = useState(true);
-  const [courses, setCourses] = useState([]);
-  const [registrations, setRegistrations] = useState([]);
+  const dispatch = useDispatch();
   const [search, setSearch] = useState('');
 
+  // ── Redux state ──────────────────────────────────────────────────
+  const { loading, gradesheetCourses: courses, gradesheetRegistrations: registrations } =
+    useSelector((state) => state.ad2);
+
+  // ── Fetch on mount ───────────────────────────────────────────────
   useEffect(() => {
-    async function loadData() {
-      try {
-        setLoading(true);
-        const [cRes, rRes] = await Promise.allSettled([
-          coursesService.getAll(),
-          registrationsService.getAll(),
-        ]);
-
-        if (cRes.status === 'fulfilled' && Array.isArray(cRes.value)) {
-          setCourses(cRes.value);
-        }
-        if (rRes.status === 'fulfilled' && Array.isArray(rRes.value)) {
-          setRegistrations(rRes.value);
-        }
-      } catch (err) {
-        console.error('Failed to load gradesheets data:', err);
-        toast.error('Failed to load grade sheets');
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadData();
-  }, []);
+    dispatch(fetchGradesheets()).catch(() => toast.error('Failed to load grade sheets'));
+  }, [dispatch]);
 
   const courseRows = useMemo(() => {
     const list = [];
