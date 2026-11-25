@@ -74,7 +74,7 @@ export default function Dean2GradesheetDetail() {
       await dispatch(sendGpaToStudents());
       toast.success(`▷ GPA & grades officially published to ${enrollments.length} students!`);
     } catch (err) {
-      toast.error('Failed to send GPA to students');
+      toast.error(err?.response?.data?.message || 'Failed to send GPA to students');
     }
   };
 
@@ -84,7 +84,7 @@ export default function Dean2GradesheetDetail() {
       const code = await dispatch(saveGradesheetDraft());
       toast.success(`💾 Grade sheet draft for ${code} saved.`);
     } catch (err) {
-      toast.error('Failed to save draft');
+      toast.error(err?.response?.data?.message || 'Failed to save draft');
     }
   };
 
@@ -94,7 +94,7 @@ export default function Dean2GradesheetDetail() {
       const code = await dispatch(submitGradesheetForReview());
       toast.success(`📨 Grade sheet for ${code} submitted for Dean review!`);
     } catch (err) {
-      toast.error('Failed to submit for review');
+      toast.error(err?.response?.data?.message || 'Failed to submit for review');
     }
   };
 

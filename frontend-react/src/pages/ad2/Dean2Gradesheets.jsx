@@ -30,7 +30,7 @@ export default function Dean2Gradesheets() {
 
       // Even if no registrations in seed DB, show courses with fallback mock data or active records
       const term = courseRegs.length > 0 ? courseRegs[0].termId || courseRegs[0].Term_ID || 'Spring 2026' : 'Spring 2026';
-      const withGrades = courseRegs.filter((r) => (r.finalGrade || r.Final_Grade) !== null).length;
+      const withGrades = courseRegs.filter((r) => Boolean(r.finalGrade || r.Final_Grade)).length;
 
       list.push({
         courseId: cid,

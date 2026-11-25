@@ -65,7 +65,7 @@ export default function Dean2Enrollment() {
       const termLabel = computeTermLabel(newYear, newTerm);
       await dispatch(updateEnrollmentTerm(newYear, newTerm, termLabel));
       toast.success(`Academic Term updated to ${termLabel}`);
-    } catch (err) {
+    } catch {
       toast.error('Failed to update academic term');
     }
   };
@@ -74,7 +74,7 @@ export default function Dean2Enrollment() {
     try {
       await dispatch(updateEnrollmentDates(newStart, newEnd));
       toast.success('Enrollment window dates saved');
-    } catch (err) {
+    } catch {
       toast.error('Failed to update window dates');
     }
   };

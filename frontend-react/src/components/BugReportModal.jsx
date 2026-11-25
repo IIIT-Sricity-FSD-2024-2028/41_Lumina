@@ -26,6 +26,7 @@ export default function BugReportModal({ isOpen, onClose }) {
 
     try {
       await adminService.createDocket({
+        submittedBy: email,
         submitterEmail: email,
         category,
         priority,

@@ -208,8 +208,7 @@ export const saveAD1Assignments = ({ assignments, courseId, termId, sectionCount
             sectionName: `S${i}`,
             courseId,
             termId,
-            capacity: 100,
-          }).catch(() => null);
+          });
           if (section) sections.push(section);
         }
       }

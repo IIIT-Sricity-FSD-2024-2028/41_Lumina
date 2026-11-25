@@ -13,7 +13,7 @@ export default function Dean2Overrides() {
   const { loading, overridesList, actionLoading } = useSelector((state) => state.ad2);
 
   // Local UI-only state
-  const [activeRequest, setActiveRequest] = useState(null);
+  const [selectedRequestId, setSelectedRequestId] = useState(null);
   const [search, setSearch] = useState('');
   const [deptFilter, setDeptFilter] = useState('All Departments');
   const [statusFilter, setStatusFilter] = useState('All Status');
@@ -22,12 +22,14 @@ export default function Dean2Overrides() {
     dispatch(fetchOverrides()).catch(() => toast.error('Failed to load override requests'));
   }, [dispatch]);
 
-  // Auto-select first after data loads
-  useEffect(() => {
-    if (overridesList.length > 0 && !activeRequest) {
-      setActiveRequest(overridesList[0]);
+  const activeRequest = useMemo(() => {
+    if (overridesList.length === 0) return null;
+    if (selectedRequestId !== null) {
+      const match = overridesList.find((r) => r.id === selectedRequestId);
+      if (match) return match;
     }
-  }, [overridesList]);
+    return overridesList[0];
+  }, [overridesList, selectedRequestId]);
 
   // Filtered requests
   const filteredRequests = useMemo(() => {
@@ -95,9 +97,6 @@ export default function Dean2Overrides() {
     try {
       await dispatch(updateOverrideStatus(id, newStatus));
       toast.success(`Request OR-${id} ${newStatus.toLowerCase()} successfully`);
-      if (activeRequest && activeRequest.id === id) {
-        setActiveRequest((prev) => ({ ...prev, status: newStatus }));
-      }
     } catch (err) {
       toast.error(err.response?.data?.message || `Failed to update status to ${newStatus}`);
     }
@@ -214,7 +213,7 @@ export default function Dean2Overrides() {
                         <tr
                           key={req.id}
                           style={isSelected ? { background: '#F8FAFF' } : {}}
-                          onClick={() => setActiveRequest(req)}
+                          onClick={() => setSelectedRequestId(req.id)}
                         >
                           <td>
                             <div style={{ fontWeight: 600 }}>{req.name}</div>
@@ -238,7 +237,7 @@ export default function Dean2Overrides() {
                               className={`${styles.btn} ${btnClass} ${styles.btnSm}`}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setActiveRequest(req);
+                                setSelectedRequestId(req.id);
                               }}
                             >
                               {btnLabel}

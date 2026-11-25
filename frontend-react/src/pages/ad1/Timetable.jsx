@@ -86,7 +86,9 @@ export default function Timetable() {
   const filteredAllocations = useMemo(() => {
     if (!data) return [];
     const semester = getSemesterFromTerm(filterTerm);
+    const selectedTermId = filterTerm.replace(' ', '').toUpperCase();
     return timetable.filter((alloc) => {
+      if (alloc.termId && alloc.termId !== selectedTermId) return false;
       const course = data.courses.find((c) => c.code === alloc.courseCode);
       if (!course || course.ugYear !== filterUG || course.semester !== semester || course.type !== filterType) return false;
       if (filterType === 'Program Core' && course.dept !== filterDept) return false;
@@ -144,9 +146,20 @@ export default function Timetable() {
   // ─── CRUD ──────────────────────────────────────────────────
   const handleUpdateSlot = async () => {
     if (!data || !canUpdate || writing) return;
-    const newAlloc = { day: panelDay, timeSlot: panelSlot, courseCode: panelCourse, room: panelRoom, professor: panelFaculty, section: panelSection };
+    const secNum = panelSection.replace(/\D/g, '') || '1';
+    const sectionId = `${panelCourse}-S${secNum}`;
+    const faculty = data.faculty.find((f) => f.name === panelFaculty);
+    const termId = filterTerm.replace(' ', '').toUpperCase();
+    const newAlloc = { day: panelDay, timeSlot: panelSlot, courseCode: panelCourse, room: panelRoom, professor: panelFaculty, section: panelSection, termId };
     const [startTime, endTime] = newAlloc.timeSlot.split('-');
-    const changes = { roomNumber: newAlloc.room, dayOfWeek: newAlloc.day, startTime, endTime };
+    const changes = {
+      sectionId,
+      ...(faculty?.id ? { facultyId: faculty.id } : {}),
+      roomNumber: newAlloc.room,
+      dayOfWeek: newAlloc.day,
+      startTime,
+      endTime,
+    };
     try {
       let id;
       if (editingAlloc) {
@@ -154,11 +167,13 @@ export default function Timetable() {
         await dispatch(updateAD1Slot({ slotId: id, changes }));
         toast.success('Slot updated successfully');
       } else {
-        const faculty = data.faculty.find((f) => f.name === panelFaculty);
         const slot = await dispatch(createAD1Slot({
-          sectionId: `${panelCourse}-S1`,
+          sectionId,
           facultyId: faculty?.id || 'F2024001',
-          ...changes,
+          roomNumber: newAlloc.room,
+          dayOfWeek: newAlloc.day,
+          startTime,
+          endTime,
           syllabus: null,
         }));
         id = slot.Slot_ID;

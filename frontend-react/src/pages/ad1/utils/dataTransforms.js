@@ -289,24 +289,22 @@ export function buildStudentRecords(rawRegistrations, rawUsers, rawSections, app
 
 export function buildTimetable(rawSlots, rawSections, rawUsers) {
   const facultyUsers = rawUsers.filter((u) => u.Role === 'Faculty');
-  return rawSlots
-    .filter((slot) => {
-      const section = rawSections.find((row) => row.Section_ID === slot.Section_ID);
-      return section?.Term_ID === 'SPRING2026';
-    })
-    .map((slot) => {
-      const section = rawSections.find((row) => row.Section_ID === slot.Section_ID);
-      const faculty = facultyUsers.find((row) => row.User_ID === slot.Faculty_ID);
-      return {
-        id: slot.Slot_ID,
-        day: slot.Day_of_Week,
-        timeSlot: `${slot.Start_Time}-${slot.End_Time}`,
-        courseCode: section?.Course_ID || '',
-        room: slot.Room_Number,
-        professor: faculty?.Full_Name || '',
-        section: section ? section.Section_Name.replace(/^S/, '') : '1',
-      };
-    });
+  return rawSlots.map((slot) => {
+    const section = rawSections.find((row) => row.Section_ID === slot.Section_ID);
+    const faculty = facultyUsers.find((row) => row.User_ID === slot.Faculty_ID);
+    const fallbackCode = String(slot.Section_ID || '').split('-')[0] || '';
+    const fallbackSecMatch = String(slot.Section_ID || '').match(/S(\d+)$/i);
+    return {
+      id: slot.Slot_ID,
+      day: slot.Day_of_Week,
+      timeSlot: `${slot.Start_Time}-${slot.End_Time}`,
+      courseCode: section?.Course_ID || fallbackCode,
+      termId: section?.Term_ID || '',
+      room: slot.Room_Number,
+      professor: faculty?.Full_Name || '',
+      section: section ? section.Section_Name.replace(/^S/, '') : (fallbackSecMatch ? fallbackSecMatch[1] : '1'),
+    };
+  });
 }
 
 export function buildRooms(rawSlots) {

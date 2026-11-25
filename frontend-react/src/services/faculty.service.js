@@ -433,7 +433,7 @@ export const facultyService = {
         return res.map((a) => ({
           id: a.announcementId || a.id,
           courseId: a.courseId || 'all',
-          courseLabel: a.courseId ? `${a.courseId} - COURSE` : 'ALL COURSES',
+          courseLabel: !a.courseId || a.courseId === 'all' ? 'ALL COURSES' : `${a.courseId} - COURSE`,
           title: a.title,
           message: a.message || a.content,
           ago: 'Recently',
@@ -476,7 +476,7 @@ export const facultyService = {
       const res = await announcementsService.create({
         title: data.title,
         message: data.message,
-        courseId: data.courseId === 'all' ? 'PC402' : data.courseId,
+        courseId: data.courseId || 'all',
       }, file);
       backendSuccess = true;
       if (res && (res.announcementId || res.id)) {
@@ -530,7 +530,7 @@ export const facultyService = {
         await announcementsService.update(numId, {
           title: data.title,
           message: data.message,
-          courseId: data.courseId === 'all' ? 'PC402' : data.courseId,
+          courseId: data.courseId || 'all',
         });
         backendSuccess = true;
       } catch (e) {

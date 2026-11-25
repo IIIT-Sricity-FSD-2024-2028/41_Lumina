@@ -520,7 +520,7 @@ export default function StudentDashboard() {
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                           <span className="badge" style={{ background: '#e0e7ff', color: '#4338ca', fontWeight: 600 }}>
-                            {ann.courseId || 'Campus Alert'}
+                            {!ann.courseId || ann.courseId === 'all' ? 'All Courses' : ann.courseId}
                           </span>
                           <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
                             {ann.createdAt ? new Date(ann.createdAt).toLocaleDateString() : 'Recent'}

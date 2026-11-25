@@ -3,7 +3,6 @@ import Dean2Layout from './Dean2Layout';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   fetchPolicies,
-  sendPolicyUpdate as dispatchPolicyUpdate,
   lockTerm,
   unlockTerm,
   validatePolicies,
@@ -44,31 +43,28 @@ export default function Dean2Policies() {
     dispatch(ad2Actions.setPolicySettings({ [field]: value, status: 'Pending' }));
   };
 
-  const sendPolicyUpdateLocal = async (payload, successMsg) => {
-    try {
-      await dispatch(dispatchPolicyUpdate(payload, successMsg));
-      if (successMsg) toast.success(successMsg);
-      return true;
-    } catch (err) {
-      toast.error(err.message || 'Failed to update policy');
-      return false;
-    }
-  };
-
   // Lock / Unlock Term
   const handleLockTerm = async () => {
     if (!settings.academicYear) {
       toast.error('Please select an Academic Year before locking the term.');
       return;
     }
-    const label = computeTermLabel(settings.academicYear, settings.term);
-    await dispatch(lockTerm(settings.academicYear, settings.term, label));
-    toast.success('Academic Term locked successfully');
+    try {
+      const label = computeTermLabel(settings.academicYear, settings.term);
+      await dispatch(lockTerm(settings.academicYear, settings.term, label));
+      toast.success('Academic Term locked successfully');
+    } catch (err) {
+      toast.error(err.message || 'Failed to lock Academic Term');
+    }
   };
 
   const handleUnlockTerm = async () => {
-    await dispatch(unlockTerm());
-    toast.success('Academic Term unlocked');
+    try {
+      await dispatch(unlockTerm());
+      toast.success('Academic Term unlocked');
+    } catch (err) {
+      toast.error(err.message || 'Failed to unlock Academic Term');
+    }
   };
 
   // Validate Policies
@@ -120,19 +116,31 @@ export default function Dean2Policies() {
       logMessage: 'Policies Validated',
     };
 
-    await dispatch(validatePolicies(payload));
-    toast.success('Policies successfully validated and saved!');
+    try {
+      await dispatch(validatePolicies(payload));
+      toast.success('Policies successfully validated and saved!');
+    } catch (err) {
+      toast.error(err.message || 'Failed to validate policies');
+    }
   };
 
   // Lock / Unlock Policies
   const handleLockPolicies = async () => {
-    await dispatch(lockPolicies(settings));
-    toast.success('Policies locked against further modifications.');
+    try {
+      await dispatch(lockPolicies(settings));
+      toast.success('Policies locked against further modifications.');
+    } catch (err) {
+      toast.error(err.message || 'Failed to lock policies');
+    }
   };
 
   const handleUnlockPolicies = async () => {
-    await dispatch(unlockPolicies());
-    toast.success('Policies unlocked for editing.');
+    try {
+      await dispatch(unlockPolicies());
+      toast.success('Policies unlocked for editing.');
+    } catch (err) {
+      toast.error(err.message || 'Failed to unlock policies');
+    }
   };
 
   // Banner status styling

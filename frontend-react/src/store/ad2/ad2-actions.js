@@ -386,7 +386,7 @@ export const fetchGradesheets = () => async (dispatch) => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const GRADE_POINT_MAP = {
-  'A+': 10.0, A: 10.0, 'A-': 9.0, 'B+': 9.0, B: 8.0,
+  'O': 10.0, 'S': 10.0, 'A+': 10.0, A: 10.0, 'A-': 9.0, 'B+': 9.0, B: 8.0,
   'B-': 7.0, 'C+': 7.0, C: 7.0, D: 6.0, F: 0.0,
 };
 
@@ -396,6 +396,8 @@ const GRADE_POINT_MAP = {
 export const fetchGradesheetDetail = (paramCourseId, paramTermId) => async (dispatch) => {
   dispatch(ad2Actions.setLoading(true));
   dispatch(ad2Actions.setError(null));
+  dispatch(ad2Actions.setGradesheetDetailGpaStats(null));
+  dispatch(ad2Actions.setGradesheetDetailStatus('REVIEW'));
   try {
     const [cRes, rRes, uRes] = await Promise.allSettled([
       coursesService.getAll(),
@@ -510,25 +512,19 @@ export const sendGpaToStudents = () => async (dispatch, getState) => {
     const { enrollments, course } = getState().ad2.gradesheetDetail;
     const courseCode = course?.courseId || course?.Course_ID || 'CS201';
     const courseName = course?.courseName || course?.Course_Name || 'Course';
-    const deptId = course?.deptId || course?.Dept_ID || 'General';
 
     const gradeBatch = enrollments
       .filter((e) => e.enrollmentId)
-      .map((e) => ({ enrollmentId: e.enrollmentId, finalGrade: e.grade }));
+      .map((e) => ({ enrollmentId: Number(e.enrollmentId), finalGrade: e.grade }));
 
     if (gradeBatch.length > 0) {
-      await registrationsService.batchUpdateGrades(gradeBatch).catch((err) => {
-        console.warn('Batch grades persist notice:', err);
-      });
+      await registrationsService.batchUpdateGrades(gradeBatch);
     }
 
     await announcementsService.create({
       title: `Official Grades & GPA Released: ${courseCode}`,
-      content: `Official semester grades and GPA for ${courseCode} (${courseName}) have been processed and published to all student profiles by Assistant Dean 2.`,
-      deptId,
+      message: `Official semester grades and GPA for ${courseCode} (${courseName}) have been processed and published to all student profiles by Assistant Dean 2.`,
       courseId: courseCode,
-    }).catch((err) => {
-      console.warn('Announcement dispatch notice:', err);
     });
 
     dispatch(ad2Actions.setGradesheetDetailStatus('PUBLISHED'));
@@ -551,10 +547,10 @@ export const saveGradesheetDraft = () => async (dispatch, getState) => {
 
     const gradeBatch = enrollments
       .filter((e) => e.enrollmentId)
-      .map((e) => ({ enrollmentId: e.enrollmentId, finalGrade: e.grade }));
+      .map((e) => ({ enrollmentId: Number(e.enrollmentId), finalGrade: e.grade }));
 
     if (gradeBatch.length > 0) {
-      await registrationsService.batchUpdateGrades(gradeBatch).catch(() => {});
+      await registrationsService.batchUpdateGrades(gradeBatch);
     }
 
     dispatch(ad2Actions.setGradesheetDetailStatus('DRAFT'));
@@ -576,14 +572,12 @@ export const submitGradesheetForReview = () => async (dispatch, getState) => {
     const { course } = getState().ad2.gradesheetDetail;
     const courseCode = course?.courseId || course?.Course_ID || 'CS201';
     const courseName = course?.courseName || course?.Course_Name || 'Course';
-    const deptId = course?.deptId || course?.Dept_ID || 'General';
 
     await announcementsService.create({
       title: `Grade Sheet Submitted for Dean Approval: ${courseCode}`,
-      content: `Assistant Dean 2 has submitted the grade sheet and calculated GPA records for ${courseCode} (${courseName}) for final Dean sign-off.`,
-      deptId,
+      message: `Assistant Dean 2 has submitted the grade sheet and calculated GPA records for ${courseCode} (${courseName}) for final Dean sign-off.`,
       courseId: courseCode,
-    }).catch(() => {});
+    });
 
     dispatch(ad2Actions.setGradesheetDetailStatus('SUBMITTED_FOR_REVIEW'));
     return courseCode;
@@ -724,11 +718,24 @@ export const validatePolicies = (settings) => async (dispatch) => {
  * Thunk: Lock all policies
  */
 export const lockPolicies = (settings) => async (dispatch) => {
+  const payload = {
+    minCredits: Number(settings?.minCredits ?? 12),
+    maxCredits: Number(settings?.maxCredits ?? 21),
+    maxCourses: Number(settings?.maxCourses ?? 6),
+    minGpa: Number(settings?.minGpa ?? 5.0),
+    enforcePrereq: Boolean(settings?.enforcePrereq),
+    allowConditional: Boolean(settings?.allowConditional),
+    allowAdvisorOverride: Boolean(settings?.allowAdvisorOverride),
+    financialClearance: Boolean(settings?.financialClearance),
+    advisorApproval: Boolean(settings?.advisorApproval),
+    academicYear: settings?.academicYear,
+    term: settings?.term,
+    isLocked: true,
+    status: settings?.status === 'Pending' ? 'Pending' : 'Validated',
+    logMessage: 'Policies Locked',
+  };
   return dispatch(
-    sendPolicyUpdate(
-      { ...settings, isLocked: true, status: 'Locked', logMessage: 'Policies Locked' },
-      'Policies locked'
-    )
+    sendPolicyUpdate(payload, 'Policies locked')
   );
 };
 

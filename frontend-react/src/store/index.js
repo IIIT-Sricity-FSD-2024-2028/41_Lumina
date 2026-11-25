@@ -1,12 +1,12 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authSlice from './auth/auth-slice';
-import studentSlice from './student/student-slice';
-import facultySlice from './faculty/faculty-slice';
-import adminSlice from './admin/admin-slice';
-import deanSlice from './dean/dean-slice';
+import studentSlice, { studentActions } from './student/student-slice';
+import facultySlice, { facultyActions } from './faculty/faculty-slice';
+import adminSlice, { adminActions } from './admin/admin-slice';
+import deanSlice, { deanActions } from './dean/dean-slice';
 import ad1PlanningSlice, { ad1Actions } from './ad1/ad1-slice';
-import ad2Slice from './ad2/ad2-slice';
-import superuserSlice from './superuser/superuser-slice';
+import ad2Slice, { ad2Actions } from './ad2/ad2-slice';
+import superuserSlice, { superuserActions } from './superuser/superuser-slice';
 
 const store = configureStore({
   reducer: {
@@ -21,12 +21,18 @@ const store = configureStore({
   },
 });
 
-let ad1Session = store.getState().auth.user;
+let currentSessionUser = store.getState().auth.user;
 store.subscribe(() => {
   const session = store.getState().auth.user;
-  if (session === ad1Session) return;
-  ad1Session = session;
+  if (session === currentSessionUser) return;
+  currentSessionUser = session;
   store.dispatch(ad1Actions.clearPlanning());
+  store.dispatch(studentActions.resetStudentState());
+  store.dispatch(facultyActions.resetFacultyState());
+  store.dispatch(adminActions.resetAdminState());
+  store.dispatch(deanActions.resetDeanState());
+  store.dispatch(ad2Actions.resetAd2State());
+  store.dispatch(superuserActions.resetSuperUserState());
 });
 
 export default store;

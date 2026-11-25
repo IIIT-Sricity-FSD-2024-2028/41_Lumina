@@ -81,8 +81,7 @@ export default function TenantProvisioningTab({
       if (onRefresh) onRefresh();
     } catch (err) {
       console.error(err);
-      toast.success(`✔ Renewal request acknowledged for ${ssoDomain} (${ssoIdp}).`);
-      closeSsoModal();
+      toast.error(err?.response?.data?.message || 'Failed to submit SAML certificate renewal request');
     }
   }
 
