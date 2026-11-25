@@ -3,18 +3,15 @@
  * Refactored to use shared AD1PageLayout, StatCard, and DataTable.
  */
 import { useState, useMemo } from 'react';
-import { useSelector } from 'react-redux';
 import AD1PageLayout from './components/AD1PageLayout';
 import StatCard, { StatCardsRow } from './components/StatCard';
 import DataTable from './components/DataTable';
 import useLoadAD1Data from './hooks/useLoadAD1Data';
-import { selectAD1Data } from '../../store/ad1/ad1-slice';
 import { ALL_SLOT_KEYS } from './utils/dataTransforms';
 import styles from './AD1Dashboard.module.css';
 
 export default function AD1Dashboard() {
-  const { loading, error } = useLoadAD1Data();
-  const data = useSelector(selectAD1Data);
+  const { data, loading, error } = useLoadAD1Data();
   const [selectedDay, setSelectedDay] = useState('Monday');
   const [selectedRoomIdx, setSelectedRoomIdx] = useState(0);
 

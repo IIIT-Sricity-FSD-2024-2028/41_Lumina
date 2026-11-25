@@ -3,13 +3,12 @@
  * Refactored to use shared AD1PageLayout and shared CSS tokens.
  */
 import { useState, useMemo, useCallback } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import toast from 'react-hot-toast';
 import AD1PageLayout from './components/AD1PageLayout';
 import Modal from './components/Modal';
 import useLoadAD1Data from './hooks/useLoadAD1Data';
 import { createAD1Slot, deleteAD1Slot, updateAD1Slot } from '../../store/ad1/ad1-actions';
-import { selectAD1Data, selectAD1Writing } from '../../store/ad1/ad1-slice';
 import {
   TIME_SLOTS, DAYS, getSemesterFromTerm, normalizeSectionValue, getCardColorClass,
 } from './utils/dataTransforms';
@@ -19,9 +18,7 @@ import styles from './Timetable.module.css';
 
 export default function Timetable() {
   const dispatch = useDispatch();
-  const { loading, error } = useLoadAD1Data();
-  const data = useSelector(selectAD1Data);
-  const writing = useSelector(selectAD1Writing);
+  const { data, loading, error, writing } = useLoadAD1Data();
   const [allocationEdits, setAllocationEdits] = useState({});
 
   const timetable = useMemo(() => {
@@ -154,7 +151,7 @@ export default function Timetable() {
       let id;
       if (editingAlloc) {
         id = editingAlloc.id;
-        await dispatch(updateAD1Slot({ slotId: id, changes })).unwrap();
+        await dispatch(updateAD1Slot({ slotId: id, changes }));
         toast.success('Slot updated successfully');
       } else {
         const faculty = data.faculty.find((f) => f.name === panelFaculty);
@@ -163,12 +160,12 @@ export default function Timetable() {
           facultyId: faculty?.id || 'F2024001',
           ...changes,
           syllabus: null,
-        })).unwrap();
+        }));
         id = slot.Slot_ID;
         toast.success('Slot allocated successfully');
       }
       setAllocationEdits((previous) => ({ ...previous, [id]: { ...newAlloc, id } }));
-    } catch (err) { toast.error('Failed to save slot: ' + err.message); }
+    } catch (err) { toast.error('Failed to save slot: ' + (err.response?.data?.message || err.message)); }
     closeSidePanel();
   };
 
@@ -181,14 +178,14 @@ export default function Timetable() {
     setDeleteConfirmOpen(false);
     if (!editingAlloc || !data || writing) return;
     try {
-      await dispatch(deleteAD1Slot(editingAlloc.id)).unwrap();
+      await dispatch(deleteAD1Slot(editingAlloc.id));
       setAllocationEdits((previous) => {
         const next = { ...previous };
         delete next[editingAlloc.id];
         return next;
       });
       toast.success('Slot removed');
-    } catch (err) { toast.error('Failed: ' + err.message); }
+    } catch (err) { toast.error('Failed: ' + (err.response?.data?.message || err.message)); }
     closeSidePanel();
   };
 

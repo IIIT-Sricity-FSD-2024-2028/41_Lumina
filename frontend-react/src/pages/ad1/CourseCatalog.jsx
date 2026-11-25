@@ -4,7 +4,7 @@
  * DataTable, Pagination, PrereqDropdown, and shared CSS tokens.
  */
 import { useState, useMemo, useCallback } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import toast from 'react-hot-toast';
 import AD1PageLayout from './components/AD1PageLayout';
 import StatCard, { StatCardsRow } from './components/StatCard';
@@ -16,16 +16,13 @@ import PrereqDropdown from './components/PrereqDropdown';
 import useLoadAD1Data from './hooks/useLoadAD1Data';
 import usePagination from './hooks/usePagination';
 import { createAD1Course, updateAD1Course } from '../../store/ad1/ad1-actions';
-import { selectAD1Data, selectAD1Writing } from '../../store/ad1/ad1-slice';
 import { getTypeBadgeInfo, getDeptDisplay } from './utils/dataTransforms';
 import shared from './styles/ad1-shared.module.css';
 import styles from './CourseCatalog.module.css';
 
 export default function CourseCatalog() {
   const dispatch = useDispatch();
-  const { loading, error } = useLoadAD1Data();
-  const data = useSelector(selectAD1Data);
-  const writing = useSelector(selectAD1Writing);
+  const { data, loading, error, writing } = useLoadAD1Data();
 
   // ─── Filters ───────────────────────────────────────────────
   const [search, setSearch] = useState('');
@@ -168,11 +165,11 @@ export default function CourseCatalog() {
         semester: newCourse.semester,
         courseType: newCourse.type,
         prerequisites: newCourse.prerequisites,
-      })).unwrap();
+      }));
       setAddModalOpen(false);
       toast.success('Course added successfully!');
     } catch (err) {
-      toast.error('Failed to add course: ' + err.message);
+      toast.error('Failed to add course: ' + (err.response?.data?.message || err.message));
     }
   };
 
@@ -195,7 +192,7 @@ export default function CourseCatalog() {
         courseType: updated.type,
         prerequisites: updated.prerequisites,
       };
-      const result = await dispatch(updateAD1Course({ courseId: editingCourseCode, changes })).unwrap();
+      const result = await dispatch(updateAD1Course({ courseId: editingCourseCode, changes }));
       if (!result) return;
       setEditModalOpen(false);
       toast.success('Course updated successfully!');
@@ -204,7 +201,7 @@ export default function CourseCatalog() {
         setEditErrors((errors) => ({ ...errors, status: err.message }));
         return;
       }
-      toast.error('Failed to update course: ' + err.message);
+      toast.error('Failed to update course: ' + (err.response?.data?.message || err.message));
     }
   };
 

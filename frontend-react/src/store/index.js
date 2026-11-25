@@ -4,7 +4,7 @@ import studentSlice from './student/student-slice';
 import facultySlice from './faculty/faculty-slice';
 import adminSlice from './admin/admin-slice';
 import deanSlice from './dean/dean-slice';
-import ad1PlanningSlice from './ad1/ad1-slice';
+import ad1PlanningSlice, { ad1Actions } from './ad1/ad1-slice';
 import ad2Slice from './ad2/ad2-slice';
 import superuserSlice from './superuser/superuser-slice';
 
@@ -19,6 +19,14 @@ const store = configureStore({
     ad2: ad2Slice.reducer,
     superuser: superuserSlice.reducer,
   },
+});
+
+let ad1Session = store.getState().auth.user;
+store.subscribe(() => {
+  const session = store.getState().auth.user;
+  if (session === ad1Session) return;
+  ad1Session = session;
+  store.dispatch(ad1Actions.clearPlanning());
 });
 
 export default store;

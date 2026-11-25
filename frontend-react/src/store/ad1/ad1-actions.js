@@ -1,4 +1,4 @@
-import { createAsyncThunk } from '@reduxjs/toolkit';
+import { ad1Actions } from './ad1-slice';
 import { coursesService } from '../../services/courses.service';
 import { usersService } from '../../services/users.service';
 import { registrationsService } from '../../services/registrations.service';
@@ -75,9 +75,13 @@ function mapPrerequisites(prereqs) {
   }));
 }
 
-export const loadAD1Planning = createAsyncThunk(
-  'ad1Planning/load',
-  async (_, { rejectWithValue }) => {
+export const loadAD1Planning = ({ refresh = false } = {}) => {
+  return async (dispatch, getState) => {
+    const { auth, ad1Planning } = getState();
+    const { data, error, loading, writing } = ad1Planning;
+    if (loading || writing || (!refresh && data && !error)) return;
+
+    dispatch(ad1Actions.loadStarted());
     try {
       const [courses, users, registrations, sections, slots, requirements, prerequisites] =
         await Promise.all([
@@ -90,7 +94,8 @@ export const loadAD1Planning = createAsyncThunk(
           coursesService.getPrerequisites().catch(() => []),
         ]);
 
-      return {
+      if (getState().auth.user !== auth.user) return;
+      const planning = {
         courses: mapCourses(courses),
         users: mapUsers(users),
         registrations: mapRegistrations(registrations),
@@ -99,26 +104,26 @@ export const loadAD1Planning = createAsyncThunk(
         requirements: mapDegreeRequirements(requirements),
         prerequisites: mapPrerequisites(prerequisites),
       };
+      dispatch(ad1Actions.loadSucceeded(planning));
+      return planning;
     } catch (err) {
       console.error('AD1 data fetch error:', err);
-      return rejectWithValue(err.message || 'Failed to load data');
+      if (getState().auth.user === auth.user) {
+        dispatch(ad1Actions.loadFailed(err.message || 'Failed to load data'));
+      }
     }
-  },
-  {
-    condition: ({ refresh = false } = {}, { getState }) => {
-      const { data, error, loadRequestId, writeRequestId } = getState().ad1Planning;
-      return !loadRequestId && !writeRequestId && (refresh || !data || Boolean(error));
-    },
-  },
-);
+  };
+};
 
-function canWritePlanning(_, { getState }) {
-  const { data, loadRequestId, writeRequestId } = getState().ad1Planning;
-  return !!data && !loadRequestId && !writeRequestId;
-}
+function startWrite(dispatch, getState, savingAssignments = false) {
+  const { auth, ad1Planning } = getState();
+  const { data, loading, writing } = ad1Planning;
+  if (!data || loading || writing) {
+    throw new Error('AD1 data is loading or a save is already in progress.');
+  }
 
-function writeError(err) {
-  return { message: err.response?.data?.message || err.message };
+  dispatch(ad1Actions.writeStarted(savingAssignments));
+  return () => getState().auth.user === auth.user;
 }
 
 function courseChanges(courseId, request, saved) {
@@ -139,62 +144,63 @@ function courseChanges(courseId, request, saved) {
   };
 }
 
-export const createAD1Course = createAsyncThunk(
-  'ad1Planning/createCourse',
-  async (request, { getState, requestId, rejectWithValue }) => {
+export const createAD1Course = (request) => {
+  return async (dispatch, getState) => {
+    const isCurrentSession = startWrite(dispatch, getState);
     try {
       const saved = await coursesService.create(request);
       const { courseId } = request;
       // The course endpoint creates a default section and returns only the course.
-      const sections = getState().ad1Planning.writeRequestId === requestId
+      const sections = isCurrentSession()
         ? await sectionsService.getAll().catch(() => [])
         : [];
-      return {
+      const changes = {
         ...courseChanges(courseId, request, saved),
         sections: mapSections(sections.filter((section) => section.courseId === courseId)),
       };
-    } catch (err) {
-      return rejectWithValue(writeError(err));
+      if (isCurrentSession()) dispatch(ad1Actions.courseSaved(changes));
+      return changes;
+    } finally {
+      if (isCurrentSession()) dispatch(ad1Actions.writeFinished());
     }
-  },
-  { condition: canWritePlanning },
-);
+  };
+};
 
-export const updateAD1Course = createAsyncThunk(
-  'ad1Planning/updateCourse',
-  async ({ courseId, changes }, { getState, requestId, rejectWithValue }) => {
+export const updateAD1Course = ({ courseId, changes }) => {
+  return async (dispatch, getState) => {
+    const isCurrentSession = startWrite(dispatch, getState);
     try {
       const course = getState().ad1Planning.data.courses.find((entry) => entry.Course_ID === courseId);
       if (course?.Status === 'Active' && changes.status === 'Inactive') {
         const registrations = await registrationsService.getAll();
-        if (getState().ad1Planning.writeRequestId !== requestId) return;
+        if (!isCurrentSession()) return;
 
         if (registrations.some((entry) => entry.courseId === courseId && entry.status === 'Enrolled')) {
-          return rejectWithValue({
-            field: 'status',
-            message: 'This course cannot be made inactive while students are enrolled.',
-          });
+          const error = new Error('This course cannot be made inactive while students are enrolled.');
+          error.field = 'status';
+          throw error;
         }
       }
 
       const saved = await coursesService.update(courseId, changes);
-      return courseChanges(courseId, changes, saved);
-    } catch (err) {
-      return rejectWithValue(writeError(err));
+      const result = courseChanges(courseId, changes, saved);
+      if (isCurrentSession()) dispatch(ad1Actions.courseSaved(result));
+      return result;
+    } finally {
+      if (isCurrentSession()) dispatch(ad1Actions.writeFinished());
     }
-  },
-  { condition: canWritePlanning },
-);
+  };
+};
 
-export const saveAD1Assignments = createAsyncThunk(
-  'ad1Planning/saveAssignments',
-  async ({ assignments, courseId, termId, sectionCount }, { getState, requestId, rejectWithValue }) => {
+export const saveAD1Assignments = ({ assignments, courseId, termId, sectionCount }) => {
+  return async (dispatch, getState) => {
+    const isCurrentSession = startWrite(dispatch, getState, true);
     const sections = [];
     try {
       const existing = await sectionsService.getAll().catch(() => []);
       sections.push(...existing.filter((section) => section.courseId === courseId));
       for (let i = 1; i <= sectionCount; i++) {
-        if (getState().ad1Planning.writeRequestId !== requestId) return;
+        if (!isCurrentSession()) return;
         const sectionId = `${courseId}-S${i}`;
         if (!existing.some((section) => section.sectionId === sectionId)) {
           const section = await sectionsService.create({
@@ -208,38 +214,42 @@ export const saveAD1Assignments = createAsyncThunk(
         }
       }
 
-      if (getState().ad1Planning.writeRequestId !== requestId) return;
+      if (!isCurrentSession()) return;
       const result = await registrationsService.batchAssignSections(assignments);
-      return {
+      const saved = {
         sections: mapSections(sections),
         updated: mapRegistrations(result.updated),
         errors: result.errors,
       };
+      if (isCurrentSession()) dispatch(ad1Actions.assignmentsSaved(saved));
+      return saved;
     } catch (err) {
-      return rejectWithValue({ ...writeError(err), sections: mapSections(sections) });
+      if (isCurrentSession()) dispatch(ad1Actions.sectionsReceived(mapSections(sections)));
+      throw err;
+    } finally {
+      if (isCurrentSession()) dispatch(ad1Actions.writeFinished());
     }
-  },
-  { condition: canWritePlanning },
-);
+  };
+};
 
-export const createAD1Slot = createAsyncThunk(
-  'ad1Planning/createSlot',
-  async (request, { rejectWithValue }) => {
+export const createAD1Slot = (request) => {
+  return async (dispatch, getState) => {
+    const isCurrentSession = startWrite(dispatch, getState);
     try {
       const saved = await slotsService.create(request);
       const slotId = saved?.slotId || Date.now();
       const [slot] = mapSlots([{ ...request, ...saved, slotId }]);
+      if (isCurrentSession()) dispatch(ad1Actions.slotAdded(slot));
       return slot;
-    } catch (err) {
-      return rejectWithValue(writeError(err));
+    } finally {
+      if (isCurrentSession()) dispatch(ad1Actions.writeFinished());
     }
-  },
-  { condition: canWritePlanning },
-);
+  };
+};
 
-export const updateAD1Slot = createAsyncThunk(
-  'ad1Planning/updateSlot',
-  async ({ slotId, changes }, { getState, rejectWithValue }) => {
+export const updateAD1Slot = ({ slotId, changes }) => {
+  return async (dispatch, getState) => {
+    const isCurrentSession = startWrite(dispatch, getState);
     try {
       const previous = getState().ad1Planning.data.slots.find((slot) => slot.Slot_ID === slotId);
       const saved = await slotsService.update(slotId, changes);
@@ -250,23 +260,23 @@ export const updateAD1Slot = createAsyncThunk(
         ...saved,
         slotId,
       }]);
+      if (isCurrentSession()) dispatch(ad1Actions.slotUpdated(slot));
       return slot;
-    } catch (err) {
-      return rejectWithValue(writeError(err));
+    } finally {
+      if (isCurrentSession()) dispatch(ad1Actions.writeFinished());
     }
-  },
-  { condition: canWritePlanning },
-);
+  };
+};
 
-export const deleteAD1Slot = createAsyncThunk(
-  'ad1Planning/deleteSlot',
-  async (slotId, { rejectWithValue }) => {
+export const deleteAD1Slot = (slotId) => {
+  return async (dispatch, getState) => {
+    const isCurrentSession = startWrite(dispatch, getState);
     try {
       await slotsService.delete(slotId);
+      if (isCurrentSession()) dispatch(ad1Actions.slotRemoved(slotId));
       return slotId;
-    } catch (err) {
-      return rejectWithValue(writeError(err));
+    } finally {
+      if (isCurrentSession()) dispatch(ad1Actions.writeFinished());
     }
-  },
-  { condition: canWritePlanning },
-);
+  };
+};

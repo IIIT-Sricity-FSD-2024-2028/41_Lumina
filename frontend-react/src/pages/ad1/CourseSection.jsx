@@ -3,7 +3,7 @@
  * Refactored to use shared AD1PageLayout, StatCard, Modal, FormGroup, DataTable.
  */
 import { useState, useMemo, useCallback } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import toast from 'react-hot-toast';
 import AD1PageLayout from './components/AD1PageLayout';
 import StatCard, { StatCardsRow } from './components/StatCard';
@@ -11,17 +11,13 @@ import Modal from './components/Modal';
 import DataTable from './components/DataTable';
 import useLoadAD1Data from './hooks/useLoadAD1Data';
 import { loadAD1Planning, saveAD1Assignments } from '../../store/ad1/ad1-actions';
-import { selectAD1Data, selectAD1SavingAssignments, selectAD1Writing } from '../../store/ad1/ad1-slice';
 import { normalizeSectionValue, formatSectionLabel, getSemesterFromTerm, MAX_SECTION_CAPACITY } from './utils/dataTransforms';
 import shared from './styles/ad1-shared.module.css';
 import styles from './CourseSection.module.css';
 
 export default function CourseSection() {
   const dispatch = useDispatch();
-  const { loading, error } = useLoadAD1Data();
-  const planning = useSelector(selectAD1Data);
-  const saving = useSelector(selectAD1SavingAssignments);
-  const writing = useSelector(selectAD1Writing);
+  const { data: planning, loading, error, savingAssignments: saving, writing } = useLoadAD1Data();
   const [assignmentDrafts, setAssignmentDrafts] = useState({});
   const [sectionCountDrafts, setSectionCountDrafts] = useState({});
 
@@ -235,7 +231,7 @@ export default function CourseSection() {
           courseId: currentCourse.code,
           termId,
           sectionCount: currentCourse.sections || 1,
-        })).unwrap();
+        }));
         if (!result) return;
         if (result.errors && result.errors.length > 0) {
           toast.error(`Saved with ${result.errors.length} error(s).`);
@@ -248,13 +244,13 @@ export default function CourseSection() {
       setLastSaved(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
     } catch (err) {
       console.error('Failed to save assignments:', err);
-      toast.error('Failed to save assignments: ' + err.message);
+      toast.error('Failed to save assignments: ' + (err.response?.data?.message || err.message));
     }
   };
 
   const handleResetChanges = async () => {
     const result = await dispatch(loadAD1Planning({ refresh: true }));
-    if (loadAD1Planning.fulfilled.match(result)) {
+    if (result) {
       setAssignmentDrafts({});
       setSectionCountDrafts({});
     }
