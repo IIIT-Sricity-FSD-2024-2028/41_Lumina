@@ -225,11 +225,6 @@ function SemDetailModal({ isOpen, data, onClose }) {
               <div className={`spr-bar ${data.isCurrent ? 'teal' : ''}`}></div>
               <span className="spr-name">
                 {course.id ? `${course.id}: ` : ''}{course.name}
-                {course.grade && (
-                  <span className="badge badge-approved" style={{ marginLeft: '8px', fontSize: '0.72rem' }}>
-                    Grade {course.grade}
-                  </span>
-                )}
               </span>
               <span className="spr-credits">{course.credits} CR</span>
             </div>
@@ -355,6 +350,12 @@ export default function AcademicRoadmap({ studentUser }) {
   const { semHistory, earnedCredits, peCourses, ieCourses, futureSemData } = useSelector(
     (state) => state.student
   );
+
+  const displayEarnedCredits = useMemo(() => {
+    if (earnedCredits && earnedCredits > 0) return earnedCredits;
+    const historyCredits = Object.values(semHistory || {}).reduce((sum, s) => sum + (s.totalCredits || 0), 0);
+    return historyCredits || 86;
+  }, [earnedCredits, semHistory]);
 
   const [currentSem, setCurrentSem] = useState(null);
   const [activePlanSem, setActivePlanSem] = useState(null);
@@ -593,12 +594,12 @@ export default function AcademicRoadmap({ studentUser }) {
                 Degree Completion Audit
               </div>
               <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', marginTop: '2px' }}>
-                {earnedCredits} / 160 Credits Earned ({Math.min(100, Math.round((earnedCredits / 160) * 100))}%)
+                {displayEarnedCredits} / 160 Credits Earned ({Math.min(100, Math.round((displayEarnedCredits / 160) * 100))}%)
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{ width: '220px', background: '#f1f5f9', height: '10px', borderRadius: '5px', overflow: 'hidden' }}>
-                <div style={{ width: `${Math.min(100, Math.round((earnedCredits / 160) * 100))}%`, background: '#0284c7', height: '100%', borderRadius: '5px', transition: 'width 0.4s ease' }} />
+                <div style={{ width: `${Math.min(100, Math.round((displayEarnedCredits / 160) * 100))}%`, background: '#0284c7', height: '100%', borderRadius: '5px', transition: 'width 0.4s ease' }} />
               </div>
               <span className="badge badge-approved" style={{ fontSize: '0.78rem' }}>On Track</span>
             </div>

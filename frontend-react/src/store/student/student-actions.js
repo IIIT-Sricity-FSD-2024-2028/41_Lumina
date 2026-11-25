@@ -282,46 +282,84 @@ export const fetchStudentRoadmap = (studentId, currentSemester = 4, deptId = 'CS
         ? regData.filter((r) => r.studentId === studentId || r.Student_ID === studentId)
         : [];
 
-      const passedCourseIds = new Set(
-        userRegs
-          .filter((r) => r.finalGrade && r.finalGrade !== 'F')
-          .map((r) => r.courseId || r.Course_ID)
-      );
-
-      const inProgressCourseIds = new Set(
-        userRegs
-          .filter((r) => !r.finalGrade)
-          .map((r) => r.courseId || r.Course_ID)
-      );
-
-      const earnedCredits = userRegs
-        .filter((r) => r.finalGrade && r.finalGrade !== 'F')
-        .reduce((sum, r) => {
-          const cId = r.courseId || r.Course_ID;
-          return sum + (catalogMap[cId]?.credits || 4);
-        }, 0);
-
       const degreeReqs = Array.isArray(degreeReqData) ? degreeReqData : [];
       const deptReqs = degreeReqs.filter((dr) => !dr.deptId || dr.deptId === deptId);
 
+      // Curriculum definitions matching official Lumina curriculum:
+      // Sem 1 (20 cr) + Sem 2 (20 cr) + Sem 3 (22 cr) + Sem 4 (24 cr) = 86 cr total
+      const curriculumMap = {
+        1: [
+          { id: 'IC101', name: 'Computer Programming', defaultCredits: 4 },
+          { id: 'IC104', name: 'Digital Logic Design', defaultCredits: 4 },
+          { id: 'IC103', name: 'Overview of Computers Workshop', defaultCredits: 4 },
+          { id: 'IC102', name: 'Discrete Structures and Matrix Algebra', defaultCredits: 4 },
+          { id: 'SEED01', name: 'Essential English', defaultCredits: 2 },
+          { id: 'SEED02', name: 'Foundations in Human Values', defaultCredits: 2 },
+        ],
+        2: [
+          { id: 'PC201', name: 'Data Structures and Algorithms', defaultCredits: 4 },
+          { id: 'IC203', name: 'Computer Architecture', defaultCredits: 4 },
+          { id: 'IC202', name: 'Signals and Systems', defaultCredits: 4 },
+          { id: 'IC201', name: 'Probability and Statistics', defaultCredits: 4 },
+          { id: 'SEED03', name: 'Operational Communication', defaultCredits: 2 },
+          { id: 'SEED06', name: 'Energy and Environment', defaultCredits: 2 },
+        ],
+        3: [
+          { id: 'PC302', name: 'Advanced Data Structures and Algorithms', defaultCredits: 4 },
+          { id: 'PC303', name: 'Operating Systems', defaultCredits: 4 },
+          { id: 'PC304', name: 'Database Management Systems', defaultCredits: 4 },
+          { id: 'PC301', name: 'Object Oriented Programming', defaultCredits: 4 },
+          { id: 'IC301', name: 'Real Analysis and Numerical Methods', defaultCredits: 4 },
+          { id: 'SEED04', name: 'Professional Communication', defaultCredits: 2 },
+        ],
+        4: [
+          { id: 'PC401', name: 'Computer and Communication Networks', defaultCredits: 4 },
+          { id: 'PC402', name: 'Fundamentals of Full Stack Development', defaultCredits: 4 },
+          { id: 'IC401', name: 'Theory of Computation', defaultCredits: 4 },
+          { id: 'PC403', name: 'Artificial Intelligence', defaultCredits: 4 },
+          { id: 'SEED05', name: 'Advanced Communication Skills', defaultCredits: 2 },
+          { id: 'SEED07', name: 'Logical Reasoning', defaultCredits: 2 },
+          { id: 'PE504', name: 'Deep Learning', defaultCredits: 4 },
+        ],
+      };
+
       const semHistory = {};
-      for (let semNum = 1; semNum < currentSemester; semNum++) {
+      const passedCourseIds = new Set();
+      const inProgressCourseIds = new Set();
+
+      for (let semNum = 1; semNum <= currentSemester; semNum++) {
+        const isCurrent = semNum === currentSemester;
+        const defaultList = curriculumMap[semNum] || [];
         const semReqs = deptReqs.filter((dr) => dr.targetSemester === semNum);
-        const semCourseIds = new Set(semReqs.map((dr) => dr.courseId));
 
-        const semRegs = userRegs.filter((r) => {
-          const cId = r.courseId || r.Course_ID;
-          return semCourseIds.has(cId);
-        });
-
-        const mappedCourses = semReqs.map((dr) => {
-          const foundCat = catalogMap[dr.courseId] || {};
-          const reg = semRegs.find((r) => (r.courseId || r.Course_ID) === dr.courseId);
-          return {
+        let courseList = [];
+        if (defaultList.length > 0) {
+          courseList = defaultList;
+        } else if (semReqs.length > 0) {
+          courseList = semReqs.map((dr) => ({
             id: dr.courseId,
-            name: foundCat.courseName || dr.courseId,
-            credits: foundCat.credits || 4,
-            grade: reg?.finalGrade || 'A',
+            name: catalogMap[dr.courseId]?.courseName || dr.courseId,
+            defaultCredits: catalogMap[dr.courseId]?.credits || 4,
+          }));
+        }
+
+        const mappedCourses = courseList.map((item) => {
+          const catItem = catalogMap[item.id] || {};
+          const reg = userRegs.find((r) => (r.courseId || r.Course_ID) === item.id);
+          const grade = reg?.finalGrade || (isCurrent ? 'In Progress' : 'A');
+          const credits = item.defaultCredits || catItem.credits || 4;
+
+          if (isCurrent) {
+            inProgressCourseIds.add(item.id);
+          } else if (grade !== 'F') {
+            passedCourseIds.add(item.id);
+          }
+
+          return {
+            id: item.id,
+            name: catItem.courseName || item.name,
+            credits,
+            grade,
           };
         });
 
@@ -336,12 +374,35 @@ export const fetchStudentRoadmap = (studentId, currentSemester = 4, deptId = 'CS
         semHistory[semNum] = {
           title: `Semester ${semNum}`,
           date: dateStr,
-          isCurrent: false,
+          isCurrent,
           coursesSummary: mappedCourses.map((c) => c.id).join(', '),
           courses: mappedCourses,
           totalCredits: semTotal,
         };
       }
+
+      // Also merge any additional passed or in-progress courses from userRegs
+      userRegs.forEach((r) => {
+        const cId = r.courseId || r.Course_ID;
+        if (r.finalGrade && r.finalGrade !== 'F') {
+          passedCourseIds.add(cId);
+        } else if (!r.finalGrade) {
+          inProgressCourseIds.add(cId);
+        }
+      });
+
+      // Calculate total earned credits by adding up all previous semesters' credits as well as current semester's credits
+      let previousSemCredits = 0;
+      let currentSemCredits = 0;
+      Object.keys(semHistory).forEach((s) => {
+        const semNum = Number(s);
+        if (semNum < currentSemester) {
+          previousSemCredits += semHistory[s].totalCredits || 0;
+        } else if (semNum === currentSemester) {
+          currentSemCredits += semHistory[s].totalCredits || 0;
+        }
+      });
+      const earnedCredits = previousSemCredits + currentSemCredits;
 
       function resolvePrereq(courseId) {
         const requiredId = prereqMap[courseId];
