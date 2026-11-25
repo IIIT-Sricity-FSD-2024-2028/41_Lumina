@@ -1,6 +1,14 @@
 import { useState, useEffect } from 'react';
 import Dean2Layout from './Dean2Layout';
-import { policiesService } from '../../services/policies.service';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  fetchEnrollmentData,
+  updateEnrollmentSetting,
+  updateEnrollmentTerm,
+  updateEnrollmentDates,
+  savePhase,
+  deletePhase,
+} from '../../store/ad2/ad2-actions';
 import toast from 'react-hot-toast';
 import styles from './Dean2.module.css';
 
@@ -22,14 +30,12 @@ function formatDateShort(dtStr) {
 }
 
 export default function Dean2Enrollment() {
-  const [loading, setLoading] = useState(true);
-  const [settings, setSettings] = useState({
-    systemStatus: 'Active',
-    windowStatus: 'Open',
-    startDate: '',
-    endDate: '',
-  });
-  const [phases, setPhases] = useState([]);
+  const dispatch = useDispatch();
+
+  // Redux state
+  const { loading, enrollmentSettings: settings, phases, saving: savingPhase } = useSelector((state) => state.ad2);
+
+  // Local UI-only state (keep as useState)
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [modalData, setModalData] = useState({
@@ -38,72 +44,18 @@ export default function Dean2Enrollment() {
     timeline: '',
     status: 'Upcoming',
   });
-  const [savingPhase, setSavingPhase] = useState(false);
-
-  const loadEnrollmentData = async () => {
-    try {
-      const [polRes, phasesRes] = await Promise.allSettled([
-        policiesService.getPolicies(),
-        policiesService.getPhases(),
-      ]);
-
-      if (polRes.status === 'fulfilled' && polRes.value?.settings) {
-        setSettings((prev) => ({ ...prev, ...polRes.value.settings }));
-      }
-      if (phasesRes.status === 'fulfilled' && Array.isArray(phasesRes.value)) {
-        setPhases(phasesRes.value);
-      }
-    } catch (err) {
-      console.error('Failed to load enrollment configuration:', err);
-      toast.error('Failed to load enrollment configuration');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [confirmDeletePhase, setConfirmDeletePhase] = useState(null);
+  const [isDeletingPhase, setIsDeletingPhase] = useState(false);
 
   useEffect(() => {
-    let ignore = false;
-    async function init() {
-      try {
-        const [polRes, phasesRes] = await Promise.allSettled([
-          policiesService.getPolicies(),
-          policiesService.getPhases(),
-        ]);
-
-        if (!ignore) {
-          if (polRes.status === 'fulfilled' && polRes.value?.settings) {
-            setSettings((prev) => ({ ...prev, ...polRes.value.settings }));
-          }
-          if (phasesRes.status === 'fulfilled' && Array.isArray(phasesRes.value)) {
-            setPhases(phasesRes.value);
-          }
-        }
-      } catch (err) {
-        if (!ignore) {
-          console.error('Failed to load enrollment configuration:', err);
-          toast.error('Failed to load enrollment configuration');
-        }
-      } finally {
-        if (!ignore) {
-          setLoading(false);
-        }
-      }
-    }
-
-    init();
-    return () => {
-      ignore = true;
-    };
-  }, []);
+    dispatch(fetchEnrollmentData()).catch(() => toast.error('Failed to load enrollment configuration'));
+  }, [dispatch]);
 
   const handleUpdateSetting = async (key, value, label) => {
     try {
-      const logMsg = label || `Updated ${key} to ${value}`;
-      await policiesService.updatePolicies({ [key]: value, logMessage: logMsg });
-      setSettings((prev) => ({ ...prev, [key]: value }));
+      await dispatch(updateEnrollmentSetting(key, value, label));
       toast.success(`${key === 'systemStatus' ? 'System status' : 'Window status'} updated to ${value}`);
     } catch (err) {
-      console.error('Failed to update setting:', err);
       toast.error(err.response?.data?.message || `Failed to update ${key}`);
     }
   };
@@ -111,30 +63,18 @@ export default function Dean2Enrollment() {
   const handleTermChange = async (newYear, newTerm) => {
     try {
       const termLabel = computeTermLabel(newYear, newTerm);
-      await policiesService.updatePolicies({
-        academicYear: newYear,
-        term: newTerm,
-        logMessage: `Term updated to ${termLabel}`,
-      });
-      setSettings((prev) => ({ ...prev, academicYear: newYear, term: newTerm }));
+      await dispatch(updateEnrollmentTerm(newYear, newTerm, termLabel));
       toast.success(`Academic Term updated to ${termLabel}`);
-    } catch (err) {
-      console.error('Failed to update term:', err);
+    } catch {
       toast.error('Failed to update academic term');
     }
   };
 
   const handleDatesChange = async (newStart, newEnd) => {
     try {
-      await policiesService.updatePolicies({
-        startDate: newStart,
-        endDate: newEnd,
-        logMessage: `Updated enrollment window dates`,
-      });
-      setSettings((prev) => ({ ...prev, startDate: newStart, endDate: newEnd }));
+      await dispatch(updateEnrollmentDates(newStart, newEnd));
       toast.success('Enrollment window dates saved');
-    } catch (err) {
-      console.error('Failed to update dates:', err);
+    } catch {
       toast.error('Failed to update window dates');
     }
   };
@@ -176,50 +116,24 @@ export default function Dean2Enrollment() {
       toast.error('Please enter a timeline');
       return;
     }
-
     try {
-      setSavingPhase(true);
-      if (editingId) {
-        await policiesService.updatePhase(editingId, {
-          name: modalData.name.trim(),
-          eligibleGroups: modalData.eligibleGroups,
-          timeline: modalData.timeline.trim(),
-          status: modalData.status,
-        });
-        toast.success('Phase updated successfully');
-      } else {
-        await policiesService.createPhase({
-          name: modalData.name.trim(),
-          eligibleGroups: modalData.eligibleGroups,
-          timeline: modalData.timeline.trim(),
-          status: modalData.status,
-        });
-        toast.success('Phase added successfully');
-      }
+      await dispatch(savePhase(editingId, modalData));
+      toast.success(editingId ? 'Phase updated successfully' : 'Phase added successfully');
       closeModal();
-      await loadEnrollmentData();
     } catch (err) {
-      console.error('Failed to save phase:', err);
       toast.error(err.response?.data?.message || 'Failed to save phase');
-    } finally {
-      setSavingPhase(false);
     }
   };
-
-  const [confirmDeletePhase, setConfirmDeletePhase] = useState(null);
-  const [isDeletingPhase, setIsDeletingPhase] = useState(false);
 
   const handleDeletePhase = async () => {
     if (!confirmDeletePhase) return;
     const { id, name } = confirmDeletePhase;
     try {
       setIsDeletingPhase(true);
-      await policiesService.deletePhase(id);
+      await dispatch(deletePhase(id));
       toast.success(`Phase "${name}" deleted`);
-      setPhases((prev) => prev.filter((p) => p.id !== id));
       setConfirmDeletePhase(null);
     } catch (err) {
-      console.error('Failed to delete phase:', err);
       toast.error(err.response?.data?.message || 'Failed to delete phase');
     } finally {
       setIsDeletingPhase(false);

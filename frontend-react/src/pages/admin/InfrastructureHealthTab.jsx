@@ -8,6 +8,8 @@
  * - Real-time Operational Alerts & Telemetry Feed with Refresh trigger
  */
 import toast from 'react-hot-toast';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchAdminDashboard } from '../../store/admin/admin-actions';
 import styles from './AdminPortal.module.css';
 
 function getAlertItemClass(type) {
@@ -22,7 +24,14 @@ function getAlertIcon(type) {
   return 'ℹ';
 }
 
-export default function InfrastructureHealthTab({ dashboard }) {
+export default function InfrastructureHealthTab({ dashboard: propDashboard }) {
+  const dispatch = useDispatch();
+  const reduxAdmin = useSelector((state) => state.admin);
+  const dashboard = propDashboard || reduxAdmin.dashboard;
+  const authUser = useSelector((state) => state.auth?.user);
+  const spocId = dashboard?.spoc?.spocId || authUser?.spocId || 'SPOC-001';
+  const instId = reduxAdmin.currentInstituteId || dashboard?.assignedInstitute?.instituteId;
+
   const infraMetrics = dashboard?.infraMetrics || {
     gatewayLatencyMs: 14,
     p99LatencyMs: 28,
@@ -126,7 +135,14 @@ export default function InfrastructureHealthTab({ dashboard }) {
           </h3>
           <button
             className={`${styles.btnOutline} ${styles.btnSm}`}
-            onClick={() => toast.success('✔ Telemetry alert feed refreshed.')}
+            onClick={async () => {
+              try {
+                await dispatch(fetchAdminDashboard(spocId, instId));
+                toast.success('✔ Telemetry alert feed refreshed.');
+              } catch {
+                toast.error('Failed to refresh telemetry feed.');
+              }
+            }}
           >
             ↻ Refresh Feed
           </button>

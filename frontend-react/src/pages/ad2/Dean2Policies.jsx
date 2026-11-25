@@ -1,6 +1,15 @@
 import { useState, useEffect } from 'react';
 import Dean2Layout from './Dean2Layout';
-import { policiesService } from '../../services/policies.service';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  fetchPolicies,
+  lockTerm,
+  unlockTerm,
+  validatePolicies,
+  lockPolicies,
+  unlockPolicies,
+} from '../../store/ad2/ad2-actions';
+import { ad2Actions } from '../../store/ad2/ad2-slice';
 import toast from 'react-hot-toast';
 import styles from './Dean2.module.css';
 
@@ -16,89 +25,22 @@ function computeTermLabel(academicYear, term) {
 }
 
 export default function Dean2Policies() {
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [settings, setSettings] = useState({
-    academicYear: '2025-2026',
-    term: 'Spring',
-    termLocked: true,
-    minCredits: 12,
-    maxCredits: 21,
-    maxCourses: 6,
-    enforcePrereq: true,
-    allowConditional: false,
-    allowAdvisorOverride: true,
-    minGpa: 5.0,
-    financialClearance: true,
-    advisorApproval: true,
-    status: 'Validated',
-    isLocked: false,
-  });
-  const [logs, setLogs] = useState([]);
+  const dispatch = useDispatch();
+
+  // Redux state
+  const { loading, saving, policySettings: settings, policyLogs: logs } = useSelector((state) => state.ad2);
+
+  // Local UI state only
   const [showAllLogs, setShowAllLogs] = useState(false);
 
   useEffect(() => {
-    let ignore = false;
-    async function fetchPolicies() {
-      try {
-        const data = await policiesService.getPolicies();
-        if (!ignore) {
-          if (data?.settings) {
-            setSettings((prev) => ({ ...prev, ...data.settings }));
-          }
-          if (Array.isArray(data?.logs)) {
-            setLogs(data.logs);
-          }
-        }
-      } catch (err) {
-        if (!ignore) {
-          console.error('Failed to load policies:', err);
-          toast.error('Failed to load academic policies');
-        }
-      } finally {
-        if (!ignore) {
-          setLoading(false);
-        }
-      }
-    }
+    dispatch(fetchPolicies()).catch(() => toast.error('Failed to load academic policies'));
+  }, [dispatch]);
 
-    fetchPolicies();
-    return () => {
-      ignore = true;
-    };
-  }, []);
-
+  // markPendingLocally — updates Redux store for field edits
   const markPendingLocally = (field, value) => {
-    setSettings((prev) => {
-      if (prev.isLocked) return prev;
-      return {
-        ...prev,
-        [field]: value,
-        status: 'Pending',
-      };
-    });
-  };
-
-  const sendPolicyUpdate = async (payload, successMsg) => {
-    try {
-      setSaving(true);
-      const res = await policiesService.updatePolicies(payload);
-      if (res?.settings) {
-        setSettings((prev) => ({ ...prev, ...res.settings }));
-      }
-      if (Array.isArray(res?.logs)) {
-        setLogs(res.logs);
-      }
-      if (successMsg) toast.success(successMsg);
-      return true;
-    } catch (err) {
-      console.error('Policy update error:', err);
-      const msg = err.response?.data?.message || 'Failed to update policy';
-      toast.error(msg);
-      return false;
-    } finally {
-      setSaving(false);
-    }
+    if (settings.isLocked) return;
+    dispatch(ad2Actions.setPolicySettings({ [field]: value, status: 'Pending' }));
   };
 
   // Lock / Unlock Term
@@ -107,26 +49,22 @@ export default function Dean2Policies() {
       toast.error('Please select an Academic Year before locking the term.');
       return;
     }
-    const label = computeTermLabel(settings.academicYear, settings.term);
-    await sendPolicyUpdate(
-      {
-        academicYear: settings.academicYear,
-        term: settings.term,
-        termLocked: true,
-        logMessage: `Term Locked: ${label}`,
-      },
-      'Academic Term locked successfully'
-    );
+    try {
+      const label = computeTermLabel(settings.academicYear, settings.term);
+      await dispatch(lockTerm(settings.academicYear, settings.term, label));
+      toast.success('Academic Term locked successfully');
+    } catch (err) {
+      toast.error(err.message || 'Failed to lock Academic Term');
+    }
   };
 
   const handleUnlockTerm = async () => {
-    await sendPolicyUpdate(
-      {
-        termLocked: false,
-        logMessage: 'Term Unlocked',
-      },
-      'Academic Term unlocked'
-    );
+    try {
+      await dispatch(unlockTerm());
+      toast.success('Academic Term unlocked');
+    } catch (err) {
+      toast.error(err.message || 'Failed to unlock Academic Term');
+    }
   };
 
   // Validate Policies
@@ -178,22 +116,31 @@ export default function Dean2Policies() {
       logMessage: 'Policies Validated',
     };
 
-    await sendPolicyUpdate(payload, 'Policies successfully validated and saved!');
+    try {
+      await dispatch(validatePolicies(payload));
+      toast.success('Policies successfully validated and saved!');
+    } catch (err) {
+      toast.error(err.message || 'Failed to validate policies');
+    }
   };
 
   // Lock / Unlock Policies
   const handleLockPolicies = async () => {
-    await sendPolicyUpdate(
-      { isLocked: true, logMessage: 'Policies Locked' },
-      'Policies locked against further modifications.'
-    );
+    try {
+      await dispatch(lockPolicies(settings));
+      toast.success('Policies locked against further modifications.');
+    } catch (err) {
+      toast.error(err.message || 'Failed to lock policies');
+    }
   };
 
   const handleUnlockPolicies = async () => {
-    await sendPolicyUpdate(
-      { isLocked: false, logMessage: 'Policies Unlocked' },
-      'Policies unlocked for editing.'
-    );
+    try {
+      await dispatch(unlockPolicies());
+      toast.success('Policies unlocked for editing.');
+    } catch (err) {
+      toast.error(err.message || 'Failed to unlock policies');
+    }
   };
 
   // Banner status styling

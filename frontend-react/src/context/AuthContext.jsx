@@ -1,37 +1,38 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { authActions } from '../store/auth/auth-slice';
+import { logoutUser } from '../store/auth/auth-actions';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  // State to hold the logged-in user object
-  const [user, setUser] = useState(() => {
-    // Read from localStorage on initial page load
-    const saved = localStorage.getItem('Lumina_Session');
-    try {
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  });
+  const dispatch = useDispatch();
+  const { user, role, id, isAuthenticated, isLoggedIn, loading, error } = useSelector(
+    (state) => state.auth,
+  );
 
-  // Login function: updates state and saves to browser storage
   const login = (userData) => {
-    setUser(userData);
-    localStorage.setItem('Lumina_Session', JSON.stringify(userData));
+    dispatch(authActions.login(userData));
   };
 
-  // Logout function: clears state and browser storage
   const logout = () => {
-    setUser(null);
-    localStorage.removeItem('Lumina_Session');
+    dispatch(logoutUser());
   };
 
-  const role = user?.Role || null;
-  const isAuthenticated = !!user;
-
-  // Provide these values to all child components
   return (
-    <AuthContext.Provider value={{ user, role, isAuthenticated, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        role,
+        id,
+        isAuthenticated,
+        isLoggedIn,
+        loading,
+        error,
+        login,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

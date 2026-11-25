@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 
 import AppShell from '../../components/common/AppShell';
@@ -8,23 +9,10 @@ import UserAvatar from '../../components/ui/UserAvatar';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 
 import { useAuth } from '../../context/AuthContext';
-import { revenueService } from '../../services/revenue.service';
-import { announcementsService } from '../../services/announcements.service';
-import { coursesService } from '../../services/courses.service';
-import { registrationsService } from '../../services/registrations.service';
-import { slotsService } from '../../services/slots.service';
-import { policiesService } from '../../services/policies.service';
-
-function computeTermLabel(academicYear, term) {
-  if (!academicYear || !term) return 'Spring 2026';
-  const parts = academicYear.split('-');
-  if (parts.length !== 2) return `${term} ${academicYear}`;
-  const startYear = parts[0].trim();
-  const endYear = parts[1].trim();
-  if (term === 'Spring' || term === 'Summer') return `${term} ${endYear}`;
-  if (term === 'Monsoon' || term === 'Fall') return `${term} ${startYear}`;
-  return `${term} ${endYear}`;
-}
+import {
+  fetchStudentDashboard,
+  payStudentTuition,
+} from '../../store/student/student-actions';
 
 import styles from './StudentDashboard.module.css';
 
@@ -37,139 +25,47 @@ const GRADE_POINTS = {
 
 export default function StudentDashboard() {
   const { user } = useAuth();
+  const dispatch = useDispatch();
 
   const studentId = user?.User_ID || 'S2024001';
   const studentName = user?.Full_Name || 'Student';
   const department = user?.Dept_ID || 'Computer Science & Engineering';
 
-  const [loading, setLoading] = useState(true);
-  const [billing, setBilling] = useState(null);
-  const [announcements, setAnnouncements] = useState([]);
-  const [courses, setCourses] = useState([]);
-  const [allCatalog, setAllCatalog] = useState([]);
-  const [allUserRegistrations, setAllUserRegistrations] = useState([]);
-  const [slots, setSlots] = useState([]);
-  const [currentSemester, setCurrentSemester] = useState(user?.Current_Semester || 4);
-  const [activeTerm, setActiveTerm] = useState('Spring 2026');
-  const [maxCredits, setMaxCredits] = useState(20);
-  const [policies, setPolicies] = useState(null);
+  // Redux Student State
+  const {
+    loading,
+    billing,
+    announcements,
+    courses,
+    allCatalog,
+    allUserRegistrations,
+    slots,
+    currentSemester,
+    activeTerm,
+    maxCredits,
+    policies,
+    isPaying,
+  } = useSelector((state) => state.student);
 
+  // Local UI State
   const [isTuitionModalOpen, setIsTuitionModalOpen] = useState(false);
   const [isAnnouncementsModalOpen, setIsAnnouncementsModalOpen] = useState(false);
   const [announcementSearch, setAnnouncementSearch] = useState('');
-  const [isPaying, setIsPaying] = useState(false);
 
   useEffect(() => {
-    async function loadDashboardData() {
-      setLoading(true);
-      try {
-        const [billingRes, annRes, studentCourseRes, regRes, allCoursesRes, slotsRes, policiesRes] =
-          await Promise.allSettled([
-            revenueService.getStudentBilling(studentId),
-            announcementsService.getAll(),
-            coursesService.getForStudent(studentId),
-            registrationsService.getAll(),
-            coursesService.getAll(),
-            slotsService.getAll(),
-            policiesService.getPolicies(),
-          ]);
-
-        if (billingRes.status === 'fulfilled' && billingRes.value) {
-          setBilling(billingRes.value);
-        } else {
-          setBilling({
-            studentId,
-            studentName,
-            flatSemesterTuition: 2500,
-            totalAmountDue: 2500,
-            amountPaid: 0,
-            balanceDue: 2500,
-            paymentStatus: 'Pending',
-            isFinancialHoldActive: true,
-          });
-        }
-
-        if (annRes.status === 'fulfilled' && Array.isArray(annRes.value)) {
-          setAnnouncements(annRes.value);
-        }
-
-        if (allCoursesRes.status === 'fulfilled' && Array.isArray(allCoursesRes.value)) {
-          setAllCatalog(allCoursesRes.value);
-        }
-
-        if (slotsRes.status === 'fulfilled' && Array.isArray(slotsRes.value)) {
-          setSlots(slotsRes.value);
-        }
-
-        if (policiesRes.status === 'fulfilled' && policiesRes.value?.settings) {
-          const pol = policiesRes.value.settings;
-          setPolicies(pol);
-          if (pol.academicYear && pol.term) {
-            setActiveTerm(computeTermLabel(pol.academicYear, pol.term));
-          }
-          if (pol.maxCredits) {
-            setMaxCredits(pol.maxCredits);
-          }
-        }
-
-
-        if (studentCourseRes.status === 'fulfilled' && studentCourseRes.value) {
-          const raw = studentCourseRes.value;
-          if (raw.currentSemester) setCurrentSemester(raw.currentSemester);
-          if (raw.activeTerm) setActiveTerm(raw.activeTerm);
-          if (raw.maxCreditLimit) setMaxCredits(raw.maxCreditLimit);
-
-          if (raw.courses && Array.isArray(raw.courses)) {
-            setCourses(
-              raw.courses.map((item) => ({
-                ...item.course,
-                courseType: item.courseType || item.course?.courseType || 'Program Core',
-                sections: item.sections,
-              }))
-            );
-          } else if (Array.isArray(raw)) {
-            setCourses(raw);
-          }
-        }
-
-        if (regRes.status === 'fulfilled' && Array.isArray(regRes.value)) {
-          const userRegs = regRes.value.filter(
-            (r) => r.studentId === studentId || r.Student_ID === studentId
-          );
-          setAllUserRegistrations(userRegs);
-        }
-      } catch (err) {
-        console.error('Error loading dashboard data:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadDashboardData();
-  }, [studentId, studentName]);
+    dispatch(fetchStudentDashboard(studentId, studentName));
+  }, [dispatch, studentId, studentName]);
 
   async function handlePayTuition() {
     if (!billing || billing.balanceDue === 0) return;
-    setIsPaying(true);
     try {
-      const res = await revenueService.payStudentTuition(studentId, billing.balanceDue);
-      toast.success(res.message || 'Tuition payment cleared successfully!');
-      setBilling((prev) => ({
-        ...prev,
-        amountPaid: res.amountPaid ?? prev.totalAmountDue ?? 2500,
-        balanceDue: 0,
-        paymentStatus: 'Cleared',
-        isFinancialHoldActive: false,
-        transactionId: res.transactionId,
-        paymentDate: res.timestamp,
-      }));
+      const res = await dispatch(payStudentTuition(studentId, billing.balanceDue));
+      toast.success(res?.message || 'Tuition payment cleared successfully!');
       setIsTuitionModalOpen(false);
     } catch (err) {
       toast.error(
         err?.response?.data?.message || 'Tuition payment could not be processed. Please check your network and try again.'
       );
-    } finally {
-      setIsPaying(false);
     }
   }
 
@@ -624,7 +520,7 @@ export default function StudentDashboard() {
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                           <span className="badge" style={{ background: '#e0e7ff', color: '#4338ca', fontWeight: 600 }}>
-                            {ann.courseId || 'Campus Alert'}
+                            {!ann.courseId || ann.courseId === 'all' ? 'All Courses' : ann.courseId}
                           </span>
                           <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
                             {ann.createdAt ? new Date(ann.createdAt).toLocaleDateString() : 'Recent'}

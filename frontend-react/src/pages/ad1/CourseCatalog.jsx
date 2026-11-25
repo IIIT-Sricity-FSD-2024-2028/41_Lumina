@@ -4,6 +4,7 @@
  * DataTable, Pagination, PrereqDropdown, and shared CSS tokens.
  */
 import { useState, useMemo, useCallback } from 'react';
+import { useDispatch } from 'react-redux';
 import toast from 'react-hot-toast';
 import AD1PageLayout from './components/AD1PageLayout';
 import StatCard, { StatCardsRow } from './components/StatCard';
@@ -12,15 +13,16 @@ import FormGroup from './components/FormGroup';
 import DataTable from './components/DataTable';
 import Pagination from './components/Pagination';
 import PrereqDropdown from './components/PrereqDropdown';
-import useAD1Data from './hooks/useAD1Data';
+import useLoadAD1Data from './hooks/useLoadAD1Data';
 import usePagination from './hooks/usePagination';
-import { coursesService } from '../../services/courses.service';
+import { createAD1Course, updateAD1Course } from '../../store/ad1/ad1-actions';
 import { getTypeBadgeInfo, getDeptDisplay } from './utils/dataTransforms';
 import shared from './styles/ad1-shared.module.css';
 import styles from './CourseCatalog.module.css';
 
 export default function CourseCatalog() {
-  const { data, loading, error, setData } = useAD1Data();
+  const dispatch = useDispatch();
+  const { data, loading, error, writing } = useLoadAD1Data();
 
   // ─── Filters ───────────────────────────────────────────────
   const [search, setSearch] = useState('');
@@ -69,7 +71,6 @@ export default function CourseCatalog() {
     };
   }, [data]);
 
-  // ─── Pagination (shared hook) ──────────────────────────────
   const { pagedItems, currentPage, totalPages, setPage, info: paginationInfo } = usePagination(filteredCourses, 6);
 
   const clearFilters = useCallback(() => {
@@ -126,7 +127,6 @@ export default function CourseCatalog() {
     dept: form.type === 'Institute Core' ? '-' : form.type === 'Seed Course' ? 'All Departments (CSE, ECE, AIDS)' : form.dept,
     prerequisites: [...prereqs],
     status: form.status || 'Active',
-    sections: 1,
   });
 
   // ─── Open modals ───────────────────────────────────────────
@@ -147,13 +147,14 @@ export default function CourseCatalog() {
   // ─── Submit handlers ──────────────────────────────────────
   const handleAddCourse = async (e) => {
     e.preventDefault();
+    if (writing) return;
     const errs = validateForm(addForm, true);
     setAddErrors(errs);
     if (Object.keys(errs).length > 0) return;
 
     const newCourse = buildCourseFromForm(addForm, addPrereqTags);
     try {
-      await coursesService.create({
+      await dispatch(createAD1Course({
         courseId: newCourse.code,
         courseName: newCourse.name,
         credits: newCourse.credits,
@@ -164,8 +165,7 @@ export default function CourseCatalog() {
         semester: newCourse.semester,
         courseType: newCourse.type,
         prerequisites: newCourse.prerequisites,
-      });
-      setData((prev) => ({ ...prev, courses: [...prev.courses, newCourse] }));
+      }));
       setAddModalOpen(false);
       toast.success('Course added successfully!');
     } catch (err) {
@@ -175,13 +175,14 @@ export default function CourseCatalog() {
 
   const handleEditCourse = async (e) => {
     e.preventDefault();
+    if (writing) return;
     const errs = validateForm(editForm, false);
     setEditErrors(errs);
     if (Object.keys(errs).length > 0) return;
 
     const updated = buildCourseFromForm(editForm, editPrereqTags);
     try {
-      await coursesService.update(editingCourseCode, {
+      const changes = {
         courseName: updated.name,
         credits: updated.credits,
         status: updated.status,
@@ -190,11 +191,16 @@ export default function CourseCatalog() {
         semester: updated.semester,
         courseType: updated.type,
         prerequisites: updated.prerequisites,
-      });
-      setData((prev) => ({ ...prev, courses: prev.courses.map((c) => c.code === editingCourseCode ? { ...c, ...updated } : c) }));
+      };
+      const result = await dispatch(updateAD1Course({ courseId: editingCourseCode, changes }));
+      if (!result) return;
       setEditModalOpen(false);
       toast.success('Course updated successfully!');
     } catch (err) {
+      if (err.field === 'status') {
+        setEditErrors((errors) => ({ ...errors, status: err.message }));
+        return;
+      }
       toast.error('Failed to update course: ' + (err.response?.data?.message || err.message));
     }
   };
@@ -269,7 +275,10 @@ export default function CourseCatalog() {
               {['Active', 'Inactive'].map((s) => (
                 <label key={s} className={shared.radioLabel}>
                   <input type="radio" name="editStatus" value={s} checked={form.status === s}
-                    onChange={() => setForm((f) => ({ ...f, status: s }))} /> {s}
+                    onChange={() => {
+                      setForm((f) => ({ ...f, status: s }));
+                      setEditErrors((previous) => ({ ...previous, status: undefined }));
+                    }} /> {s}
                 </label>
               ))}
             </div>

@@ -21,7 +21,7 @@ export class AnnouncementsController {
   }
 
   @Post()
-  @Roles('Faculty', 'Dean')
+  @Roles('Faculty', 'Dean', 'Assistant_Dean_2')
   @UseInterceptors(FileInterceptor('file', multerUploadOptions))
   @ApiConsumes('multipart/form-data', 'application/json')
   @ApiOperation({ summary: 'Create an announcement with optional file attachment', description: 'Creates a new announcement with Multer file upload middleware validation. Faculty and Dean only.' })

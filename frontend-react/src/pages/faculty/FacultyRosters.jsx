@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import { useAuth } from '../../context/AuthContext';
-import { facultyService, getColorForString, getInitials } from '../../services/faculty.service';
+import {
+  fetchFacultyCourses,
+  fetchCourseStudents,
+} from '../../store/faculty/faculty-actions';
+import { getColorForString, getInitials } from '../../services/faculty.service';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import toast from 'react-hot-toast';
 import styles from './FacultyRosters.module.css';
@@ -11,32 +16,26 @@ const PAGE_SIZE = 8;
 export default function FacultyRosters() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { courseId: pathCourseId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [loading, setLoading] = useState(true);
-  const [courses, setCourses] = useState([]);
-  const [students, setStudents] = useState([]);
+  const courses = useSelector((state) => state.faculty.courses);
+  const students = useSelector((state) => state.faculty.currentCourseStudents);
+  const loading = useSelector((state) => state.faculty.loading);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
   // Load courses
   useEffect(() => {
-    async function initCourses() {
-      setLoading(true);
-      try {
-        const cList = await facultyService.getCourses(user);
-        setCourses(cList);
-      } catch (err) {
+    if (user && courses.length === 0) {
+      dispatch(fetchFacultyCourses(user)).catch((err) => {
         console.error('Failed to load courses', err);
         toast.error('Failed to load courses');
-      } finally {
-        setLoading(false);
-      }
+      });
     }
-
-    initCourses();
-  }, [user]);
+  }, [dispatch, user, courses.length]);
 
   // Give valid path parameter precedence over query parameter, then fallback to default
   const selectedCourseId = (() => {
@@ -56,19 +55,13 @@ export default function FacultyRosters() {
   useEffect(() => {
     if (!selectedCourseId) return;
 
-    async function loadRoster() {
-      try {
-        const list = await facultyService.getStudentsForCourse(selectedCourseId);
-        setStudents(list);
-        setCurrentPage(1);
-      } catch (err) {
+    dispatch(fetchCourseStudents(selectedCourseId))
+      .then(() => setCurrentPage(1))
+      .catch((err) => {
         console.error('Failed to load student roster', err);
         toast.error('Could not load student roster');
-      }
-    }
-
-    loadRoster();
-  }, [selectedCourseId]);
+      });
+  }, [dispatch, selectedCourseId]);
 
   // Handle course switch
   function handleCourseChange(e) {
@@ -108,7 +101,7 @@ export default function FacultyRosters() {
     toast.success(`Exported Roster_${selectedCourseId}.csv`);
   }
 
-  if (loading) {
+  if (loading && courses.length === 0) {
     return <LoadingSpinner text="Loading academic roster..." />;
   }
 

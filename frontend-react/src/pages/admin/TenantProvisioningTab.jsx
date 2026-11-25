@@ -10,13 +10,33 @@
  */
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { adminService } from '../../services/admin.service';
+import { useDispatch, useSelector } from 'react-redux';
+import { createDocket } from '../../store/admin/admin-actions';
 import styles from './AdminPortal.module.css';
 
 export default function TenantProvisioningTab({
-  dashboard, currentSpocId, inst,
-  seatsUsed, totalStudents, quotaPct, progressColor, onRefresh,
+  dashboard: propDashboard,
+  currentSpocId: propSpocId,
+  inst: propInst,
+  seatsUsed: propSeatsUsed,
+  totalStudents: propTotalStudents,
+  quotaPct: propQuotaPct,
+  progressColor: propProgressColor,
+  onRefresh,
 }) {
+  const dispatch = useDispatch();
+  const reduxAdmin = useSelector((state) => state.admin);
+  const dashboard = propDashboard || reduxAdmin.dashboard;
+  const currentInstituteId = reduxAdmin.currentInstituteId;
+  const authUser = useSelector((state) => state.auth?.user);
+  const currentSpocId = propSpocId || dashboard?.spoc?.spocId || authUser?.spocId || 'SPOC-001';
+
+  const inst = propInst || dashboard?.assignedInstitute;
+  const metrics = dashboard?.metrics;
+  const totalStudents = propTotalStudents ?? (metrics?.totalStudents ?? (inst?.studentCount ?? 0));
+  const seatsUsed = propSeatsUsed ?? (metrics?.seatsUsed ?? 0);
+  const quotaPct = propQuotaPct ?? (metrics?.quotaPct ?? (totalStudents > 0 ? Math.round((seatsUsed / totalStudents) * 100) : 0));
+  const progressColor = propProgressColor || (quotaPct > 90 ? '#f59e0b' : '#10b981');
   const ssoConfig = dashboard?.ssoConfig || {
     idpName: 'Google Workspace SAML',
     metadataUrl: `https://auth.lumina.edu/saml/${inst?.instituteId?.toLowerCase().replace('inst-', '') || 'iiits'}`,
@@ -46,23 +66,22 @@ export default function TenantProvisioningTab({
   async function submitSsoRenewal(e) {
     e.preventDefault();
     try {
-      await adminService.createDocket({
-        instituteId: inst?.instituteId || 'INST-IIITS',
+      await dispatch(createDocket({
+        instituteId: inst?.instituteId || currentInstituteId || 'INST-IIITS',
         instituteName: inst?.name || 'IIIT Sri City',
-        submittedBy: `${dashboard?.spoc?.fullName || 'SPOC'} (Tenant SPOC)`,
+        submittedBy: `${dashboard?.spoc?.fullName || authUser?.fullName || 'SPOC'} (Tenant SPOC)`,
         category: 'SSO_Integration',
         priority: 'Medium',
         subject: `SAML SSO certificate renewal request for ${ssoDomain} (${ssoIdp})`,
         description: `Routine certificate rotation submitted. IdP: ${ssoIdp}, Domain: ${ssoDomain}.`,
         assignedSpocId: currentSpocId,
-      });
+      }, currentSpocId, currentInstituteId));
       toast.success(`✔ SAML Certificate renewal ticket created for ${ssoDomain} (${ssoIdp}). Dispatched to Security Ops.`);
       closeSsoModal();
       if (onRefresh) onRefresh();
     } catch (err) {
       console.error(err);
-      toast.success(`✔ Renewal request acknowledged for ${ssoDomain} (${ssoIdp}).`);
-      closeSsoModal();
+      toast.error(err?.response?.data?.message || 'Failed to submit SAML certificate renewal request');
     }
   }
 
@@ -72,11 +91,11 @@ export default function TenantProvisioningTab({
 
   // ── Seat Quota Upgrade ──
   async function requestQuotaUpgrade() {
-    const spocName = dashboard?.spoc?.fullName || 'Arjun Verma';
+    const spocName = dashboard?.spoc?.fullName || authUser?.fullName || 'Arjun Verma';
     const instName = inst?.name || 'IIIT Sri City';
-    const instId   = inst?.instituteId || 'INST-IIITS';
+    const instId   = inst?.instituteId || currentInstituteId || 'INST-IIITS';
     try {
-      await adminService.createDocket({
+      await dispatch(createDocket({
         instituteId: instId,
         instituteName: instName,
         submittedBy: `${spocName} (Assigned SPOC)`,
@@ -85,7 +104,7 @@ export default function TenantProvisioningTab({
         subject: `Tenant seat quota upgrade requested (+500 seats) for ${instName}`,
         description: `University tenant has reached ${quotaPct}% license utilization (${seatsUsed.toLocaleString()} / ${totalStudents.toLocaleString()} seats). Requested +500 seat tier upgrade.`,
         assignedSpocId: currentSpocId,
-      });
+      }, currentSpocId, currentInstituteId));
       toast.success('✔ Capacity expansion ticket created in database and dispatched to Super User sales queue!');
       if (onRefresh) onRefresh();
     } catch (err) {

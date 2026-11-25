@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Req } from '@nestjs/common';
+import { Controller, Post, Body, Req, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { AuthService } from './auth.service';
@@ -31,5 +31,19 @@ export class AuthController {
     const userId = body.User_ID || body.userId || '';
     const password = body.Password || body.password || '';
     return this.authService.login(userId, password, clientIp);
+  }
+
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  @Roles('*') // Allows any logged in user or client to invalidate session
+  @ApiOperation({ summary: 'Log out user and invalidate current session token' })
+  @ApiResponse({ status: 200, description: 'Logout successful. Session token invalidated.' })
+  logout(@Req() req: Request) {
+    const rawIp = req.ip || req.socket.remoteAddress || '127.0.0.1';
+    const clientIp = rawIp.replace(/^.*:/, '') || '127.0.0.1';
+    const authHeader = req.headers['authorization'] as string | undefined;
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7).trim() : '';
+    const userId = (req as any).user?.userId;
+    return this.authService.logout(token, userId, clientIp);
   }
 }

@@ -6,8 +6,14 @@ import { User } from '../interfaces';
 export class UsersService {
   constructor(private readonly db: DatabaseService) {}
 
-  findAll(): User[] {
-    return this.db.users;
+  private sanitizeUser(user: User): Omit<User, 'password'> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...safeUser } = user;
+    return safeUser;
+  }
+
+  findAll(): Omit<User, 'password'>[] {
+    return this.db.users.map((u) => this.sanitizeUser(u));
   }
 
   create(data: {
@@ -17,7 +23,7 @@ export class UsersService {
     password: string;
     role: string;
     deptId: string;
-  }): User {
+  }): Omit<User, 'password'> {
     // Check for duplicate ID
     if (this.db.users.some(u => u.userId === data.userId)) {
       throw new BadRequestException(`User ID '${data.userId}' already exists.`);
@@ -32,13 +38,13 @@ export class UsersService {
       deptId: data.deptId,
     };
     this.db.users.push(newUser);
-    return newUser;
+    return this.sanitizeUser(newUser);
   }
 
   update(
     userId: string,
     data: { fullName?: string; email?: string; role?: string; deptId?: string },
-  ): User {
+  ): Omit<User, 'password'> {
     const user = this.db.users.find(u => u.userId === userId);
     if (!user) {
       throw new NotFoundException(`User '${userId}' not found.`);
@@ -47,7 +53,7 @@ export class UsersService {
     if (data.email !== undefined) user.email = data.email;
     if (data.role !== undefined) user.role = data.role as User['role'];
     if (data.deptId !== undefined) user.deptId = data.deptId;
-    return user;
+    return this.sanitizeUser(user);
   }
 
   delete(userId: string): { deleted: boolean } {

@@ -28,6 +28,13 @@ describe('Policies and Dynamic Validation Integration', () => {
       paymentDate: new Date().toISOString(),
       transactionId: 'TXN-TEST-SETUP',
     };
+
+    // Ensure enrollment window is open during tests regardless of wall clock time
+    policiesService.updateSettings({
+      windowStatus: 'Open',
+      startDate: new Date(Date.now() - 86400000).toISOString(),
+      endDate: new Date(Date.now() + 86400000).toISOString(),
+    }, 'Assistant_Dean_2');
   });
 
   it('should return initial policy settings and change logs', () => {

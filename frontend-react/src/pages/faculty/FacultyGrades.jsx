@@ -1,7 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import { useAuth } from '../../context/AuthContext';
-import { facultyService, getGradeLetter } from '../../services/faculty.service';
+import { facultyActions } from '../../store/faculty/faculty-slice';
+import {
+  fetchFacultyCourses,
+  fetchCourseStudents,
+  saveDraftGrades,
+  submitFinalGrades,
+} from '../../store/faculty/faculty-actions';
+import { getGradeLetter } from '../../services/faculty.service';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import toast from 'react-hot-toast';
 import styles from './FacultyGrades.module.css';
@@ -9,33 +17,27 @@ import styles from './FacultyGrades.module.css';
 export default function FacultyGrades() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { courseId: pathCourseId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [loading, setLoading] = useState(true);
-  const [courses, setCourses] = useState([]);
-  const [gradesData, setGradesData] = useState([]);
+  const courses = useSelector((state) => state.faculty.courses);
+  const gradesData = useSelector((state) => state.faculty.currentCourseStudents);
+  const loading = useSelector((state) => state.faculty.loading);
+  const isSubmitting = useSelector((state) => state.faculty.isSubmittingGrades);
+
   const [searchTerm, setSearchTerm] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
 
-  // Load course list
+  // Load course list if not present
   useEffect(() => {
-    async function initCourses() {
-      setLoading(true);
-      try {
-        const cList = await facultyService.getCourses(user);
-        setCourses(cList);
-      } catch (err) {
+    if (user && courses.length === 0) {
+      dispatch(fetchFacultyCourses(user)).catch((err) => {
         console.error('Failed to load courses for grading', err);
         toast.error('Failed to load courses');
-      } finally {
-        setLoading(false);
-      }
+      });
     }
-
-    initCourses();
-  }, [user]);
+  }, [dispatch, user, courses.length]);
 
   // Give valid path parameter precedence over query parameter, then fallback to default
   const selectedCourseId = (() => {
@@ -55,18 +57,11 @@ export default function FacultyGrades() {
   useEffect(() => {
     if (!selectedCourseId) return;
 
-    async function loadGrades() {
-      try {
-        const list = await facultyService.getStudentsForCourse(selectedCourseId);
-        setGradesData(list);
-      } catch (err) {
-        console.error('Failed to load students for course', err);
-        toast.error('Could not load course roster');
-      }
-    }
-
-    loadGrades();
-  }, [selectedCourseId]);
+    dispatch(fetchCourseStudents(selectedCourseId)).catch((err) => {
+      console.error('Failed to load students for course', err);
+      toast.error('Could not load course roster');
+    });
+  }, [dispatch, selectedCourseId]);
 
   // Change course handler
   function handleCourseChange(e) {
@@ -78,26 +73,26 @@ export default function FacultyGrades() {
     }
   }
 
-  // Update a student's marks in local state
+  // Update a student's marks in Redux state
   function handleScoreChange(roll, field, val) {
     const numericVal = Math.max(0, Number(val) || 0);
     const maxVal = field === 'mid' ? 30 : 70;
     const boundedVal = Math.min(numericVal, maxVal);
 
-    setGradesData((prev) =>
-      prev.map((item) => {
-        if (item.roll === roll) {
-          const updatedMid = field === 'mid' ? boundedVal : item.mid;
-          const updatedFin = field === 'fin' ? boundedVal : item.fin;
-          const newTotal = updatedMid + updatedFin;
-          return {
-            ...item,
-            [field]: boundedVal,
-            finalGrade: getGradeLetter(newTotal).grade,
-            submitted: false,
-          };
-        }
-        return item;
+    const student = gradesData.find((s) => s.roll === roll);
+    if (!student) return;
+
+    const updatedMid = field === 'mid' ? boundedVal : student.mid;
+    const updatedFin = field === 'fin' ? boundedVal : student.fin;
+    const newTotal = updatedMid + updatedFin;
+    const newGrade = getGradeLetter(newTotal).grade;
+
+    dispatch(
+      facultyActions.updateStudentGradeInState({
+        roll,
+        field,
+        val: boundedVal,
+        finalGrade: newGrade,
       })
     );
   }
@@ -105,7 +100,7 @@ export default function FacultyGrades() {
   // Save Draft
   async function handleSaveDraft() {
     try {
-      await facultyService.saveDraftGrades(selectedCourseId, gradesData);
+      await dispatch(saveDraftGrades(selectedCourseId, gradesData));
       toast.success('Draft marks saved successfully!');
     } catch {
       toast.error('Failed to save draft');
@@ -124,10 +119,8 @@ export default function FacultyGrades() {
   // Final Submit Execution
   async function executeSubmitGrades() {
     setShowSubmitModal(false);
-    setIsSubmitting(true);
     try {
-      const result = await facultyService.submitFinalGrades(selectedCourseId, gradesData);
-      setGradesData(result.grades);
+      const result = await dispatch(submitFinalGrades(selectedCourseId, gradesData));
       if (result.backendSuccess) {
         toast.success(`Official grades persisted to server for ${result.syncedCount} students! 🎉`);
       } else if (result.backendError) {
@@ -137,8 +130,6 @@ export default function FacultyGrades() {
       }
     } catch {
       toast.error('Failed to submit grades');
-    } finally {
-      setIsSubmitting(false);
     }
   }
 
@@ -177,7 +168,7 @@ export default function FacultyGrades() {
     toast.success(`Exported Grades_${selectedCourseId}.csv`);
   }
 
-  if (loading) {
+  if (loading && courses.length === 0) {
     return <LoadingSpinner text="Loading gradebook..." />;
   }
 
@@ -285,7 +276,7 @@ export default function FacultyGrades() {
           <span className={styles.distBadge} style={{ background: '#eef2ff', color: '#4f46e5' }}>
             B: {distCounts.B}
           </span>
-          <span className={styles.distBadge} style={{ background: '#fffbeb', color: '#d97706' }}>
+          <span className={styles.distBadge} style={{ background: '#eef2ff', color: '#d97706' }}>
             C: {distCounts.C}
           </span>
           <span className={styles.distBadge} style={{ background: '#fff7ed', color: '#c2410c' }}>

@@ -33,6 +33,7 @@ import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import UserAvatar from '../ui/UserAvatar';
+import StudentProfileDropdown from './StudentProfileDropdown';
 import styles from './TopNavbar.module.css';
 
 export default function TopNavbar({ navLinks = [], notifications = [] }) {
@@ -192,7 +193,11 @@ export default function TopNavbar({ navLinks = [], notifications = [] }) {
             <span className={styles.userName}>{displayName}</span>
             {roleLabel && <span className={styles.userRole}>{roleLabel}</span>}
           </div>
-          <UserAvatar name={displayName} size="md" />
+          {user?.Role?.toLowerCase() === 'student' ? (
+            <StudentProfileDropdown user={user} onLogout={handleLogout} />
+          ) : (
+            <UserAvatar name={displayName} size="md" />
+          )}
         </div>
 
         {/* Sign Out */}

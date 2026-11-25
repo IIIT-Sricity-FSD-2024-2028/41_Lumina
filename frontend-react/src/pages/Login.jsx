@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useDispatch, useSelector } from "react-redux";
+import { loginUser } from "../store/auth/auth-actions";
 import { authService } from "../services/auth.service";
 import toast from "react-hot-toast";
 import styles from "./Login.module.css";
@@ -9,23 +10,19 @@ export default function Login() {
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const { login } = useAuth();
+  const dispatch = useDispatch();
+  const loading = useSelector((state) => state.auth.loading);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage("");
-    setLoading(true);
 
     try {
-      // Call the backend via authService (trim to prevent accidental spaces)
-      const sessionData = await authService.login(userId.trim(), password);
-
-      // Save user to global AuthContext (and localStorage)
-      login(sessionData);
+      // Dispatch Redux async action thunk
+      const sessionData = await dispatch(loginUser(userId.trim(), password));
 
       toast.success(
         `Welcome back, ${sessionData.Full_Name || sessionData.User_ID}!`,
@@ -45,8 +42,6 @@ export default function Login() {
           err.response.data?.message || "Invalid Username or Password.",
         );
       }
-    } finally {
-      setLoading(false);
     }
   };
 

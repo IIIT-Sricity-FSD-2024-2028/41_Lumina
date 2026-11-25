@@ -34,7 +34,7 @@ export class RegistrationsController {
   }
 
   @Patch('batch-grades')
-  @Roles('Faculty', 'Dean')
+  @Roles('Faculty', 'Dean', 'Assistant_Dean_2')
   @ApiOperation({ summary: 'Batch-submit final grades for multiple students' })
   @ApiBody({ type: BatchSubmitGradesDto })
   @ApiResponse({ status: 200, description: 'Batch grade submission results.' })

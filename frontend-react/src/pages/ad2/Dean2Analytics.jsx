@@ -1,59 +1,22 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import Dean2Layout from './Dean2Layout';
 import TierGate from '../../components/TierGate';
-import { coursesService } from '../../services/courses.service';
-import { registrationsService } from '../../services/registrations.service';
-import { sectionsService } from '../../services/sections.service';
-import { usersService } from '../../services/users.service';
+import { fetchAnalyticsData } from '../../store/ad2/ad2-actions';
 import styles from './Dean2.module.css';
 
 export default function Dean2Analytics() {
-  const [loading, setLoading] = useState(true);
-  const [courses, setCourses] = useState([]);
-  const [registrations, setRegistrations] = useState([]);
-  const [sections, setSections] = useState([]);
-  const [users, setUsers] = useState([]);
+  const dispatch = useDispatch();
 
+  // ── Redux state ──────────────────────────────────────────────────
+  const { loading, courses, registrations, sections, users } = useSelector(
+    (state) => state.ad2
+  );
+
+  // ── Fetch on mount ───────────────────────────────────────────────
   useEffect(() => {
-    let ignore = false;
-    async function loadAnalytics() {
-      try {
-        setLoading(true);
-        const [cRes, rRes, sRes, uRes] = await Promise.allSettled([
-          coursesService.getAll(),
-          registrationsService.getAll(),
-          sectionsService.getAll(),
-          usersService.getAll(),
-        ]);
-
-        if (!ignore) {
-          if (cRes.status === 'fulfilled' && Array.isArray(cRes.value)) {
-            setCourses(cRes.value);
-          }
-          if (rRes.status === 'fulfilled' && Array.isArray(rRes.value)) {
-            setRegistrations(rRes.value);
-          }
-          if (sRes.status === 'fulfilled' && Array.isArray(sRes.value)) {
-            setSections(sRes.value);
-          }
-          if (uRes.status === 'fulfilled' && Array.isArray(uRes.value)) {
-            setUsers(uRes.value);
-          }
-        }
-      } catch (err) {
-        console.error('Failed to load analytics data:', err);
-      } finally {
-        if (!ignore) {
-          setLoading(false);
-        }
-      }
-    }
-
-    loadAnalytics();
-    return () => {
-      ignore = true;
-    };
-  }, []);
+    dispatch(fetchAnalyticsData());
+  }, [dispatch]);
 
   // Compute Year-wise Enrollment Progress
   const yearWiseStats = useMemo(() => {

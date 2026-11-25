@@ -6,12 +6,12 @@ import { useState, useMemo } from 'react';
 import AD1PageLayout from './components/AD1PageLayout';
 import StatCard, { StatCardsRow } from './components/StatCard';
 import DataTable from './components/DataTable';
-import useAD1Data from './hooks/useAD1Data';
+import useLoadAD1Data from './hooks/useLoadAD1Data';
 import { ALL_SLOT_KEYS } from './utils/dataTransforms';
 import styles from './AD1Dashboard.module.css';
 
 export default function AD1Dashboard() {
-  const { data, loading, error } = useAD1Data();
+  const { data, loading, error } = useLoadAD1Data();
   const [selectedDay, setSelectedDay] = useState('Monday');
   const [selectedRoomIdx, setSelectedRoomIdx] = useState(0);
 

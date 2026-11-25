@@ -1,48 +1,31 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import { useAuth } from '../../context/AuthContext';
-import { facultyService } from '../../services/faculty.service';
+import { fetchFacultyDashboard } from '../../store/faculty/faculty-actions';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import styles from './FacultyHome.module.css';
 
 export default function FacultyHome() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState(null);
-  const [courses, setCourses] = useState([]);
-  const [todaysClasses, setTodaysClasses] = useState([]);
-  const [allStudents, setAllStudents] = useState([]);
+  const loading = useSelector((state) => state.faculty.loading);
+  const profile = useSelector((state) => state.faculty.profile);
+  const courses = useSelector((state) => state.faculty.courses);
+  const todaysClasses = useSelector((state) => state.faculty.todaysClasses);
+  const allStudents = useSelector((state) => state.faculty.allStudents);
+
   const [rosterSearch, setRosterSearch] = useState('');
 
   useEffect(() => {
-    async function loadDashboardData() {
-      setLoading(true);
-      try {
-        const prof = facultyService.getProfile(user);
-        setProfile(prof);
-
-        const [cList, classes, students] = await Promise.all([
-          facultyService.getCourses(user),
-          facultyService.getTodaysClasses(user),
-          facultyService.getAllEnrolledStudents(user),
-        ]);
-
-        setCourses(cList);
-        setTodaysClasses(classes);
-        setAllStudents(students);
-      } catch (err) {
-        console.error('Failed to load faculty dashboard data', err);
-      } finally {
-        setLoading(false);
-      }
+    if (user) {
+      dispatch(fetchFacultyDashboard(user));
     }
+  }, [dispatch, user]);
 
-    loadDashboardData();
-  }, [user]);
-
-  if (loading) {
+  if (loading && !profile) {
     return <LoadingSpinner text="Loading faculty workspace..." />;
   }
 

@@ -44,7 +44,7 @@ export class RouteMiddleware implements NestMiddleware {
 
     // Check if the route is exempted / public
     const isPublicRoute =
-      originalUrl.startsWith('/auth/login') ||
+      originalUrl.startsWith('/auth') ||
       originalUrl.startsWith('/revenue/plans') ||
       originalUrl.startsWith('/revenue/tier') ||
       (originalUrl.startsWith('/admin/dockets') && method === 'POST') ||

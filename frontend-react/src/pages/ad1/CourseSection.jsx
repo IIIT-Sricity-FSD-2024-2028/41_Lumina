@@ -3,21 +3,38 @@
  * Refactored to use shared AD1PageLayout, StatCard, Modal, FormGroup, DataTable.
  */
 import { useState, useMemo, useCallback } from 'react';
+import { useDispatch } from 'react-redux';
 import toast from 'react-hot-toast';
 import AD1PageLayout from './components/AD1PageLayout';
 import StatCard, { StatCardsRow } from './components/StatCard';
 import Modal from './components/Modal';
 import DataTable from './components/DataTable';
-import useAD1Data from './hooks/useAD1Data';
-import { registrationsService } from '../../services/registrations.service';
-import { sectionsService } from '../../services/sections.service';
+import useLoadAD1Data from './hooks/useLoadAD1Data';
+import { loadAD1Planning, saveAD1Assignments } from '../../store/ad1/ad1-actions';
 import { normalizeSectionValue, formatSectionLabel, getSemesterFromTerm, MAX_SECTION_CAPACITY } from './utils/dataTransforms';
 import shared from './styles/ad1-shared.module.css';
 import styles from './CourseSection.module.css';
 
 export default function CourseSection() {
-  const { data, loading, error, setData, refetch } = useAD1Data();
-  const [saving, setSaving] = useState(false);
+  const dispatch = useDispatch();
+  const { data: planning, loading, error, savingAssignments: saving, writing } = useLoadAD1Data();
+  const [assignmentDrafts, setAssignmentDrafts] = useState({});
+  const [sectionCountDrafts, setSectionCountDrafts] = useState({});
+
+  const data = useMemo(() => {
+    if (!planning) return null;
+    return {
+      ...planning,
+      courses: planning.courses.map((course) => {
+        const sections = sectionCountDrafts[course.code];
+        return sections === undefined ? course : { ...course, sections };
+      }),
+      students: planning.students.map((student) => {
+        const section = assignmentDrafts[student.enrollmentId];
+        return section === undefined ? student : { ...student, section };
+      }),
+    };
+  }, [planning, assignmentDrafts, sectionCountDrafts]);
 
   // ─── Filters ───────────────────────────────────────────────
   const [filterTerm, setFilterTerm] = useState('Spring 2026');
@@ -120,18 +137,23 @@ export default function CourseSection() {
     return '';
   }, [modalNewSection, currentCourse, data, editingStudent]);
 
+  const draftAssignments = useCallback((matches, section) => {
+    setAssignmentDrafts((previous) => {
+      const next = { ...previous };
+      data.students.filter(matches).forEach((student) => {
+        next[student.enrollmentId] = section;
+      });
+      return next;
+    });
+  }, [data]);
+
   const confirmEditSection = useCallback(() => {
     if (!editingStudentId || !data) return;
-    setData((prev) => ({
-      ...prev,
-      students: prev.students.map((s) =>
-        s.id === editingStudentId && s.course === currentCourse.code ? { ...s, section: modalNewSection || '' } : s
-      ),
-    }));
+    draftAssignments((s) => s.id === editingStudentId && s.course === currentCourse.code, modalNewSection || '');
     setEditModalOpen(false);
     setLastSaved(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
     modalCapacityWarning ? toast(modalCapacityWarning, { icon: '⚠️' }) : toast.success(`Student moved to ${formatSectionLabel(modalNewSection)} successfully`);
-  }, [editingStudentId, modalNewSection, currentCourse, data, setData, modalCapacityWarning]);
+  }, [editingStudentId, modalNewSection, currentCourse, data, draftAssignments, modalCapacityWarning]);
 
   // ─── Config Sections ──────────────────────────────────────
   const openConfigModal = () => {
@@ -149,7 +171,7 @@ export default function CourseSection() {
         if (count > 0) { setConfigWarning(`Cannot reduce — Section ${i} has ${count} students. Reassign first.`); return; }
       }
     }
-    setData((prev) => ({ ...prev, courses: prev.courses.map((c) => c.code === currentCourse.code ? { ...c, sections: newSec } : c) }));
+    setSectionCountDrafts((previous) => ({ ...previous, [currentCourse.code]: newSec }));
     setConfigModalOpen(false);
     toast.success(`Sections updated to ${newSec} for ${currentCourse.code}`);
   };
@@ -161,7 +183,7 @@ export default function CourseSection() {
       open: true, title: 'Clear Course Assignments',
       message: `Remove all section assignments for ${currentCourse.code}?`,
       onConfirm: () => {
-        setData((prev) => ({ ...prev, students: prev.students.map((s) => s.course === currentCourse.code ? { ...s, section: '' } : s) }));
+        draftAssignments((s) => s.course === currentCourse.code, '');
         setLastSaved(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
         toast.success(`Cleared all assignments for ${currentCourse.code}.`);
       },
@@ -178,18 +200,18 @@ export default function CourseSection() {
   };
 
   const saveAssignments = async () => {
+    if (writing) return;
     if (!currentCourse) {
       toast.error('Please select a course first.');
       return;
     }
-    setSaving(true);
     try {
       const assignments = roster
         .map((s) => {
           let secId = null;
           if (s.section && s.section !== 'Unassigned') {
             const secNum = s.section.replace(/\D/g, '');
-            const match = data?._raw?.sections?.find(
+            const match = data.sections.find(
               (sec) =>
                 sec.Course_ID === currentCourse.code &&
                 (sec.Section_Name === `S${secNum}` ||
@@ -203,24 +225,14 @@ export default function CourseSection() {
         .filter((a) => a.enrollmentId);
 
       if (assignments.length > 0) {
-        // Ensure sections exist in backend first so batch assignment does not fail
-        const allSections = await sectionsService.getAll().catch(() => []);
         const termId = filterTerm ? filterTerm.replace(' ', '').toUpperCase() : 'SPRING2026';
-        const numSec = currentCourse.sections || 1;
-        for (let i = 1; i <= numSec; i++) {
-          const expectedSecId = `${currentCourse.code}-S${i}`;
-          if (!allSections.some((sec) => sec.sectionId === expectedSecId)) {
-            await sectionsService.create({
-              sectionId: expectedSecId,
-              sectionName: `S${i}`,
-              courseId: currentCourse.code,
-              termId,
-              capacity: 100,
-            }).catch(() => null);
-          }
-        }
-
-        const result = await registrationsService.batchAssignSections(assignments);
+        const result = await dispatch(saveAD1Assignments({
+          assignments,
+          courseId: currentCourse.code,
+          termId,
+          sectionCount: currentCourse.sections || 1,
+        }));
+        if (!result) return;
         if (result.errors && result.errors.length > 0) {
           toast.error(`Saved with ${result.errors.length} error(s).`);
         } else {
@@ -233,18 +245,16 @@ export default function CourseSection() {
     } catch (err) {
       console.error('Failed to save assignments:', err);
       toast.error('Failed to save assignments: ' + (err.response?.data?.message || err.message));
-    } finally {
-      setSaving(false);
     }
   };
 
   const handleResetChanges = async () => {
-    if (refetch) {
-      await refetch();
-      toast.success('Changes reset.');
-    } else {
-      window.location.reload();
+    const result = await dispatch(loadAD1Planning({ refresh: true }));
+    if (result) {
+      setAssignmentDrafts({});
+      setSectionCountDrafts({});
     }
+    toast.success('Changes reset.');
   };
 
   const numSec = currentCourse ? currentCourse.sections || 1 : 0;
@@ -378,8 +388,8 @@ export default function CourseSection() {
               <div><div className={styles.syncTitle}>Synced</div><div className={styles.syncTime}>Last saved: {lastSaved}</div></div>
             </div>
           )}
-          <button className={shared.btnSecondary} onClick={handleResetChanges} disabled={saving}>↩ Reset Changes</button>
-          <button className={shared.btnPrimary} onClick={saveAssignments} disabled={saving || !currentCourse}>
+          <button className={shared.btnSecondary} onClick={handleResetChanges} disabled={writing}>↩ Reset Changes</button>
+          <button className={shared.btnPrimary} onClick={saveAssignments} disabled={writing || !currentCourse}>
             {saving ? 'Saving...' : 'Save Assignments'}
           </button>
         </div>

@@ -1,16 +1,25 @@
 import { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { useAuth } from '../../context/AuthContext';
-import { facultyService } from '../../services/faculty.service';
+import {
+  fetchFacultyCourses,
+  fetchAnnouncements,
+  createAnnouncement,
+  updateAnnouncement,
+  deleteAnnouncement,
+} from '../../store/faculty/faculty-actions';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import toast from 'react-hot-toast';
 import styles from './FacultyAnnouncements.module.css';
 
 export default function FacultyAnnouncements() {
   const { user } = useAuth();
+  const dispatch = useDispatch();
 
-  const [loading, setLoading] = useState(true);
-  const [courses, setCourses] = useState([]);
-  const [announcements, setAnnouncements] = useState([]);
+  const courses = useSelector((state) => state.faculty.courses);
+  const announcements = useSelector((state) => state.faculty.announcements);
+  const loading = useSelector((state) => state.faculty.loading);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [courseFilter, setCourseFilter] = useState('all');
 
@@ -60,24 +69,20 @@ export default function FacultyAnnouncements() {
 
   useEffect(() => {
     async function loadData() {
-      setLoading(true);
       try {
-        const [cList, annList] = await Promise.all([
-          facultyService.getCourses(user),
-          facultyService.getAnnouncements(),
-        ]);
-        setCourses(cList);
-        setAnnouncements(annList);
+        const promises = [dispatch(fetchAnnouncements())];
+        if (user && courses.length === 0) {
+          promises.push(dispatch(fetchFacultyCourses(user)));
+        }
+        await Promise.all(promises);
       } catch (err) {
         console.error('Failed to load announcements', err);
         toast.error('Failed to load announcements');
-      } finally {
-        setLoading(false);
       }
     }
 
     loadData();
-  }, [user]);
+  }, [dispatch, user, courses.length]);
 
   function handleOpenCreate() {
     setEditingId(null);
@@ -133,15 +138,13 @@ export default function FacultyAnnouncements() {
     setSubmitting(true);
     try {
       if (editingId) {
-        // Edit existing announcement via facultyService and update backend PUT /announcements/:id
-        const result = await facultyService.updateAnnouncement(editingId, {
-          courseId: formData.courseId,
-          title: formData.title,
-          message: formData.message,
-        });
-
-        setAnnouncements((prev) =>
-          prev.map((a) => (a.id === editingId ? result.updated : a))
+        // Edit existing announcement
+        const result = await dispatch(
+          updateAnnouncement(editingId, {
+            courseId: formData.courseId,
+            title: formData.title,
+            message: formData.message,
+          })
         );
 
         if (result.backendSuccess) {
@@ -153,15 +156,13 @@ export default function FacultyAnnouncements() {
         }
       } else {
         // Create new announcement
-        const result = await facultyService.createAnnouncement(formData, selectedFile);
+        const result = await dispatch(createAnnouncement(formData, selectedFile));
         if (result.backendSuccess) {
-          setAnnouncements((prev) => [result.created, ...prev]);
           toast.success('Announcement broadcast and saved to server! 📢');
         } else if (result.backendError) {
           toast.error(`Server rejected announcement: ${result.backendError}`);
           return;
         } else {
-          setAnnouncements((prev) => [result.created, ...prev]);
           toast.success('Announcement broadcast successfully 📢');
         }
       }
@@ -180,8 +181,7 @@ export default function FacultyAnnouncements() {
 
     setIsDeleting(true);
     try {
-      const result = await facultyService.deleteAnnouncement(deleteTarget.id);
-      setAnnouncements((prev) => prev.filter((a) => a.id !== deleteTarget.id));
+      const result = await dispatch(deleteAnnouncement(deleteTarget.id));
       if (result.backendSuccess) {
         toast.success('Announcement deleted from server');
       } else if (result.backendError) {
@@ -197,7 +197,7 @@ export default function FacultyAnnouncements() {
     }
   }
 
-  if (loading) {
+  if (loading && announcements.length === 0) {
     return <LoadingSpinner text="Loading announcements..." />;
   }
 

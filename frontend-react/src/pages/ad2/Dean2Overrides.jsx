@@ -1,90 +1,35 @@
 import { useState, useEffect, useMemo } from 'react';
 import Dean2Layout from './Dean2Layout';
 import TierGate from '../../components/TierGate';
-import { overridesService } from '../../services/overrides.service';
-import { usersService } from '../../services/users.service';
-import { coursesService } from '../../services/courses.service';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchOverrides, updateOverrideStatus } from '../../store/ad2/ad2-actions';
 import toast from 'react-hot-toast';
 import styles from './Dean2.module.css';
 
-function formatDateShort(dtStr) {
-  if (!dtStr) return '';
-  const d = new Date(dtStr);
-  return d.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-}
-
 export default function Dean2Overrides() {
-  const [loading, setLoading] = useState(true);
-  const [overridesList, setOverridesList] = useState([]);
-  const [activeRequest, setActiveRequest] = useState(null);
+  const dispatch = useDispatch();
+
+  // Redux state
+  const { loading, overridesList, actionLoading } = useSelector((state) => state.ad2);
+
+  // Local UI-only state
+  const [selectedRequestId, setSelectedRequestId] = useState(null);
   const [search, setSearch] = useState('');
   const [deptFilter, setDeptFilter] = useState('All Departments');
   const [statusFilter, setStatusFilter] = useState('All Status');
-  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
-    async function loadData() {
-      try {
-        setLoading(true);
-        const [ovRes, usrRes, crsRes] = await Promise.allSettled([
-          overridesService.getAll(),
-          usersService.getAll(),
-          coursesService.getAll(),
-        ]);
+    dispatch(fetchOverrides()).catch(() => toast.error('Failed to load override requests'));
+  }, [dispatch]);
 
-        let rawOverrides = [];
-        let usersMap = {};
-        let coursesMap = {};
-
-        if (ovRes.status === 'fulfilled' && Array.isArray(ovRes.value)) {
-          rawOverrides = ovRes.value;
-        }
-        if (usrRes.status === 'fulfilled' && Array.isArray(usrRes.value)) {
-          usrRes.value.forEach((u) => {
-            usersMap[u.userId || u.User_ID] = u;
-          });
-        }
-        if (crsRes.status === 'fulfilled' && Array.isArray(crsRes.value)) {
-          crsRes.value.forEach((c) => {
-            coursesMap[c.courseId || c.Course_ID] = c;
-          });
-        }
-
-        const mapped = rawOverrides.map((r) => {
-          const sid = r.studentId || r.Student_ID;
-          const cid = r.courseId || r.Course_ID;
-          const student = usersMap[sid] || {};
-          const course = coursesMap[cid] || {};
-          return {
-            id: r.requestId || r.id || r.Request_ID,
-            name: student.fullName || student.Full_Name || 'Unknown Student',
-            sid: sid || 'N/A',
-            dept: student.deptId || student.Dept_ID || 'Unknown',
-            year: student.year || 'N/A',
-            course: `${cid} (${course.courseName || course.Course_Name || 'Unknown'})`,
-            reason: r.reason || r.Reason || '',
-            date: formatDateShort(r.createdAt || r.Created_At),
-            status: r.approvalStatus || r.Approval_Status || 'Pending',
-          };
-        });
-
-        mapped.sort((a, b) => Number(b.id) - Number(a.id));
-        setOverridesList(mapped);
-
-        // Auto-select first request if available
-        if (mapped.length > 0) {
-          setActiveRequest(mapped[0]);
-        }
-      } catch (err) {
-        console.error('Failed to load overrides data:', err);
-        toast.error('Failed to load override requests');
-      } finally {
-        setLoading(false);
-      }
+  const activeRequest = useMemo(() => {
+    if (overridesList.length === 0) return null;
+    if (selectedRequestId !== null) {
+      const match = overridesList.find((r) => r.id === selectedRequestId);
+      if (match) return match;
     }
-
-    loadData();
-  }, []);
+    return overridesList[0];
+  }, [overridesList, selectedRequestId]);
 
   // Filtered requests
   const filteredRequests = useMemo(() => {
@@ -150,22 +95,10 @@ export default function Dean2Overrides() {
   // Handle Approve / Reject
   const handleUpdateStatus = async (id, newStatus) => {
     try {
-      setActionLoading(true);
-      await overridesService.updateStatus(id, newStatus);
+      await dispatch(updateOverrideStatus(id, newStatus));
       toast.success(`Request OR-${id} ${newStatus.toLowerCase()} successfully`);
-
-      setOverridesList((prev) =>
-        prev.map((r) => (r.id === id ? { ...r, status: newStatus } : r))
-      );
-
-      if (activeRequest && activeRequest.id === id) {
-        setActiveRequest((prev) => ({ ...prev, status: newStatus }));
-      }
     } catch (err) {
-      console.error('Failed to update override status:', err);
       toast.error(err.response?.data?.message || `Failed to update status to ${newStatus}`);
-    } finally {
-      setActionLoading(false);
     }
   };
 
@@ -280,7 +213,7 @@ export default function Dean2Overrides() {
                         <tr
                           key={req.id}
                           style={isSelected ? { background: '#F8FAFF' } : {}}
-                          onClick={() => setActiveRequest(req)}
+                          onClick={() => setSelectedRequestId(req.id)}
                         >
                           <td>
                             <div style={{ fontWeight: 600 }}>{req.name}</div>
@@ -304,7 +237,7 @@ export default function Dean2Overrides() {
                               className={`${styles.btn} ${btnClass} ${styles.btnSm}`}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setActiveRequest(req);
+                                setSelectedRequestId(req.id);
                               }}
                             >
                               {btnLabel}

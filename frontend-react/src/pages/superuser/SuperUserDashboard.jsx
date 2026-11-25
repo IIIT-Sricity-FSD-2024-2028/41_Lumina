@@ -10,13 +10,23 @@
  *  - Tab 5: Real-time System Logs Terminal Stream
  */
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import toast from 'react-hot-toast';
+import { useDispatch, useSelector } from 'react-redux';
 import TopNavbar from '../../components/common/TopNavbar';
 import Footer from '../../components/Footer';
 
-import { adminService } from '../../services/admin.service';
-import { revenueService } from '../../services/revenue.service';
+import {
+  fetchSuperUserOverview,
+  fetchSuperUserLogs,
+  updateInstitute,
+  assignSpoc,
+  updateInstituteTier,
+  archiveInstitute,
+  addAdminSpoc,
+  deleteAdminSpoc,
+  createInstitute,
+} from '../../store/superuser/superuser-actions';
 
 import styles from './SuperUser.module.css';
 
@@ -134,14 +144,21 @@ function parseLogLine(rawLine) {
 }
 
 export default function SuperUserDashboard() {
+  const dispatch = useDispatch();
+
   // Active top-level Tab: 'overview' | 'institutes' | 'spocs' | 'queue' | 'logs'
   const [activeTab, setActiveTab] = useState('overview');
 
-  // Client Institutes & SPOC state
-  const [institutes, setInstitutes] = useState([]);
-  const [adminTeam, setAdminTeam] = useState([]);
-  const [systemHealth, setSystemHealth] = useState(null);
-  const [onboardDockets, setOnboardDockets] = useState([]);
+  // Client Institutes & SPOC state from Redux
+  const { institutes, adminTeam, systemHealth, logsLoading } = useSelector((state) => state.superuser);
+  const [onboardDockets, setOnboardDockets] = useState(() => {
+    try {
+      const raw = localStorage.getItem('Lumina_Onboard_Dockets');
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
 
   // Tier counts & annual contract averages derived dynamically from live institutes
   const tierStats = useMemo(() => {
@@ -161,8 +178,8 @@ export default function SuperUserDashboard() {
 
   // System Logs Real-Time Streaming state
   const [logs, setLogs] = useState([]);
-  const [logsLoading, setLogsLoading] = useState(false);
   const [isLiveStreaming, setIsLiveStreaming] = useState(true);
+  const [isLogsCleared, setIsLogsCleared] = useState(false);
   const [logLevelFilter, setLogLevelFilter] = useState('ALL');
   const [logSearchQuery, setLogSearchQuery] = useState('');
   const [expandedLogId, setExpandedLogId] = useState(null);
@@ -194,78 +211,22 @@ export default function SuperUserDashboard() {
     spocAdminId: 'SPOC-001',
   });
 
-  // Load Initial Data (only necessary tenant data on mount)
-  useEffect(() => {
-    loadInstitutesAndStaff();
-    loadDockets();
-  }, []);
-
-  // Real-Time Log Streaming Effect: live polling every 2.5s while logs tab is active
-  useEffect(() => {
-    if (activeTab !== 'logs') return;
-
-    // Fetch immediately on tab switch
-    fetchLogs(false);
-
-    if (!isLiveStreaming) return;
-
-    const intervalId = setInterval(() => {
-      fetchLogs(true);
-    }, 1500);
-
-    return () => clearInterval(intervalId);
-  }, [activeTab, isLiveStreaming]);
-
-
-  // Load Institutes, Admin Team & System Health
-  async function loadInstitutesAndStaff() {
+  // Load Institutes, Admin Team & System Health from Redux
+  const loadInstitutesAndStaff = useCallback(async () => {
     try {
-      const [instData, teamData, healthData] = await Promise.allSettled([
-        adminService.getInstitutes(),
-        adminService.getAdminTeam(),
-        adminService.getSystemHealth(),
-      ]);
-      if (instData.status === 'fulfilled' && Array.isArray(instData.value)) {
-        setInstitutes(instData.value);
-      }
-      if (teamData.status === 'fulfilled' && Array.isArray(teamData.value)) {
-        setAdminTeam(teamData.value);
-      }
-      if (healthData.status === 'fulfilled' && healthData.value) {
-        setSystemHealth(healthData.value);
-      }
+      await dispatch(fetchSuperUserOverview());
     } catch (err) {
       console.warn('Error loading institutes / admin team / health:', err);
     }
-  }
-
-  // Load Onboard Dockets from localStorage
-  function loadDockets() {
-    try {
-      const raw = localStorage.getItem('Lumina_Onboard_Dockets');
-      if (raw) setOnboardDockets(JSON.parse(raw));
-    } catch (e) {
-      console.warn('Failed to parse onboard dockets:', e);
-      setOnboardDockets([]);
-    }
-  }
+  }, [dispatch]);
 
   // Fetch System Logs from server with industry-standard parsing & real-time streaming
-  async function fetchLogs(isBackground = false, forceReload = false) {
-    if (!isBackground) setLogsLoading(true);
+  const fetchLogs = useCallback(async (isBackground = false, forceReload = false) => {
     try {
-      const res = await adminService.getLogs('access', 100);
-      let rawLines = [];
-      if (Array.isArray(res)) {
-        rawLines = res;
-      } else if (res && Array.isArray(res.logs)) {
-        rawLines = res.logs;
-      } else if (res && Array.isArray(res.lines)) {
-        rawLines = res.lines;
-      }
+      const rawLines = await dispatch(fetchSuperUserLogs('access', 100, isBackground));
 
       // Parse each raw line and enforce clear watermark
-      const parsed = rawLines
+      const parsed = (rawLines || [])
         .map(line => parseLogLine(line))
         .filter(entry => entry !== null && (forceReload || entry.timestamp >= clearWatermarkRef.current));
 
@@ -282,14 +243,34 @@ export default function SuperUserDashboard() {
       });
     } catch (e) {
       console.warn('System log stream unavailable:', e);
-    } finally {
-      if (!isBackground) setLogsLoading(false);
     }
-  }
+  }, [dispatch]);
+
+  // Load Initial Data (only necessary tenant data on mount)
+  useEffect(() => {
+    loadInstitutesAndStaff();
+  }, [loadInstitutesAndStaff]);
+
+  // Real-Time Log Streaming Effect: live polling every 2.5s while logs tab is active
+  useEffect(() => {
+    if (activeTab !== 'logs') return;
+
+    // Fetch immediately on tab switch
+    fetchLogs(false);
+
+    if (!isLiveStreaming) return;
+
+    const intervalId = setInterval(() => {
+      fetchLogs(true);
+    }, 1500);
+
+    return () => clearInterval(intervalId);
+  }, [activeTab, isLiveStreaming, fetchLogs]);
 
   // Clear log console display (sets watermark so previous logs don't repopulate)
   function handleClearLogs() {
     clearWatermarkRef.current = Date.now();
+    setIsLogsCleared(true);
     seenLogSetRef.current.clear();
     setLogs([]);
   }
@@ -297,6 +278,7 @@ export default function SuperUserDashboard() {
   // Reset and reload full log history from server disk
   function handleReloadAllLogs() {
     clearWatermarkRef.current = 0;
+    setIsLogsCleared(false);
     seenLogSetRef.current.clear();
     setLogLevelFilter('ALL');
     setLogSearchQuery('');
@@ -342,16 +324,15 @@ export default function SuperUserDashboard() {
   async function handleConfirmEditInstitute(e) {
     e.preventDefault();
     try {
-      await adminService.updateInstitute(editInstModal.instId, {
+      await dispatch(updateInstitute(editInstModal.instId, {
         name: editInstModal.name,
         studentCount: Number(editInstModal.studentCount),
         deanName: editInstModal.deanName,
         deanEmail: editInstModal.deanEmail,
         slaStatus: editInstModal.slaStatus,
-      });
+      }));
       toast.success(`Updated quota & details for ${editInstModal.name}!`);
       setEditInstModal({ isOpen: false, instId: '', name: '', studentCount: 0, deanName: '', deanEmail: '', slaStatus: '99.99% SLA' });
-      loadInstitutesAndStaff();
     } catch (err) {
       console.error(err);
       toast.error('Failed to update institute details');
@@ -360,10 +341,9 @@ export default function SuperUserDashboard() {
 
   async function handleConfirmAssignSpoc() {
     try {
-      await adminService.assignSpoc(reassignSpocModal.instId, reassignSpocModal.spocId);
+      await dispatch(assignSpoc(reassignSpocModal.instId, reassignSpocModal.spocId));
       toast.success('SPOC assigned successfully!');
       setReassignSpocModal({ isOpen: false, instId: '', instName: '', spocId: '' });
-      loadInstitutesAndStaff();
     } catch (e) {
       console.error(e);
       toast.error('Failed to assign SPOC');
@@ -372,12 +352,10 @@ export default function SuperUserDashboard() {
 
   async function handleConfirmChangeTier() {
     try {
-      await adminService.updateInstituteTier(changeTierModal.instId, changeTierModal.tier);
+      await dispatch(updateInstituteTier(changeTierModal.instId, changeTierModal.tier));
       localStorage.setItem('Lumina_Active_Tier', changeTierModal.tier);
-      revenueService.setActiveTier(changeTierModal.tier).catch(() => null);
       toast.success(`Updated tier to ${changeTierModal.tier}!`);
       setChangeTierModal({ isOpen: false, instId: '', instName: '', tier: 'Campus' });
-      loadInstitutesAndStaff();
     } catch (e) {
       console.error(e);
       toast.error('Failed to change subscription tier');
@@ -388,9 +366,8 @@ export default function SuperUserDashboard() {
     const { instId, instName } = archiveTenantModal;
     setArchiveTenantModal({ isOpen: false, instId: '', instName: '' });
     try {
-      await adminService.archiveInstitute(instId);
+      await dispatch(archiveInstitute(instId));
       toast.success(`📦 Tenant ${instName} archived. Seats reclaimed.`);
-      loadInstitutesAndStaff();
     } catch (e) {
       console.error(e);
       toast.error('Failed to archive tenant');
@@ -400,14 +377,13 @@ export default function SuperUserDashboard() {
   async function handleEmploySpoc(e) {
     e.preventDefault();
     try {
-      await adminService.addAdminSpoc({
+      await dispatch(addAdminSpoc({
         fullName: employSpocModal.fullName,
         email: employSpocModal.email,
         phone: employSpocModal.phone,
-      });
+      }));
       toast.success(`Employed ${employSpocModal.fullName} to Lumina Admin Staff!`);
       setEmploySpocModal({ isOpen: false, fullName: '', email: '', phone: '' });
-      loadInstitutesAndStaff();
     } catch (e) {
       console.error(e);
       toast.error('Failed to employ SPOC');
@@ -418,9 +394,8 @@ export default function SuperUserDashboard() {
     const { adminId, spocName } = deleteSpocModal;
     setDeleteSpocModal({ isOpen: false, adminId: '', spocName: '' });
     try {
-      await adminService.deleteAdminSpoc(adminId);
+      await dispatch(deleteAdminSpoc(adminId));
       toast.success(`SPOC ${spocName} (${adminId}) offboarded successfully`);
-      loadInstitutesAndStaff();
     } catch (e) {
       toast.error(e.response?.data?.message || 'Failed to offboard SPOC');
     }
@@ -429,17 +404,16 @@ export default function SuperUserDashboard() {
   async function handleOnboardInstitute(e) {
     e.preventDefault();
     try {
-      await adminService.createInstitute({
+      await dispatch(createInstitute({
         name: onboardInstModal.name,
         deanName: onboardInstModal.deanName,
         deanEmail: onboardInstModal.deanEmail,
         studentCount: Number(onboardInstModal.studentCount),
         tier: onboardInstModal.tier,
         spocAdminId: onboardInstModal.spocAdminId,
-      });
+      }));
       toast.success(`Onboarded ${onboardInstModal.name} on ${onboardInstModal.tier} Tier!`);
       setOnboardInstModal({ isOpen: false, name: '', deanName: '', deanEmail: '', studentCount: 2000, tier: 'Campus', spocAdminId: 'SPOC-001' });
-      loadInstitutesAndStaff();
     } catch (e) {
       console.error(e);
       toast.error('Failed to provision institute tenant');
@@ -1087,7 +1061,7 @@ export default function SuperUserDashboard() {
               {filteredLogs.length === 0 ? (
                 <div style={{ color: '#64748b', textAlign: 'center', padding: '48px 0', fontFamily: 'sans-serif' }}>
                   <p style={{ margin: '0 0 6px 0', fontSize: '0.9rem', color: '#94a3b8' }}>
-                    {clearWatermarkRef.current > 0
+                    {isLogsCleared
                       ? 'Console display has been cleared. Streaming new incoming logs in real-time...'
                       : 'No log entries found matching filter criteria.'}
                   </p>
